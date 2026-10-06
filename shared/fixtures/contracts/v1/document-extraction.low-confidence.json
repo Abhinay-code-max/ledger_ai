@@ -1,0 +1,74 @@
+{
+  "classification": "INVOICE",
+  "correlation": {
+    "causation_id": null,
+    "correlation_id": "00000000-0000-4000-8000-000000000005",
+    "request_id": "00000000-0000-4000-8000-000000000004"
+  },
+  "created_at": "2026-01-15T05:00:00Z",
+  "document_id": "00000000-0000-4000-8000-000000000010",
+  "document_version": "obj-v1",
+  "extraction_id": "00000000-0000-4000-8000-000000000111",
+  "fields": [
+    {
+      "confidence": "0.31",
+      "field_name": "supplier_tax_id",
+      "is_critical": true,
+      "provenance": [
+        {
+          "bounding_box": null,
+          "confidence": "0.31",
+          "document_version": "obj-v1",
+          "evidence_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "extraction_version": "synthetic-v1",
+          "human_correction_id": null,
+          "page_number": 1,
+          "source_document_id": "00000000-0000-4000-8000-000000000010",
+          "source_field": "supplier_tax_id",
+          "source_row": null
+        }
+      ],
+      "state": "LOW_CONFIDENCE",
+      "value": "SYNTHETIC-UNCERTAIN"
+    },
+    {
+      "confidence": null,
+      "field_name": "purchase_order",
+      "is_critical": false,
+      "provenance": [],
+      "state": "MISSING",
+      "value": null
+    }
+  ],
+  "line_items": [],
+  "producer": {
+    "algorithm_version": null,
+    "model_name": "fixture-model",
+    "model_version": "synthetic-v1",
+    "name": "synthetic-extraction-agent",
+    "producer_type": "MODEL",
+    "prompt_template_version": "invoice-v1",
+    "rule_or_policy_version": null,
+    "version": "1.0.0"
+  },
+  "review_disposition": "REVIEW_REQUIRED",
+  "review_reason_codes": [
+    "CRITICAL_FIELD_LOW_CONFIDENCE"
+  ],
+  "schema_version": "1.0",
+  "status": "COMPLETED",
+  "tenant_context": {
+    "legal_entity_id": "00000000-0000-4000-8000-000000000003",
+    "organization_id": "00000000-0000-4000-8000-000000000002",
+    "tenant_id": "00000000-0000-4000-8000-000000000001"
+  },
+  "updated_at": "2026-01-15T05:00:00Z",
+  "validation_issues": [
+    {
+      "code": "LOW_CONFIDENCE_FIELD",
+      "field": "supplier_tax_id",
+      "message": "Synthetic field requires review",
+      "severity": "WARNING"
+    }
+  ]
+}

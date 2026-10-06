@@ -1,0 +1,140 @@
+{
+  "$defs": {
+    "FieldError": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "pattern": "^[A-Z][A-Z0-9_]+$",
+          "title": "Code",
+          "type": "string"
+        },
+        "field": {
+          "title": "Field",
+          "type": "string"
+        },
+        "message": {
+          "description": "User-safe text only; runtime middleware must still sanitize exceptions.",
+          "maxLength": 1000,
+          "minLength": 1,
+          "pattern": "^(?![\\s\\S]*(?:Traceback \\(most recent call last\\)|BEGIN (?:RSA )?PRIVATE KEY|(?:postgres(?:ql)?|mysql|mongodb|redis|jdbc):\\/\\/|Bearer eyJ|ghp_|sk_live_|AKIA|[A-Za-z]:\\\\|\\/(?:etc|var|home|Users|root|tmp)\\/|(?:\\b[Ss][Ee][Ll][Ee][Cc][Tt]\\s+(?:\\*|[A-Za-z_][A-Za-z0-9_]*\\s*,\\s*[A-Za-z_][A-Za-z0-9_]*(?:\\s*,\\s*[A-Za-z_][A-Za-z0-9_]*)*|[A-Za-z][A-Za-z0-9]*_[A-Za-z0-9_]+)\\s+[Ff][Rr][Oo][Mm]\\s+[A-Za-z_][A-Za-z0-9_]*\\b|\\b[Ss][Ee][Ll][Ee][Cc][Tt]\\s+[A-Za-z_][A-Za-z0-9_]*\\s+[Ff][Rr][Oo][Mm]\\s+[A-Za-z_][A-Za-z0-9_]*\\s*(?:;|$)|\\b[Ss][Ee][Ll][Ee][Cc][Tt]\\s+[A-Za-z_][A-Za-z0-9_]*\\s+[Ff][Rr][Oo][Mm]\\s+[A-Za-z_][A-Za-z0-9_]*\\s+(?:[Ww][Hh][Ee][Rr][Ee]|[Jj][Oo][Ii][Nn]|[Ll][Ii][Mm][Ii][Tt]|[Oo][Rr][Dd][Ee][Rr]\\s+[Bb][Yy]|[Gg][Rr][Oo][Uu][Pp]\\s+[Bb][Yy])\\b|\\b[Ii][Nn][Ss][Ee][Rr][Tt]\\s+[Ii][Nn][Tt][Oo]\\s+[A-Za-z_][A-Za-z0-9_]*\\s*(?:\\(|[Vv][Aa][Ll][Uu][Ee][Ss]\\b|[Ss][Ee][Ll][Ee][Cc][Tt]\\b)|\\b[Uu][Pp][Dd][Aa][Tt][Ee]\\s+[A-Za-z_][A-Za-z0-9_]*\\s+[Ss][Ee][Tt]\\s+[A-Za-z_][A-Za-z0-9_]*\\s*=|\\b[Dd][Ee][Ll][Ee][Tt][Ee]\\s+[Ff][Rr][Oo][Mm]\\s+[A-Za-z_][A-Za-z0-9_]*\\s*(?:;|$|[Ww][Hh][Ee][Rr][Ee]\\b)|\\b(?:[Dd][Rr][Oo][Pp]|[Aa][Ll][Tt][Ee][Rr]|[Tt][Rr][Uu][Nn][Cc][Aa][Tt][Ee]|[Cc][Rr][Ee][Aa][Tt][Ee])\\s+[Tt][Aa][Bb][Ll][Ee]\\s+[A-Za-z_][A-Za-z0-9_]*\\b)))[\\s\\S]{1,1000}$",
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "field",
+        "code",
+        "message"
+      ],
+      "title": "FieldError",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "External error data. Messages must be sanitized before this model is constructed.",
+  "properties": {
+    "category": {
+      "enum": [
+        "INPUT_VALIDATION",
+        "AUTHENTICATION",
+        "AUTHORIZATION",
+        "CONFLICT",
+        "STATE_TRANSITION",
+        "RATE_LIMIT",
+        "DOWNSTREAM",
+        "INTERNAL"
+      ],
+      "title": "Category",
+      "type": "string"
+    },
+    "code": {
+      "pattern": "^[A-Z][A-Z0-9_]+$",
+      "title": "Code",
+      "type": "string"
+    },
+    "correlation_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Correlation Id"
+    },
+    "field_errors": {
+      "items": {
+        "$ref": "#/$defs/FieldError"
+      },
+      "title": "Field Errors",
+      "type": "array"
+    },
+    "help_reference": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Help Reference"
+    },
+    "internal_error_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Internal Error Id"
+    },
+    "message": {
+      "description": "User-safe text only; runtime middleware must still sanitize exceptions.",
+      "maxLength": 1000,
+      "minLength": 1,
+      "pattern": "^(?![\\s\\S]*(?:Traceback \\(most recent call last\\)|BEGIN (?:RSA )?PRIVATE KEY|(?:postgres(?:ql)?|mysql|mongodb|redis|jdbc):\\/\\/|Bearer eyJ|ghp_|sk_live_|AKIA|[A-Za-z]:\\\\|\\/(?:etc|var|home|Users|root|tmp)\\/|(?:\\b[Ss][Ee][Ll][Ee][Cc][Tt]\\s+(?:\\*|[A-Za-z_][A-Za-z0-9_]*\\s*,\\s*[A-Za-z_][A-Za-z0-9_]*(?:\\s*,\\s*[A-Za-z_][A-Za-z0-9_]*)*|[A-Za-z][A-Za-z0-9]*_[A-Za-z0-9_]+)\\s+[Ff][Rr][Oo][Mm]\\s+[A-Za-z_][A-Za-z0-9_]*\\b|\\b[Ss][Ee][Ll][Ee][Cc][Tt]\\s+[A-Za-z_][A-Za-z0-9_]*\\s+[Ff][Rr][Oo][Mm]\\s+[A-Za-z_][A-Za-z0-9_]*\\s*(?:;|$)|\\b[Ss][Ee][Ll][Ee][Cc][Tt]\\s+[A-Za-z_][A-Za-z0-9_]*\\s+[Ff][Rr][Oo][Mm]\\s+[A-Za-z_][A-Za-z0-9_]*\\s+(?:[Ww][Hh][Ee][Rr][Ee]|[Jj][Oo][Ii][Nn]|[Ll][Ii][Mm][Ii][Tt]|[Oo][Rr][Dd][Ee][Rr]\\s+[Bb][Yy]|[Gg][Rr][Oo][Uu][Pp]\\s+[Bb][Yy])\\b|\\b[Ii][Nn][Ss][Ee][Rr][Tt]\\s+[Ii][Nn][Tt][Oo]\\s+[A-Za-z_][A-Za-z0-9_]*\\s*(?:\\(|[Vv][Aa][Ll][Uu][Ee][Ss]\\b|[Ss][Ee][Ll][Ee][Cc][Tt]\\b)|\\b[Uu][Pp][Dd][Aa][Tt][Ee]\\s+[A-Za-z_][A-Za-z0-9_]*\\s+[Ss][Ee][Tt]\\s+[A-Za-z_][A-Za-z0-9_]*\\s*=|\\b[Dd][Ee][Ll][Ee][Tt][Ee]\\s+[Ff][Rr][Oo][Mm]\\s+[A-Za-z_][A-Za-z0-9_]*\\s*(?:;|$|[Ww][Hh][Ee][Rr][Ee]\\b)|\\b(?:[Dd][Rr][Oo][Pp]|[Aa][Ll][Tt][Ee][Rr]|[Tt][Rr][Uu][Nn][Cc][Aa][Tt][Ee]|[Cc][Rr][Ee][Aa][Tt][Ee])\\s+[Tt][Aa][Bb][Ll][Ee]\\s+[A-Za-z_][A-Za-z0-9_]*\\b)))[\\s\\S]{1,1000}$",
+      "title": "Message",
+      "type": "string"
+    },
+    "request_id": {
+      "format": "uuid",
+      "title": "Request Id",
+      "type": "string"
+    },
+    "retryable": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Retryable"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "category",
+    "code",
+    "message",
+    "request_id"
+  ],
+  "title": "ErrorEnvelope",
+  "type": "object"
+}

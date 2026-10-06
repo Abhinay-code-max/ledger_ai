@@ -1,0 +1,12 @@
+{
+  "category": "STATE_TRANSITION",
+  "code": "SYNTHETIC_STATE_TRANSITION",
+  "correlation_id": "00000000-0000-4000-8000-000000000005",
+  "field_errors": [],
+  "help_reference": "urn:ledgerai:errors:v1",
+  "internal_error_id": null,
+  "message": "The synthetic request could not be completed.",
+  "request_id": "00000000-0000-4000-8000-000000000404",
+  "retryable": false,
+  "schema_version": "1.0"
+}

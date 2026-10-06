@@ -1,0 +1,38 @@
+{
+  "attempt_number": 1,
+  "completed_at": null,
+  "correlation": {
+    "causation_id": null,
+    "correlation_id": "00000000-0000-4000-8000-000000000005",
+    "request_id": "00000000-0000-4000-8000-000000000004"
+  },
+  "created_at": "2026-01-15T05:00:00Z",
+  "error_code": "SYNTHETIC_DOWNSTREAM_FAILURE",
+  "failed_at": "2026-01-15T05:00:00Z",
+  "input_references": [
+    {
+      "resource_id": "00000000-0000-4000-8000-000000000010",
+      "resource_type": "document",
+      "resource_version": "obj-v1"
+    }
+  ],
+  "job_id": "00000000-0000-4000-8000-000000000225",
+  "job_type": "DOCUMENT_EXTRACTION",
+  "maximum_attempts": 3,
+  "output_references": [],
+  "progress_percent": null,
+  "queue_name": "document-processing",
+  "retry_at": null,
+  "retryable": true,
+  "safe_error_message": "Synthetic processing failure",
+  "scheduled_for": "2026-01-15T05:00:00Z",
+  "schema_version": "1.0",
+  "started_at": "2026-01-15T05:00:00Z",
+  "state": "FAILED",
+  "tenant_context": {
+    "legal_entity_id": "00000000-0000-4000-8000-000000000003",
+    "organization_id": "00000000-0000-4000-8000-000000000002",
+    "tenant_id": "00000000-0000-4000-8000-000000000001"
+  },
+  "updated_at": "2026-01-15T05:00:00Z"
+}

@@ -1,0 +1,62 @@
+{
+  "correlation": {
+    "causation_id": null,
+    "correlation_id": "00000000-0000-4000-8000-000000000005",
+    "request_id": "00000000-0000-4000-8000-000000000004"
+  },
+  "created_at": "2026-01-15T05:00:00Z",
+  "detector": {
+    "algorithm_version": null,
+    "model_name": null,
+    "model_version": null,
+    "name": "ledgerai-contract-fixture",
+    "producer_type": "SERVICE",
+    "prompt_template_version": null,
+    "rule_or_policy_version": "exception-rules-v1",
+    "version": "1.0.0"
+  },
+  "exception_id": "00000000-0000-4000-8000-000000000016",
+  "exception_type": "AMOUNT_MISMATCH",
+  "explanation": "Synthetic transaction and invoice totals differ.",
+  "involved_resources": [
+    {
+      "resource_id": "00000000-0000-4000-8000-000000000012",
+      "resource_type": "bank_transaction",
+      "resource_version": "1"
+    },
+    {
+      "resource_id": "00000000-0000-4000-8000-000000000011",
+      "resource_type": "document_extraction",
+      "resource_version": "1"
+    }
+  ],
+  "reason_codes": [
+    "AMOUNT_MISMATCH"
+  ],
+  "required_action": "HUMAN_REVIEW",
+  "resolution_reference": null,
+  "resolution_status": "OPEN",
+  "schema_version": "1.0",
+  "severity": "HIGH",
+  "suggested_action": "Review source evidence",
+  "supporting_evidence": [
+    {
+      "bounding_box": null,
+      "confidence": "0.98",
+      "document_version": "obj-v1",
+      "evidence_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "extraction_version": "synthetic-v1",
+      "human_correction_id": null,
+      "page_number": 1,
+      "source_document_id": "00000000-0000-4000-8000-000000000010",
+      "source_field": "invoice_total",
+      "source_row": null
+    }
+  ],
+  "tenant_context": {
+    "legal_entity_id": "00000000-0000-4000-8000-000000000003",
+    "organization_id": "00000000-0000-4000-8000-000000000002",
+    "tenant_id": "00000000-0000-4000-8000-000000000001"
+  },
+  "updated_at": "2026-01-15T05:00:00Z"
+}

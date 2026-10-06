@@ -1,0 +1,47 @@
+{
+  "bank_account_id": "00000000-0000-4000-8000-000000000014",
+  "booking_date": "2026-01-15",
+  "content_fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "correlation": {
+    "causation_id": null,
+    "correlation_id": "00000000-0000-4000-8000-000000000005",
+    "request_id": "00000000-0000-4000-8000-000000000004"
+  },
+  "counterparty": {
+    "display_name": "Synthetic Supplies Ltd",
+    "masked_account_reference": "XXXX0012"
+  },
+  "direction": "DEBIT",
+  "external_source_id": "SYNTH-TXN-001",
+  "import_batch_id": "00000000-0000-4000-8000-000000000013",
+  "money": {
+    "amount": "1250.00",
+    "currency": "INR"
+  },
+  "narration": "SYNTHETIC NOVA TECHNOLOGIES PVT LTD INVOICE",
+  "normalization_status": "NORMALIZED",
+  "provenance": [
+    {
+      "bounding_box": null,
+      "confidence": "0.98",
+      "document_version": "obj-v1",
+      "evidence_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "extraction_version": "synthetic-v1",
+      "human_correction_id": null,
+      "page_number": null,
+      "source_document_id": "00000000-0000-4000-8000-000000000010",
+      "source_field": "invoice_total",
+      "source_row": 2
+    }
+  ],
+  "reference": "SYNTH-INV-001",
+  "schema_version": "1.0",
+  "source_row_number": 2,
+  "tenant_context": {
+    "legal_entity_id": "00000000-0000-4000-8000-000000000003",
+    "organization_id": "00000000-0000-4000-8000-000000000002",
+    "tenant_id": "00000000-0000-4000-8000-000000000001"
+  },
+  "transaction_id": "00000000-0000-4000-8000-000000000012",
+  "value_date": "2026-01-14"
+}

@@ -1,0 +1,195 @@
+{
+  "$defs": {
+    "CorrelationMetadata": {
+      "additionalProperties": false,
+      "description": "Request starts an interaction; correlation spans it; causation identifies its parent.",
+      "properties": {
+        "causation_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Causation Id"
+        },
+        "correlation_id": {
+          "format": "uuid",
+          "title": "Correlation Id",
+          "type": "string"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "request_id",
+        "correlation_id"
+      ],
+      "title": "CorrelationMetadata",
+      "type": "object"
+    },
+    "EntityTenantContext": {
+      "additionalProperties": false,
+      "properties": {
+        "legal_entity_id": {
+          "format": "uuid",
+          "title": "Legal Entity Id",
+          "type": "string"
+        },
+        "organization_id": {
+          "format": "uuid",
+          "title": "Organization Id",
+          "type": "string"
+        },
+        "tenant_id": {
+          "format": "uuid",
+          "title": "Tenant Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tenant_id",
+        "organization_id",
+        "legal_entity_id"
+      ],
+      "title": "EntityTenantContext",
+      "type": "object"
+    },
+    "ResourceReference": {
+      "additionalProperties": false,
+      "properties": {
+        "resource_id": {
+          "format": "uuid",
+          "title": "Resource Id",
+          "type": "string"
+        },
+        "resource_type": {
+          "minLength": 1,
+          "title": "Resource Type",
+          "type": "string"
+        },
+        "resource_version": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Resource Version"
+        }
+      },
+      "required": [
+        "resource_type",
+        "resource_id"
+      ],
+      "title": "ResourceReference",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "correlation": {
+      "$ref": "#/$defs/CorrelationMetadata"
+    },
+    "decided_at": {
+      "format": "date-time",
+      "title": "Decided At",
+      "type": "string"
+    },
+    "decision_id": {
+      "format": "uuid",
+      "title": "Decision Id",
+      "type": "string"
+    },
+    "evaluated_inputs": {
+      "additionalProperties": true,
+      "title": "Evaluated Inputs",
+      "type": "object"
+    },
+    "evaluator_version": {
+      "minLength": 1,
+      "title": "Evaluator Version",
+      "type": "string"
+    },
+    "explanation": {
+      "minLength": 1,
+      "title": "Explanation",
+      "type": "string"
+    },
+    "matched_rule_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Matched Rule Ids",
+      "type": "array"
+    },
+    "outcome": {
+      "enum": [
+        "AUTO_ELIGIBLE",
+        "REVIEW_REQUIRED",
+        "ESCALATED",
+        "BLOCKED"
+      ],
+      "title": "Outcome",
+      "type": "string"
+    },
+    "policy_set_id": {
+      "format": "uuid",
+      "title": "Policy Set Id",
+      "type": "string"
+    },
+    "policy_set_version": {
+      "minLength": 1,
+      "title": "Policy Set Version",
+      "type": "string"
+    },
+    "reason_codes": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Reason Codes",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "subject": {
+      "$ref": "#/$defs/ResourceReference"
+    },
+    "tenant_context": {
+      "$ref": "#/$defs/EntityTenantContext"
+    }
+  },
+  "required": [
+    "schema_version",
+    "decision_id",
+    "tenant_context",
+    "subject",
+    "policy_set_id",
+    "policy_set_version",
+    "outcome",
+    "evaluated_inputs",
+    "matched_rule_ids",
+    "reason_codes",
+    "explanation",
+    "evaluator_version",
+    "decided_at",
+    "correlation"
+  ],
+  "title": "PolicyDecision",
+  "type": "object"
+}

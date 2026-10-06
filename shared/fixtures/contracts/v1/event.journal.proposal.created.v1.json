@@ -1,0 +1,126 @@
+{
+  "causation_id": null,
+  "correlation_id": "00000000-0000-4000-8000-000000000005",
+  "event_id": "00000000-0000-4000-8000-000000000608",
+  "event_type": "journal.proposal.created.v1",
+  "occurred_at": "2026-01-15T05:00:00Z",
+  "payload": {
+    "proposal": {
+      "accounting_validation": "NOT_VALIDATED",
+      "approval_decision": null,
+      "confidence": "0.88",
+      "correlation": {
+        "causation_id": null,
+        "correlation_id": "00000000-0000-4000-8000-000000000005",
+        "request_id": "00000000-0000-4000-8000-000000000004"
+      },
+      "currency": "INR",
+      "explanation": "Synthetic balanced-looking proposal; not posted and not validated by Role 2.",
+      "lines": [
+        {
+          "account_reference": "SYNTH-EXPENSE",
+          "amount": {
+            "amount": "1250.00",
+            "currency": "INR"
+          },
+          "description": "Synthetic expense",
+          "direction": "DEBIT",
+          "line_id": "00000000-0000-4000-8000-000000000171",
+          "source_evidence": [
+            {
+              "bounding_box": null,
+              "confidence": "0.98",
+              "document_version": "obj-v1",
+              "evidence_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "extraction_version": "synthetic-v1",
+              "human_correction_id": null,
+              "page_number": 1,
+              "source_document_id": "00000000-0000-4000-8000-000000000010",
+              "source_field": "invoice_total",
+              "source_row": null
+            }
+          ]
+        },
+        {
+          "account_reference": "SYNTH-PAYABLE",
+          "amount": {
+            "amount": "1250.00",
+            "currency": "INR"
+          },
+          "description": "Synthetic payable",
+          "direction": "CREDIT",
+          "line_id": "00000000-0000-4000-8000-000000000172",
+          "source_evidence": [
+            {
+              "bounding_box": null,
+              "confidence": "0.98",
+              "document_version": "obj-v1",
+              "evidence_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "extraction_version": "synthetic-v1",
+              "human_correction_id": null,
+              "page_number": 1,
+              "source_document_id": "00000000-0000-4000-8000-000000000010",
+              "source_field": "invoice_total",
+              "source_row": null
+            }
+          ]
+        }
+      ],
+      "policy_decision": null,
+      "posting_status": "UNPOSTED",
+      "producer": {
+        "algorithm_version": null,
+        "model_name": "fixture-model",
+        "model_version": "synthetic-v1",
+        "name": "synthetic-extraction-agent",
+        "producer_type": "MODEL",
+        "prompt_template_version": "invoice-v1",
+        "rule_or_policy_version": null,
+        "version": "1.0.0"
+      },
+      "proposal_id": "00000000-0000-4000-8000-000000000017",
+      "proposal_version": 1,
+      "proposed_journal_date": "2026-01-15",
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "bounding_box": null,
+          "confidence": "0.98",
+          "document_version": "obj-v1",
+          "evidence_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "extraction_version": "synthetic-v1",
+          "human_correction_id": null,
+          "page_number": 1,
+          "source_document_id": "00000000-0000-4000-8000-000000000010",
+          "source_field": "invoice_total",
+          "source_row": null
+        }
+      ],
+      "tenant_context": {
+        "legal_entity_id": "00000000-0000-4000-8000-000000000003",
+        "organization_id": "00000000-0000-4000-8000-000000000002",
+        "tenant_id": "00000000-0000-4000-8000-000000000001"
+      }
+    }
+  },
+  "payload_reference": null,
+  "producer": {
+    "algorithm_version": null,
+    "model_name": null,
+    "model_version": null,
+    "name": "ledgerai-contract-fixture",
+    "producer_type": "SERVICE",
+    "prompt_template_version": null,
+    "rule_or_policy_version": null,
+    "version": "1.0.0"
+  },
+  "schema_version": "1.0",
+  "tenant_context": {
+    "legal_entity_id": "00000000-0000-4000-8000-000000000003",
+    "organization_id": "00000000-0000-4000-8000-000000000002",
+    "tenant_id": "00000000-0000-4000-8000-000000000001"
+  },
+  "trace_context": {
+    "traceparent": "00-00000000000000000000000000000001-0000000000000001-01"
+  }
+}

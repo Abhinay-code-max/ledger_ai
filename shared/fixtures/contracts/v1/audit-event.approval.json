@@ -1,0 +1,49 @@
+{
+  "action": "APPROVAL_DECIDED",
+  "actor": {
+    "actor_id": "fixture.reviewer@nova.invalid",
+    "actor_type": "HUMAN"
+  },
+  "after_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "audit_event_id": "00000000-0000-4000-8000-000000000025",
+  "before_hash": null,
+  "client_metadata": null,
+  "correlation": {
+    "causation_id": null,
+    "correlation_id": "00000000-0000-4000-8000-000000000005",
+    "request_id": "00000000-0000-4000-8000-000000000004"
+  },
+  "occurred_at": "2026-01-15T05:00:00Z",
+  "outcome": "SUCCEEDED",
+  "policy_versions": [
+    "2026.01"
+  ],
+  "producer_versions": [
+    {
+      "algorithm_version": null,
+      "model_name": null,
+      "model_version": null,
+      "name": "ledgerai-contract-fixture",
+      "producer_type": "SERVICE",
+      "prompt_template_version": null,
+      "rule_or_policy_version": null,
+      "version": "1.0.0"
+    }
+  ],
+  "resource_id": "00000000-0000-4000-8000-000000000017",
+  "resource_type": "journal_proposal",
+  "resource_version": "1",
+  "rule_versions": [
+    "REQUESTER_CANNOT_APPROVE"
+  ],
+  "schema_version": "1.0",
+  "schema_versions": [
+    "1.0"
+  ],
+  "source_ip": null,
+  "tenant_context": {
+    "legal_entity_id": "00000000-0000-4000-8000-000000000003",
+    "organization_id": "00000000-0000-4000-8000-000000000002",
+    "tenant_id": "00000000-0000-4000-8000-000000000001"
+  }
+}
