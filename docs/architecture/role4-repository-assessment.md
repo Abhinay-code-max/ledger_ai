@@ -1,6 +1,23 @@
-# Role 4 repository assessment — Phase 0
+# Role 4 repository assessment
 
-Status: verified on 2026-10-05 before Phase 0 edits.
+Status: updated 2026-10-06 for Phase 1.
+
+## Current repository facts
+
+- The repository is published at `Abhinay-code-max/ledger_ai`.
+- `main` remains the empty bootstrap branch. Phase 0 and Phase 1 live only on
+  `role4/backend-orchestration`.
+- Phase 1 started from published commit `8b4e648542fc9edee3e51df3875ccf59851ce06f` with a clean
+  worktree and identical local/remote branch tips.
+- No `AGENTS.md` or additional contributor instructions exist.
+- Phase 0's 806 tests passed before Phase 1 edits.
+- Role 4 owns the new backend package, migrations, backend tests, documentation, dependency lock,
+  and backend CI changes. Phase 0 contracts remain a separate import boundary.
+
+## Historical Phase 0 discovery
+
+The following facts describe the empty pre-publication workspace on 2026-10-05 and are retained
+for traceability.
 
 ## Verified facts
 
