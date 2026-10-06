@@ -1,4 +1,4 @@
-name: contracts
+name: backend
 
 permissions:
   contents: read
@@ -7,39 +7,98 @@ on:
   pull_request:
     paths:
       - "src/ledgerai_contracts/**"
+      - "src/ledgerai_backend/**"
+      - "migrations/**"
       - "shared/schemas/**"
       - "shared/fixtures/**"
+      - "shared/openapi/**"
       - "tests/**"
       - "tools/**"
       - "docs/architecture/**"
       - "docs/integration/**"
+      - "docs/backend/**"
+      - "docs/adr/**"
+      - "README.md"
+      - ".env.example"
+      - "alembic.ini"
       - "pyproject.toml"
+      - "uv.lock"
+      - "compose.yaml"
       - ".github/workflows/contracts.yml"
   push:
+    branches:
+      - main
+      - role4/backend-orchestration
     paths:
       - "src/ledgerai_contracts/**"
+      - "src/ledgerai_backend/**"
+      - "migrations/**"
       - "shared/schemas/**"
       - "shared/fixtures/**"
+      - "shared/openapi/**"
       - "tests/**"
       - "tools/**"
       - "docs/architecture/**"
       - "docs/integration/**"
+      - "docs/backend/**"
+      - "docs/adr/**"
+      - "README.md"
+      - ".env.example"
+      - "alembic.ini"
       - "pyproject.toml"
+      - "uv.lock"
+      - "compose.yaml"
       - ".github/workflows/contracts.yml"
 
 jobs:
   validate:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: ledgerai
+          POSTGRES_USER: ledgerai_migrator
+          POSTGRES_PASSWORD: ci-migration-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ledgerai_migrator -d ledgerai"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      LEDGERAI_ENVIRONMENT: test
+      LEDGERAI_MIGRATION_DSN: postgresql+psycopg://ledgerai_migrator:ci-migration-only@127.0.0.1:5432/ledgerai
+      LEDGERAI_DATABASE_DSN: postgresql+psycopg://ledgerai_runtime:ci-runtime-only@127.0.0.1:5432/ledgerai
+      LEDGERAI_TEST_ADMIN_DSN: postgresql://ledgerai_migrator:ci-migration-only@127.0.0.1:5432/ledgerai
+      LEDGERAI_TEST_RUNTIME_DSN: postgresql://ledgerai_runtime:ci-runtime-only@127.0.0.1:5432/ledgerai
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
         with:
-          python-version: "3.11"
-          cache: pip
-      - run: python -m pip install -e ".[dev]"
-      - run: ruff format --check .
-      - run: ruff check .
-      - run: mypy src tests tools
-      - run: python tools/generate_contract_artifacts.py --check
-      - run: pytest
-      - run: python -m compileall -q src tools tests
+          version: "0.11.27"
+          enable-cache: true
+      - run: uv python install 3.11
+      - run: uv sync --all-extras --frozen --python 3.11
+      - name: Create non-owner runtime role
+        run: >-
+          docker exec ${{ job.services.postgres.id }}
+          psql -v ON_ERROR_STOP=1 -U ledgerai_migrator -d ledgerai
+          -c "CREATE ROLE ledgerai_runtime LOGIN PASSWORD 'ci-runtime-only'
+          NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS"
+      - run: uv run --frozen alembic upgrade head
+      - run: uv run --frozen alembic upgrade head
+      - run: uv run --frozen alembic current
+      - run: uv run --frozen alembic heads
+      - run: uv run --frozen ledgerai-seed
+      - run: uv run --frozen ledgerai-seed
+      - run: uv run --frozen ruff format --check .
+      - run: uv run --frozen ruff check .
+      - run: uv run --frozen mypy src tests tools
+      - run: uv run --frozen pip-audit --local --skip-editable --progress-spinner off
+      - run: uv run --frozen pip-licenses --summary
+      - run: uv run --frozen python tools/generate_contract_artifacts.py --check
+      - run: uv run --frozen python tools/generate_openapi.py --check
+      - run: uv run --frozen pytest
+      - run: uv run --frozen python -m compileall -q src tools tests
