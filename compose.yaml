@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ledgerai
+      POSTGRES_USER: ledgerai_migrator
+      POSTGRES_PASSWORD: local-migration-only
+      LEDGERAI_RUNTIME_PASSWORD: local-runtime-only
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - ledgerai-postgres:/var/lib/postgresql/data
+      - ./tools/postgres-init.sh:/docker-entrypoint-initdb.d/10-ledgerai-roles.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ledgerai_migrator -d ledgerai"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  ledgerai-postgres:
