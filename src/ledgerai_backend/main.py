@@ -38,6 +38,15 @@ from ledgerai_backend.database.engine import create_engine
 from ledgerai_backend.database.session import create_session_factory
 from ledgerai_backend.health.routes import router as health_router
 from ledgerai_backend.ingestion.routes import router as ingestion_router
+from ledgerai_backend.integration.adapters import (
+    AdapterSecurity,
+    Role1Adapter,
+    Role2Adapter,
+    Role3Adapter,
+    Role6Adapter,
+    SignedServiceTokenProvider,
+)
+from ledgerai_backend.integration.routes import router as integration_router
 from ledgerai_backend.ports import JobQueuePort, MalwareScannerPort, ObjectStoragePort
 from ledgerai_backend.tenancy.routes import router as tenancy_router
 
@@ -65,6 +74,8 @@ def create_app(
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         yield
+        for adapter in getattr(app.state, "role_adapters", {}).values():
+            await adapter.aclose()
         if owns_engine and app.state.engine is not None:
             await app.state.engine.dispose()
 
@@ -96,6 +107,31 @@ def create_app(
         app.state.job_queue = CeleryJobQueue(settings)
     else:
         app.state.job_queue = None
+    app.state.role_adapters = {}
+    if settings.service_token_secret:
+        token_provider = SignedServiceTokenProvider(
+            issuer=settings.service_token_issuer,
+            subject=settings.service_name,
+            secret=settings.service_token_secret.get_secret_value(),
+        )
+        adapter_types = {
+            "role1": (settings.role1_base_url, Role1Adapter),
+            "role2": (settings.role2_base_url, Role2Adapter),
+            "role3": (settings.role3_base_url, Role3Adapter),
+            "role6": (settings.role6_base_url, Role6Adapter),
+        }
+        for role, (base_url, adapter_type) in adapter_types.items():
+            if base_url:
+                app.state.role_adapters[role] = adapter_type(
+                    AdapterSecurity(
+                        base_url=base_url,
+                        audience=f"ledgerai-{role}",
+                        environment=settings.environment,
+                        total_timeout=settings.adapter_total_timeout_seconds,
+                        maximum_response_bytes=settings.adapter_max_response_bytes,
+                    ),
+                    token_provider,
+                )
     if identity_provider is not None:
         app.state.identity_provider = identity_provider
     elif (
@@ -169,6 +205,7 @@ def create_app(
 
     app.include_router(tenancy_router, prefix="/api/v1", tags=["workspace"])
     app.include_router(ingestion_router, prefix="/api/v1", tags=["ingestion"])
+    app.include_router(integration_router, prefix="/api/v1", tags=["integration", "review"])
     return app
 
 

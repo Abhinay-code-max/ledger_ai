@@ -797,6 +797,7 @@ dependencies = [
     { name = "boto3" },
     { name = "celery", extra = ["redis"] },
     { name = "fastapi" },
+    { name = "httpx" },
     { name = "opentelemetry-api" },
     { name = "psycopg", extra = ["binary"] },
     { name = "pydantic" },
@@ -810,7 +811,6 @@ dependencies = [
 
 [package.optional-dependencies]
 dev = [
-    { name = "httpx" },
     { name = "jsonschema" },
     { name = "mypy" },
     { name = "pip-audit" },
@@ -826,7 +826,7 @@ requires-dist = [
     { name = "boto3", specifier = ">=1.40,<2" },
     { name = "celery", extras = ["redis"], specifier = ">=5.5,<6" },
     { name = "fastapi", specifier = ">=0.115,<1" },
-    { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.28,<1" },
+    { name = "httpx", specifier = ">=0.28,<1" },
     { name = "jsonschema", marker = "extra == 'dev'", specifier = ">=4.23,<5" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.15,<2" },
     { name = "opentelemetry-api", specifier = ">=1.31,<2" },

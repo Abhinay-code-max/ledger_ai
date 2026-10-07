@@ -54,6 +54,14 @@ class Settings(BaseSettings):
     csv_max_columns: int = Field(default=32, ge=1, le=128)
     csv_max_cell_chars: int = Field(default=4_096, ge=1, le=65_536)
     idempotency_ttl_seconds: int = Field(default=86_400, ge=300, le=2_592_000)
+    role1_base_url: str | None = None
+    role2_base_url: str | None = None
+    role3_base_url: str | None = None
+    role6_base_url: str | None = None
+    service_token_secret: SecretStr | None = Field(default=None, repr=False)
+    service_token_issuer: str = "ledgerai-backend"
+    adapter_max_response_bytes: int = Field(default=1_048_576, ge=1_024, le=10_485_760)
+    adapter_total_timeout_seconds: float = Field(default=20.0, gt=0, le=120)
 
     @model_validator(mode="after")
     def validate_security(self) -> Self:
@@ -81,6 +89,11 @@ class Settings(BaseSettings):
                 ("storage_secret_key", self.storage_secret_key),
                 ("scanner_adapter", self.scanner_adapter),
                 ("redis_url", self.redis_url),
+                ("role1_base_url", self.role1_base_url),
+                ("role2_base_url", self.role2_base_url),
+                ("role3_base_url", self.role3_base_url),
+                ("role6_base_url", self.role6_base_url),
+                ("service_token_secret", self.service_token_secret),
             ):
                 if not value:
                     missing.append(name)
