@@ -73,6 +73,10 @@ jobs:
       LEDGERAI_DATABASE_DSN: postgresql+psycopg://ledgerai_runtime:ci-runtime-only@127.0.0.1:5432/ledgerai
       LEDGERAI_TEST_ADMIN_DSN: postgresql://ledgerai_migrator:ci-migration-only@127.0.0.1:5432/ledgerai
       LEDGERAI_TEST_RUNTIME_DSN: postgresql://ledgerai_runtime:ci-runtime-only@127.0.0.1:5432/ledgerai
+      LEDGERAI_TEST_REDIS_URL: redis://127.0.0.1:6379/0
+      LEDGERAI_TEST_STORAGE_ENDPOINT_URL: http://127.0.0.1:9000
+      LEDGERAI_TEST_STORAGE_ACCESS_KEY: ledgerai-minio-ci
+      LEDGERAI_TEST_STORAGE_SECRET_KEY: ci-storage-only-change-me
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
@@ -81,6 +85,24 @@ jobs:
           enable-cache: true
       - run: uv python install 3.11
       - run: uv sync --all-extras --frozen --python 3.11
+      - name: Start Redis and private MinIO
+        run: |
+          docker run -d --name ledgerai-redis -p 6379:6379 redis:8-alpine redis-server --save "" --appendonly no
+          GOBIN="$RUNNER_TEMP" go install github.com/minio/minio@RELEASE.2025-04-22T22-12-26Z
+          mkdir -p "$RUNNER_TEMP/minio-data"
+          MINIO_ROOT_USER=ledgerai-minio-ci \
+          MINIO_ROOT_PASSWORD=ci-storage-only-change-me \
+          MINIO_KMS_SECRET_KEY=ledgerai-ci-key:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY= \
+          MINIO_KMS_AUTO_ENCRYPTION=on \
+            "$RUNNER_TEMP/minio" server "$RUNNER_TEMP/minio-data" --address 127.0.0.1:9000 \
+            >"$RUNNER_TEMP/minio.log" 2>&1 &
+          for attempt in {1..30}; do
+            curl --fail --silent http://127.0.0.1:9000/minio/health/live && break
+            if [ "$attempt" = 30 ]; then exit 1; fi
+            sleep 2
+          done
+          docker exec ledgerai-redis redis-cli ping | grep PONG
+          uv run --frozen python -c "import boto3; c=boto3.client('s3',endpoint_url='http://127.0.0.1:9000',aws_access_key_id='ledgerai-minio-ci',aws_secret_access_key='ci-storage-only-change-me',region_name='us-east-1'); c.create_bucket(Bucket='ledgerai-evidence'); c.put_bucket_versioning(Bucket='ledgerai-evidence',VersioningConfiguration={'Status':'Enabled'})"
       - name: Create non-owner runtime role
         run: >-
           docker exec ${{ job.services.postgres.id }}

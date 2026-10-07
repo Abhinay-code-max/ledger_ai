@@ -1,16 +1,17 @@
 # LedgerAI backend and shared contracts
 
-Phase 1 adds a secure FastAPI and PostgreSQL foundation around the independently importable Phase
-0 contract package. It implements external JWT verification, membership-derived tenant context,
-scoped RBAC, PostgreSQL row-level security, deterministic NOVA data, and foundational workspace
-reads. It does not implement document ingestion, jobs, events, object storage, or agent workflows.
+Phase 2 adds immutable quarantined document intake, private S3-compatible storage, bounded bank CSV
+normalization, durable HTTP idempotency, processing-job state, a transactional outbox, consumer
+inbox deduplication, and Celery/Redis dispatch behind infrastructure ports. Tenant context still
+comes from Phase 1 identity and membership, and every new business table is protected by forced
+PostgreSQL row-level security.
 
 Canonical Pydantic models live in `src/ledgerai_contracts/v1`, generated JSON Schemas
 in `shared/schemas/v1`, and synthetic examples in `shared/fixtures/contracts/v1`.
 
 ```shell
 uv sync --all-extras --frozen
-docker compose up -d postgres
+docker compose up -d postgres redis minio minio-init
 uv run alembic upgrade head
 uv run ledgerai-seed
 uv run uvicorn ledgerai_backend.main:app
@@ -22,5 +23,5 @@ diff, then run `uv sync --all-extras --frozen`. Python 3.11 is the minimum; the 
 supported interpreters. Never commit `.env`; copy `.env.example` and replace only local values.
 
 See `docs/integration/cross-role-contracts-v1.md` for team usage and
-`docs/backend/phase1.md` for architecture, setup, configuration, migrations, RLS, permissions,
-testing, recovery, and independent review instructions.
+`docs/backend/phase1.md` and `docs/backend/phase2.md` for architecture, setup, configuration,
+migrations, RLS, ingestion, reliability, recovery, and independent review instructions.

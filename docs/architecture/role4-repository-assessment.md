@@ -1,6 +1,6 @@
 # Role 4 repository assessment
 
-Status: updated 2026-10-06 for Phase 1.
+Status: updated 2026-10-07 for Phase 2.
 
 ## Current repository facts
 
@@ -13,6 +13,9 @@ Status: updated 2026-10-06 for Phase 1.
 - Phase 0's 806 tests passed before Phase 1 edits.
 - Role 4 owns the new backend package, migrations, backend tests, documentation, dependency lock,
   and backend CI changes. Phase 0 contracts remain a separate import boundary.
+- Phase 2 adds immutable quarantine storage, exact CSV normalization, durable idempotency, jobs,
+  outbox/inbox reliability, and replaceable queue/cross-role ports without implementing another
+  role's business logic.
 
 ## Historical Phase 0 discovery
 
