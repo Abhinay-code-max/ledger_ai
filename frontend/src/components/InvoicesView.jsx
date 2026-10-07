@@ -11,7 +11,7 @@ import {
   DollarSign
 } from 'lucide-react';
 
-export default function InvoicesView({ invoices, currency }) {
+export default function InvoicesView({ invoices, currency, currentUser, requirePermission }) {
   const [invoiceList, setInvoiceList] = useState(invoices);
   const [toastMsg, setToastMsg] = useState(null);
 
@@ -21,6 +21,16 @@ export default function InvoicesView({ invoices, currency }) {
   };
 
   const handleSendReminder = (inv) => {
+    if (requirePermission) {
+      const allowed = requirePermission(
+        'canDispatchInvoices',
+        `Send Payment Reminder for ${inv.id}`,
+        'accountant',
+        'Auditor accounts possess read-only inspection access and cannot dispatch external client communications.'
+      );
+      if (!allowed) return;
+    }
+
     showToast(`Dispatched payment reminder email & SMS link to ${inv.client}`);
   };
 

@@ -16,7 +16,9 @@ import {
 export default function TransactionsView({
   transactions,
   setTransactions,
-  currency
+  currency,
+  currentUser,
+  requirePermission
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAccount, setSelectedAccount] = useState('ALL');
@@ -68,6 +70,16 @@ export default function TransactionsView({
   };
 
   const handleAcceptSuggestion = (txn) => {
+    if (requirePermission) {
+      const allowed = requirePermission(
+        'canEdit',
+        `Classify Transaction ${txn.id}`,
+        'accountant',
+        'Auditor accounts possess read-only inspection access and cannot modify transaction classifications.'
+      );
+      if (!allowed) return;
+    }
+
     setTransactions((prev) =>
       prev.map((t) =>
         t.id === txn.id
@@ -85,6 +97,16 @@ export default function TransactionsView({
   };
 
   const handleBatchAccept = () => {
+    if (requirePermission) {
+      const allowed = requirePermission(
+        'canEdit',
+        'Batch Transaction Categorization',
+        'accountant',
+        'Auditor accounts possess read-only inspection access and cannot modify transaction classifications.'
+      );
+      if (!allowed) return;
+    }
+
     const targetIds = selectedTxnIds.size > 0 ? selectedTxnIds : new Set(filtered.filter(t => t.aiSuggested).map(t => t.id));
     setTransactions((prev) =>
       prev.map((t) =>

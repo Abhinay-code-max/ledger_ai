@@ -14,7 +14,8 @@ import {
   FileText,
   AlertTriangle,
   Building2,
-  ChevronRight
+  ChevronRight,
+  TrendingUp
 } from 'lucide-react';
 
 export default function LandingPageView({ onEnterApp }) {

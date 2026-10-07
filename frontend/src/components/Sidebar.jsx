@@ -14,8 +14,12 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  Building2
+  Building2,
+  Home,
+  LogOut,
+  ShieldCheck
 } from 'lucide-react';
+import { DEMO_USERS } from '../data/authUsers';
 
 export default function Sidebar({
   activeTab,
@@ -23,7 +27,11 @@ export default function Sidebar({
   isCollapsed,
   setIsCollapsed,
   needsAttentionCount,
-  uncategorizedCount
+  uncategorizedCount,
+  onNavigateHome,
+  currentUser,
+  onSwitchRole,
+  onLogout
 }) {
   const mainNavItems = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -40,9 +48,15 @@ export default function Sidebar({
   const secondaryNavItems = [
     { id: 'intelligence', label: 'Ledger Intelligence', icon: Sparkles },
     { id: 'integrations', label: 'Integrations', icon: Blocks },
-    { id: 'team', label: 'Team', icon: Users },
+    { id: 'team', label: 'Team & RBAC', icon: Users },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
+
+  const roleColorMap = {
+    cfo: 'var(--navy-800)',
+    accountant: 'var(--teal-600)',
+    auditor: '#D97706'
+  };
 
   return (
     <aside
@@ -118,6 +132,8 @@ export default function Sidebar({
               color: 'var(--text-light-muted)',
               padding: '4px',
               borderRadius: '4px',
+              background: 'none',
+              border: 'none',
               cursor: 'pointer'
             }}
             title="Collapse sidebar"
@@ -147,7 +163,7 @@ export default function Sidebar({
             <Building2 size={15} color="var(--teal-400)" />
             <div style={{ overflow: 'hidden' }}>
               <div style={{ fontWeight: '600', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
-                Acme Technologies
+                {currentUser?.company || 'Acme Technologies'}
               </div>
               <div style={{ fontSize: '10px', color: 'var(--text-light-muted)' }}>
                 FY 2026 • Books Open
@@ -162,6 +178,35 @@ export default function Sidebar({
 
       {/* Main Navigation */}
       <div style={{ flex: 1, overflowY: 'auto', padding: isCollapsed ? '10px 8px' : '10px 12px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+        {/* Home Page Link */}
+        <button
+          onClick={onNavigateHome}
+          style={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: isCollapsed ? 'center' : 'flex-start',
+            gap: '12px',
+            padding: isCollapsed ? '10px 0' : '9px 12px',
+            borderRadius: 'var(--radius-md)',
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+            color: 'rgba(255, 255, 255, 0.9)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            fontSize: '13px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            marginBottom: '6px'
+          }}
+          title={isCollapsed ? 'Return to Home Page' : undefined}
+        >
+          <Home size={18} color="var(--teal-400)" />
+          {!isCollapsed && (
+            <span style={{ flex: 1, textAlign: 'left' }}>
+              Public Home Page
+            </span>
+          )}
+        </button>
+
         <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-light-muted)', padding: '6px 10px 2px', display: isCollapsed ? 'none' : 'block' }}>
           Workspace
         </div>
@@ -281,6 +326,8 @@ export default function Sidebar({
               color: 'var(--text-light-muted)',
               padding: '6px',
               borderRadius: '4px',
+              background: 'none',
+              border: 'none',
               cursor: 'pointer'
             }}
             title="Expand sidebar"
@@ -290,45 +337,64 @@ export default function Sidebar({
         </div>
       )}
 
-      {/* User Footer Profile */}
+      {/* User Footer Profile & Active Role */}
       <div
         style={{
           padding: isCollapsed ? '16px 8px' : '14px 16px',
           borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-          backgroundColor: 'rgba(0, 0, 0, 0.15)',
+          backgroundColor: 'rgba(0, 0, 0, 0.18)',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: isCollapsed ? 'center' : 'flex-start',
+          justifyContent: isCollapsed ? 'center' : 'space-between',
           gap: '10px'
         }}
       >
-        <div
-          style={{
-            width: '32px',
-            height: '32px',
-            borderRadius: '50%',
-            backgroundColor: 'var(--teal-600)',
-            color: '#FFFFFF',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '13px',
-            fontWeight: '700',
-            flexShrink: 0
-          }}
-        >
-          AV
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', overflow: 'hidden' }}>
+          <div
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              backgroundColor: roleColorMap[currentUser?.role] || 'var(--teal-600)',
+              color: '#FFFFFF',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '12px',
+              fontWeight: '700',
+              flexShrink: 0
+            }}
+          >
+            {currentUser?.avatar || 'AV'}
+          </div>
+
+          {!isCollapsed && (
+            <div style={{ overflow: 'hidden' }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#FFFFFF', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+                {currentUser?.name || 'Alex Vance'}
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--teal-300)' }}>
+                {currentUser?.roleBadge || 'CFO (Admin)'}
+              </div>
+            </div>
+          )}
         </div>
 
         {!isCollapsed && (
-          <div style={{ overflow: 'hidden' }}>
-            <div style={{ fontSize: '13px', fontWeight: '600', color: '#FFFFFF' }}>
-              Alex Vance
-            </div>
-            <div style={{ fontSize: '11px', color: 'var(--text-light-muted)' }}>
-              Finance Lead (Owner)
-            </div>
-          </div>
+          <button
+            onClick={onLogout}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-light-muted)',
+              padding: '6px',
+              cursor: 'pointer',
+              borderRadius: '4px'
+            }}
+            title="Sign Out"
+          >
+            <LogOut size={16} />
+          </button>
         )}
       </div>
     </aside>

@@ -26,7 +26,9 @@ export default function DashboardView({
   setNeedsAttention,
   setActiveTab,
   setIsAiOpen,
-  connectedAccounts
+  connectedAccounts,
+  currentUser,
+  requirePermission
 }) {
   const [selectedAttentionItem, setSelectedAttentionItem] = useState(null);
   const [resolvedIds, setResolvedIds] = useState(new Set());
@@ -39,6 +41,28 @@ export default function DashboardView({
 
   const handleResolveAction = (e, item) => {
     e.stopPropagation();
+
+    // Enforce Institutional Role-Based Access Control
+    if (requirePermission) {
+      if (item.id === 'att-3') {
+        const allowed = requirePermission(
+          'canApprove',
+          'Reconciliation Discrepancy Write-Off',
+          'cfo',
+          'Under institutional controls, only the Chief Financial Officer (Alex Vance) can approve and write off reconciliation variances.'
+        );
+        if (!allowed) return;
+      } else {
+        const allowed = requirePermission(
+          'canEdit',
+          item.title,
+          'accountant',
+          'Auditor accounts possess read-only inspection status and cannot execute ledger resolutions.'
+        );
+        if (!allowed) return;
+      }
+    }
+
     const updated = new Set(resolvedIds);
     if (updated.has(item.id)) {
       updated.delete(item.id);

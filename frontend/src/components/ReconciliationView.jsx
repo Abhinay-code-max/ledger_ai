@@ -15,7 +15,9 @@ import {
 
 export default function ReconciliationView({
   reconciliationData,
-  currency
+  currency,
+  currentUser,
+  requirePermission
 }) {
   const [bankItems, setBankItems] = useState(reconciliationData.bankRecords);
   const [ledgerItems, setLedgerItems] = useState(reconciliationData.ledgerRecords);
@@ -28,6 +30,16 @@ export default function ReconciliationView({
   };
 
   const handleMatch = (bankId, ledgerId) => {
+    if (requirePermission) {
+      const allowed = requirePermission(
+        'canReconcile',
+        'Match Bank Record with Ledger',
+        'accountant',
+        'Auditors possess read-only inspection access and cannot match or alter reconciliation records.'
+      );
+      if (!allowed) return;
+    }
+
     setBankItems((prev) =>
       prev.map((b) => (b.id === bankId ? { ...b, reconciled: true, matchedLedgerId: ledgerId } : b))
     );
@@ -38,6 +50,16 @@ export default function ReconciliationView({
   };
 
   const handleAutoReconcileAll = () => {
+    if (requirePermission) {
+      const allowed = requirePermission(
+        'canReconcile',
+        'Auto-Reconcile High Confidence Pairs',
+        'accountant',
+        'Auditors possess read-only inspection access and cannot execute reconciliation write updates.'
+      );
+      if (!allowed) return;
+    }
+
     setBankItems((prev) =>
       prev.map((b) => (b.matchedLedgerId ? { ...b, reconciled: true } : b))
     );
@@ -48,6 +70,16 @@ export default function ReconciliationView({
   };
 
   const handleCreateVoucher = (bankItem) => {
+    if (requirePermission) {
+      const allowed = requirePermission(
+        'canEdit',
+        'Create Journal Voucher',
+        'accountant',
+        'Auditors possess read-only inspection access and cannot create journal vouchers.'
+      );
+      if (!allowed) return;
+    }
+
     showToast(`Drafted Journal Entry voucher for "${bankItem.description}" (-₹32,450)`);
   };
 
