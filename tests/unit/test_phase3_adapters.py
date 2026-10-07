@@ -1,4 +1,5 @@
 import json
+from typing import Any
 from uuid import UUID, uuid4
 
 import httpx
@@ -32,7 +33,7 @@ def body(*, tenant: EntityTenantContext = TENANT, operation_id: UUID) -> dict[st
     }
 
 
-def adapter(handler: object, **security: object) -> Role2Adapter:
+def adapter(handler: object, **security: Any) -> Role2Adapter:
     client = httpx.AsyncClient(transport=httpx.MockTransport(handler))  # type: ignore[arg-type]
     token = SignedServiceTokenProvider(issuer="test", subject="backend", secret="x" * 32)
     return Role2Adapter(

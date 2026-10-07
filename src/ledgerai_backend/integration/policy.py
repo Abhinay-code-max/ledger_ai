@@ -6,6 +6,7 @@ interprets strings as Python, SQL, templates, regular expressions, or paths.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
@@ -133,7 +134,7 @@ def _compare(actual: Scalar, condition: PolicyCondition) -> bool:
 
 def evaluate_policy(
     inputs: dict[str, Scalar],
-    rules: list[PolicyRuleSpec | dict[str, object]],
+    rules: Sequence[PolicyRuleSpec | dict[str, object]],
     *,
     default_outcome: PolicyOutcome = "REVIEW_REQUIRED",
 ) -> PolicyEvaluation:

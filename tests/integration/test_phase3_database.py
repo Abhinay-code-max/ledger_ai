@@ -1,4 +1,5 @@
 from phase1_postgres_support import ACME_TENANT
+from psycopg import Connection
 
 PHASE3_TABLES = {
     "document_extractions",
@@ -19,7 +20,9 @@ PHASE3_TABLES = {
 IMMUTABLE_TABLES = PHASE3_TABLES - {"exceptions", "policy_sets", "approval_requests"}
 
 
-def test_phase3_tables_have_forced_rls(admin_connection) -> None:
+def test_phase3_tables_have_forced_rls(
+    admin_connection: Connection[tuple[object, ...]],
+) -> None:
     rows = admin_connection.execute(
         """SELECT relname, relrowsecurity, relforcerowsecurity
            FROM pg_class WHERE relname = ANY(%s)""",
@@ -29,7 +32,9 @@ def test_phase3_tables_have_forced_rls(admin_connection) -> None:
     assert all(row[1] and row[2] for row in rows)
 
 
-def test_runtime_can_select_only_inside_tenant_context(runtime_connection) -> None:
+def test_runtime_can_select_only_inside_tenant_context(
+    runtime_connection: Connection[tuple[object, ...]],
+) -> None:
     runtime_connection.execute(
         "SELECT set_config('ledgerai.tenant_id', %s, true)", (str(ACME_TENANT),)
     )
@@ -37,7 +42,9 @@ def test_runtime_can_select_only_inside_tenant_context(runtime_connection) -> No
         runtime_connection.execute(f"SELECT count(*) FROM public.{table}").fetchone()
 
 
-def test_immutable_tables_deny_runtime_update_and_delete(admin_connection) -> None:
+def test_immutable_tables_deny_runtime_update_and_delete(
+    admin_connection: Connection[tuple[object, ...]],
+) -> None:
     rows = admin_connection.execute(
         """SELECT table_name, privilege_type FROM information_schema.role_table_grants
            WHERE grantee = 'ledgerai_runtime' AND table_name = ANY(%s)""",
@@ -45,12 +52,14 @@ def test_immutable_tables_deny_runtime_update_and_delete(admin_connection) -> No
     ).fetchall()
     privileges: dict[str, set[str]] = {}
     for table, privilege in rows:
-        privileges.setdefault(table, set()).add(privilege)
+        privileges.setdefault(str(table), set()).add(str(privilege))
     assert set(privileges) == IMMUTABLE_TABLES
     assert all(values == {"SELECT", "INSERT"} for values in privileges.values())
 
 
-def test_posting_and_job_idempotency_indexes_exist(admin_connection) -> None:
+def test_posting_and_job_idempotency_indexes_exist(
+    admin_connection: Connection[tuple[object, ...]],
+) -> None:
     names = {
         row[0]
         for row in admin_connection.execute(

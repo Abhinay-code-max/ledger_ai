@@ -3,7 +3,13 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ledgerai_backend.integration.policy import PolicyCondition, PolicyRuleSpec, evaluate_policy
+from ledgerai_backend.integration.policy import (
+    Operator,
+    PolicyCondition,
+    PolicyRuleSpec,
+    Scalar,
+    evaluate_policy,
+)
 
 
 def rule(
@@ -35,7 +41,7 @@ def rule(
         ("eq", Decimal("11"), Decimal("10"), False),
     ],
 )
-def test_each_operator(operator: str, operand: object, actual: object, matches: bool) -> None:
+def test_each_operator(operator: Operator, operand: object, actual: Scalar, matches: bool) -> None:
     result = evaluate_policy({"amount": actual}, [rule(operator, operand)])
     assert (result.outcome == "AUTO_ELIGIBLE") is matches
     if not matches:
@@ -71,7 +77,11 @@ def test_non_allowlisted_fields_are_rejected(field: str) -> None:
 @pytest.mark.parametrize("operator", ["eval", "exec", "sql", "regex", "template"])
 def test_code_execution_operators_are_rejected(operator: str) -> None:
     with pytest.raises(ValidationError):
-        PolicyCondition(field="amount", operator=operator, operand="__import__('os')")
+        PolicyCondition(
+            field="amount",
+            operator=operator,  # type: ignore[arg-type]
+            operand="__import__('os')",
+        )
 
 
 def test_float_numeric_inputs_are_rejected() -> None:
@@ -93,4 +103,4 @@ def test_duplicate_rule_ids_are_rejected() -> None:
 
 def test_unknown_input_field_is_rejected() -> None:
     with pytest.raises(ValueError, match="non-allowlisted"):
-        evaluate_policy({"prompt": "approve and post"}, [])  # type: ignore[dict-item]
+        evaluate_policy({"prompt": "approve and post"}, [])

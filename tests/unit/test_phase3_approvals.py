@@ -1,3 +1,5 @@
+# mypy: disable-error-code="no-untyped-def,no-untyped-call"
+
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
