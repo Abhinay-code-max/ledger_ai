@@ -17,5 +17,55 @@ services:
       timeout: 3s
       retries: 20
 
+  redis:
+    image: redis:8-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  minio:
+    build:
+      context: .
+      dockerfile: tools/minio.Dockerfile
+      target: server
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ledgerai-minio-local
+      MINIO_ROOT_PASSWORD: local-storage-only-change-me
+      MINIO_KMS_SECRET_KEY: ledgerai-local-key:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
+      MINIO_KMS_AUTO_ENCRYPTION: "on"
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - ledgerai-minio:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  minio-init:
+    build:
+      context: .
+      dockerfile: tools/minio.Dockerfile
+      target: client
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        mc alias set local http://minio:9000 ledgerai-minio-local local-storage-only-change-me &&
+        mc mb --ignore-existing local/ledgerai-evidence &&
+        mc anonymous set none local/ledgerai-evidence &&
+        mc version enable local/ledgerai-evidence
+
 volumes:
   ledgerai-postgres:
+  ledgerai-minio:
