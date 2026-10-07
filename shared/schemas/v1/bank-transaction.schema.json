@@ -1,0 +1,469 @@
+{
+  "$defs": {
+    "BoundingBox": {
+      "additionalProperties": false,
+      "properties": {
+        "height": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "title": "Height"
+        },
+        "page": {
+          "minimum": 1,
+          "title": "Page",
+          "type": "integer"
+        },
+        "width": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "title": "Width"
+        },
+        "x": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "title": "X"
+        },
+        "y": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "title": "Y"
+        }
+      },
+      "required": [
+        "page",
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "title": "BoundingBox",
+      "type": "object"
+    },
+    "CorrelationMetadata": {
+      "additionalProperties": false,
+      "description": "Request starts an interaction; correlation spans it; causation identifies its parent.",
+      "properties": {
+        "causation_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Causation Id"
+        },
+        "correlation_id": {
+          "format": "uuid",
+          "title": "Correlation Id",
+          "type": "string"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "request_id",
+        "correlation_id"
+      ],
+      "title": "CorrelationMetadata",
+      "type": "object"
+    },
+    "Counterparty": {
+      "additionalProperties": false,
+      "properties": {
+        "display_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Display Name"
+        },
+        "masked_account_reference": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Masked Account Reference"
+        }
+      },
+      "title": "Counterparty",
+      "type": "object"
+    },
+    "EntityTenantContext": {
+      "additionalProperties": false,
+      "properties": {
+        "legal_entity_id": {
+          "format": "uuid",
+          "title": "Legal Entity Id",
+          "type": "string"
+        },
+        "organization_id": {
+          "format": "uuid",
+          "title": "Organization Id",
+          "type": "string"
+        },
+        "tenant_id": {
+          "format": "uuid",
+          "title": "Tenant Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tenant_id",
+        "organization_id",
+        "legal_entity_id"
+      ],
+      "title": "EntityTenantContext",
+      "type": "object"
+    },
+    "PositiveMoney": {
+      "additionalProperties": false,
+      "description": "Exact positive money for records whose DEBIT/CREDIT field carries the sign.",
+      "properties": {
+        "amount": {
+          "pattern": "^(?=.*[1-9])(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+          "title": "Amount",
+          "type": "string"
+        },
+        "currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        }
+      },
+      "required": [
+        "amount",
+        "currency"
+      ],
+      "title": "PositiveMoney",
+      "type": "object"
+    },
+    "ProvenanceReference": {
+      "additionalProperties": false,
+      "properties": {
+        "bounding_box": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BoundingBox"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confidence"
+        },
+        "document_version": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Document Version"
+        },
+        "evidence_hash": {
+          "anyOf": [
+            {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evidence Hash"
+        },
+        "extraction_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Extraction Version"
+        },
+        "human_correction_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Human Correction Id"
+        },
+        "page_number": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Page Number"
+        },
+        "source_document_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Document Id"
+        },
+        "source_field": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Field"
+        },
+        "source_row": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Row"
+        }
+      },
+      "title": "ProvenanceReference",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "bank_account_id": {
+      "format": "uuid",
+      "title": "Bank Account Id",
+      "type": "string"
+    },
+    "booking_date": {
+      "format": "date",
+      "title": "Booking Date",
+      "type": "string"
+    },
+    "content_fingerprint": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Content Fingerprint",
+      "type": "string"
+    },
+    "correlation": {
+      "$ref": "#/$defs/CorrelationMetadata"
+    },
+    "counterparty": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Counterparty"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "direction": {
+      "enum": [
+        "DEBIT",
+        "CREDIT"
+      ],
+      "title": "Direction",
+      "type": "string"
+    },
+    "external_source_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "External Source Id"
+    },
+    "import_batch_id": {
+      "format": "uuid",
+      "title": "Import Batch Id",
+      "type": "string"
+    },
+    "money": {
+      "$ref": "#/$defs/PositiveMoney"
+    },
+    "narration": {
+      "default": "",
+      "title": "Narration",
+      "type": "string"
+    },
+    "normalization_status": {
+      "enum": [
+        "NORMALIZED",
+        "REVIEW_REQUIRED",
+        "REJECTED"
+      ],
+      "title": "Normalization Status",
+      "type": "string"
+    },
+    "provenance": {
+      "items": {
+        "$ref": "#/$defs/ProvenanceReference"
+      },
+      "title": "Provenance",
+      "type": "array"
+    },
+    "reference": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reference"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_row_number": {
+      "minimum": 1,
+      "title": "Source Row Number",
+      "type": "integer"
+    },
+    "tenant_context": {
+      "$ref": "#/$defs/EntityTenantContext"
+    },
+    "transaction_id": {
+      "format": "uuid",
+      "title": "Transaction Id",
+      "type": "string"
+    },
+    "value_date": {
+      "anyOf": [
+        {
+          "format": "date",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Value Date"
+    }
+  },
+  "required": [
+    "schema_version",
+    "transaction_id",
+    "tenant_context",
+    "bank_account_id",
+    "import_batch_id",
+    "source_row_number",
+    "booking_date",
+    "money",
+    "direction",
+    "normalization_status",
+    "provenance",
+    "content_fingerprint",
+    "correlation"
+  ],
+  "title": "BankTransaction",
+  "type": "object"
+}

@@ -1,0 +1,45 @@
+name: contracts
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - "src/ledgerai_contracts/**"
+      - "shared/schemas/**"
+      - "shared/fixtures/**"
+      - "tests/**"
+      - "tools/**"
+      - "docs/architecture/**"
+      - "docs/integration/**"
+      - "pyproject.toml"
+      - ".github/workflows/contracts.yml"
+  push:
+    paths:
+      - "src/ledgerai_contracts/**"
+      - "shared/schemas/**"
+      - "shared/fixtures/**"
+      - "tests/**"
+      - "tools/**"
+      - "docs/architecture/**"
+      - "docs/integration/**"
+      - "pyproject.toml"
+      - ".github/workflows/contracts.yml"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: python -m pip install -e ".[dev]"
+      - run: ruff format --check .
+      - run: ruff check .
+      - run: mypy src tests tools
+      - run: python tools/generate_contract_artifacts.py --check
+      - run: pytest
+      - run: python -m compileall -q src tools tests

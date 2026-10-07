@@ -1,0 +1,846 @@
+{
+  "$defs": {
+    "BoundingBox": {
+      "additionalProperties": false,
+      "properties": {
+        "height": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "title": "Height"
+        },
+        "page": {
+          "minimum": 1,
+          "title": "Page",
+          "type": "integer"
+        },
+        "width": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "title": "Width"
+        },
+        "x": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "title": "X"
+        },
+        "y": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "title": "Y"
+        }
+      },
+      "required": [
+        "page",
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "title": "BoundingBox",
+      "type": "object"
+    },
+    "CorrelationMetadata": {
+      "additionalProperties": false,
+      "description": "Request starts an interaction; correlation spans it; causation identifies its parent.",
+      "properties": {
+        "causation_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Causation Id"
+        },
+        "correlation_id": {
+          "format": "uuid",
+          "title": "Correlation Id",
+          "type": "string"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "request_id",
+        "correlation_id"
+      ],
+      "title": "CorrelationMetadata",
+      "type": "object"
+    },
+    "EntityTenantContext": {
+      "additionalProperties": false,
+      "properties": {
+        "legal_entity_id": {
+          "format": "uuid",
+          "title": "Legal Entity Id",
+          "type": "string"
+        },
+        "organization_id": {
+          "format": "uuid",
+          "title": "Organization Id",
+          "type": "string"
+        },
+        "tenant_id": {
+          "format": "uuid",
+          "title": "Tenant Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tenant_id",
+        "organization_id",
+        "legal_entity_id"
+      ],
+      "title": "EntityTenantContext",
+      "type": "object"
+    },
+    "ExtractedField": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confidence"
+        },
+        "field_name": {
+          "minLength": 1,
+          "title": "Field Name",
+          "type": "string"
+        },
+        "is_critical": {
+          "title": "Is Critical",
+          "type": "boolean"
+        },
+        "provenance": {
+          "items": {
+            "$ref": "#/$defs/ProvenanceReference"
+          },
+          "title": "Provenance",
+          "type": "array"
+        },
+        "state": {
+          "$ref": "#/$defs/FieldState"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        }
+      },
+      "required": [
+        "field_name",
+        "is_critical",
+        "state"
+      ],
+      "title": "ExtractedField",
+      "type": "object"
+    },
+    "ExtractedLineItem": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "$ref": "#/$defs/ExtractedField"
+        },
+        "line_amount": {
+          "$ref": "#/$defs/ExtractedField"
+        },
+        "line_number": {
+          "minimum": 1,
+          "title": "Line Number",
+          "type": "integer"
+        },
+        "quantity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExtractedField"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "unit_price": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExtractedField"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "line_number",
+        "description",
+        "line_amount"
+      ],
+      "title": "ExtractedLineItem",
+      "type": "object"
+    },
+    "ExtractionProcessingStatus": {
+      "enum": [
+        "QUEUED",
+        "PROCESSING",
+        "COMPLETED",
+        "FAILED"
+      ],
+      "title": "ExtractionProcessingStatus",
+      "type": "string"
+    },
+    "FieldState": {
+      "enum": [
+        "EXTRACTED",
+        "LOW_CONFIDENCE",
+        "MISSING"
+      ],
+      "title": "FieldState",
+      "type": "string"
+    },
+    "Money": {
+      "additionalProperties": false,
+      "description": "Exact money. JSON amount is always a decimal string; floats are forbidden.",
+      "properties": {
+        "amount": {
+          "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+          "title": "Amount",
+          "type": "string"
+        },
+        "currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        }
+      },
+      "required": [
+        "amount",
+        "currency"
+      ],
+      "title": "Money",
+      "type": "object"
+    },
+    "ProducerMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "algorithm_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Algorithm Version"
+        },
+        "model_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model Name"
+        },
+        "model_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model Version"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "producer_type": {
+          "$ref": "#/$defs/ProducerType"
+        },
+        "prompt_template_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Prompt Template Version"
+        },
+        "rule_or_policy_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rule Or Policy Version"
+        },
+        "version": {
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "producer_type",
+        "name",
+        "version"
+      ],
+      "title": "ProducerMetadata",
+      "type": "object"
+    },
+    "ProducerType": {
+      "enum": [
+        "SERVICE",
+        "AGENT",
+        "MODEL",
+        "RULE_ENGINE",
+        "HUMAN"
+      ],
+      "title": "ProducerType",
+      "type": "string"
+    },
+    "ProvenanceReference": {
+      "additionalProperties": false,
+      "properties": {
+        "bounding_box": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BoundingBox"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confidence"
+        },
+        "document_version": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Document Version"
+        },
+        "evidence_hash": {
+          "anyOf": [
+            {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evidence Hash"
+        },
+        "extraction_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Extraction Version"
+        },
+        "human_correction_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Human Correction Id"
+        },
+        "page_number": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Page Number"
+        },
+        "source_document_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Document Id"
+        },
+        "source_field": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Field"
+        },
+        "source_row": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Row"
+        }
+      },
+      "title": "ProvenanceReference",
+      "type": "object"
+    },
+    "ReviewDisposition": {
+      "enum": [
+        "NOT_REQUIRED",
+        "REVIEW_REQUIRED",
+        "REVIEWED"
+      ],
+      "title": "ReviewDisposition",
+      "type": "string"
+    },
+    "ValidationIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "pattern": "^[A-Z][A-Z0-9_]+$",
+          "title": "Code",
+          "type": "string"
+        },
+        "field": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Field"
+        },
+        "message": {
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "INFO",
+            "WARNING",
+            "ERROR"
+          ],
+          "title": "Severity",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "severity"
+      ],
+      "title": "ValidationIssue",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "fields": {
+            "contains": {
+              "properties": {
+                "is_critical": {
+                  "const": true
+                },
+                "state": {
+                  "enum": [
+                    "LOW_CONFIDENCE",
+                    "MISSING"
+                  ]
+                }
+              },
+              "required": [
+                "is_critical",
+                "state"
+              ]
+            }
+          }
+        },
+        "required": [
+          "fields"
+        ]
+      },
+      "then": {
+        "properties": {
+          "review_disposition": {
+            "enum": [
+              "REVIEW_REQUIRED",
+              "REVIEWED"
+            ]
+          },
+          "review_reason_codes": {
+            "minItems": 1
+          }
+        },
+        "required": [
+          "review_disposition",
+          "review_reason_codes"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "validation_issues": {
+            "contains": {
+              "properties": {
+                "severity": {
+                  "const": "ERROR"
+                }
+              },
+              "required": [
+                "severity"
+              ]
+            }
+          }
+        },
+        "required": [
+          "validation_issues"
+        ]
+      },
+      "then": {
+        "properties": {
+          "review_disposition": {
+            "enum": [
+              "REVIEW_REQUIRED",
+              "REVIEWED"
+            ]
+          },
+          "review_reason_codes": {
+            "minItems": 1
+          }
+        },
+        "required": [
+          "review_disposition",
+          "review_reason_codes"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "review_disposition": {
+            "const": "REVIEW_REQUIRED"
+          }
+        },
+        "required": [
+          "review_disposition"
+        ]
+      },
+      "then": {
+        "properties": {
+          "review_reason_codes": {
+            "minItems": 1
+          }
+        },
+        "required": [
+          "review_reason_codes"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "review_disposition": {
+            "const": "NOT_REQUIRED"
+          }
+        },
+        "required": [
+          "review_disposition"
+        ]
+      },
+      "then": {
+        "properties": {
+          "review_reason_codes": {
+            "maxItems": 0
+          }
+        },
+        "required": [
+          "review_reason_codes"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "review_disposition": {
+            "const": "REVIEWED"
+          }
+        },
+        "required": [
+          "review_disposition"
+        ]
+      },
+      "then": {
+        "properties": {
+          "status": {
+            "const": "COMPLETED"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      }
+    }
+  ],
+  "properties": {
+    "classification": {
+      "enum": [
+        "INVOICE",
+        "RECEIPT",
+        "BANK_STATEMENT",
+        "UNKNOWN"
+      ],
+      "title": "Classification",
+      "type": "string"
+    },
+    "correlation": {
+      "$ref": "#/$defs/CorrelationMetadata"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "document_id": {
+      "format": "uuid",
+      "title": "Document Id",
+      "type": "string"
+    },
+    "document_version": {
+      "minLength": 1,
+      "title": "Document Version",
+      "type": "string"
+    },
+    "extraction_id": {
+      "format": "uuid",
+      "title": "Extraction Id",
+      "type": "string"
+    },
+    "fields": {
+      "items": {
+        "$ref": "#/$defs/ExtractedField"
+      },
+      "title": "Fields",
+      "type": "array"
+    },
+    "line_items": {
+      "items": {
+        "$ref": "#/$defs/ExtractedLineItem"
+      },
+      "title": "Line Items",
+      "type": "array"
+    },
+    "producer": {
+      "$ref": "#/$defs/ProducerMetadata"
+    },
+    "review_disposition": {
+      "$ref": "#/$defs/ReviewDisposition"
+    },
+    "review_reason_codes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Review Reason Codes",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/ExtractionProcessingStatus"
+    },
+    "tenant_context": {
+      "$ref": "#/$defs/EntityTenantContext"
+    },
+    "updated_at": {
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+    },
+    "validation_issues": {
+      "items": {
+        "$ref": "#/$defs/ValidationIssue"
+      },
+      "title": "Validation Issues",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "extraction_id",
+    "document_id",
+    "document_version",
+    "tenant_context",
+    "classification",
+    "fields",
+    "status",
+    "review_disposition",
+    "review_reason_codes",
+    "producer",
+    "created_at",
+    "updated_at",
+    "correlation"
+  ],
+  "title": "DocumentExtraction",
+  "type": "object",
+  "x-ledgerai-pydantic-invariants": [
+    "Critical low-confidence or missing line-item fields also require review.",
+    "All ERROR validation issues require review."
+  ]
+}

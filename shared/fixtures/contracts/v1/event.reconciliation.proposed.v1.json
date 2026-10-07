@@ -1,0 +1,94 @@
+{
+  "causation_id": null,
+  "correlation_id": "00000000-0000-4000-8000-000000000005",
+  "event_id": "00000000-0000-4000-8000-000000000606",
+  "event_type": "reconciliation.proposed.v1",
+  "occurred_at": "2026-01-15T05:00:00Z",
+  "payload": {
+    "proposal": {
+      "confidence": "0.97",
+      "conflicts": [],
+      "correlation": {
+        "causation_id": null,
+        "correlation_id": "00000000-0000-4000-8000-000000000005",
+        "request_id": "00000000-0000-4000-8000-000000000004"
+      },
+      "created_at": "2026-01-15T05:00:00Z",
+      "match_type": "ONE_TO_ONE",
+      "producer": {
+        "algorithm_version": "match-fixture-v1",
+        "model_name": null,
+        "model_version": null,
+        "name": "ledgerai-contract-fixture",
+        "producer_type": "SERVICE",
+        "prompt_template_version": null,
+        "rule_or_policy_version": null,
+        "version": "1.0.0"
+      },
+      "proposal_id": "00000000-0000-4000-8000-000000000015",
+      "proposal_version": 1,
+      "provenance": [
+        {
+          "bounding_box": null,
+          "confidence": "0.98",
+          "document_version": "obj-v1",
+          "evidence_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "extraction_version": "synthetic-v1",
+          "human_correction_id": null,
+          "page_number": 1,
+          "source_document_id": "00000000-0000-4000-8000-000000000010",
+          "source_field": "invoice_total",
+          "source_row": null
+        }
+      ],
+      "reasons": [
+        {
+          "code": "AMOUNT_AND_REFERENCE_MATCH",
+          "contribution": "0.90",
+          "explanation": "Synthetic amount and reference agree"
+        }
+      ],
+      "records": [
+        {
+          "resource_id": "00000000-0000-4000-8000-000000000012",
+          "resource_type": "bank_transaction",
+          "resource_version": "1"
+        },
+        {
+          "resource_id": "00000000-0000-4000-8000-000000000011",
+          "resource_type": "document_extraction",
+          "resource_version": "1"
+        }
+      ],
+      "schema_version": "1.0",
+      "score": "0.97",
+      "status": "PROPOSED",
+      "tenant_context": {
+        "legal_entity_id": "00000000-0000-4000-8000-000000000003",
+        "organization_id": "00000000-0000-4000-8000-000000000002",
+        "tenant_id": "00000000-0000-4000-8000-000000000001"
+      },
+      "updated_at": "2026-01-15T05:00:00Z"
+    }
+  },
+  "payload_reference": null,
+  "producer": {
+    "algorithm_version": null,
+    "model_name": null,
+    "model_version": null,
+    "name": "ledgerai-contract-fixture",
+    "producer_type": "SERVICE",
+    "prompt_template_version": null,
+    "rule_or_policy_version": null,
+    "version": "1.0.0"
+  },
+  "schema_version": "1.0",
+  "tenant_context": {
+    "legal_entity_id": "00000000-0000-4000-8000-000000000003",
+    "organization_id": "00000000-0000-4000-8000-000000000002",
+    "tenant_id": "00000000-0000-4000-8000-000000000001"
+  },
+  "trace_context": {
+    "traceparent": "00-00000000000000000000000000000001-0000000000000001-01"
+  }
+}

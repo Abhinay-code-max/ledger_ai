@@ -1,0 +1,2833 @@
+{
+  "$defs": {
+    "ActorReference": {
+      "additionalProperties": false,
+      "properties": {
+        "actor_id": {
+          "minLength": 1,
+          "title": "Actor Id",
+          "type": "string"
+        },
+        "actor_type": {
+          "enum": [
+            "HUMAN",
+            "SERVICE",
+            "AGENT"
+          ],
+          "title": "Actor Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "actor_type",
+        "actor_id"
+      ],
+      "title": "ActorReference",
+      "type": "object"
+    },
+    "ApprovalDecidedPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "decision": {
+          "$ref": "#/$defs/ApprovalDecision"
+        }
+      },
+      "required": [
+        "decision"
+      ],
+      "title": "ApprovalDecidedPayload",
+      "type": "object"
+    },
+    "ApprovalDecision": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "enum": [
+            "APPROVE",
+            "CORRECT",
+            "REJECT",
+            "REQUEST_EVIDENCE",
+            "ESCALATE"
+          ],
+          "title": "Action",
+          "type": "string"
+        },
+        "actor": {
+          "$ref": "#/$defs/ActorReference"
+        },
+        "approval_request_id": {
+          "format": "uuid",
+          "title": "Approval Request Id",
+          "type": "string"
+        },
+        "authorization_roles": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Authorization Roles",
+          "type": "array"
+        },
+        "correlation": {
+          "$ref": "#/$defs/CorrelationMetadata"
+        },
+        "decided_at": {
+          "format": "date-time",
+          "title": "Decided At",
+          "type": "string"
+        },
+        "decision_id": {
+          "format": "uuid",
+          "title": "Decision Id",
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        },
+        "reviewed_resource": {
+          "$ref": "#/$defs/VersionedResourceReference"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "separation_of_duties_checked": {
+          "title": "Separation Of Duties Checked",
+          "type": "boolean"
+        },
+        "separation_of_duties_rule": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Separation Of Duties Rule"
+        },
+        "structured_corrections": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Structured Corrections"
+        },
+        "tenant_context": {
+          "$ref": "#/$defs/EntityTenantContext"
+        }
+      },
+      "required": [
+        "schema_version",
+        "decision_id",
+        "tenant_context",
+        "approval_request_id",
+        "reviewed_resource",
+        "actor",
+        "action",
+        "authorization_roles",
+        "separation_of_duties_checked",
+        "decided_at",
+        "correlation"
+      ],
+      "title": "ApprovalDecision",
+      "type": "object"
+    },
+    "ApprovalRequestedPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "approval_request": {
+          "$ref": "#/$defs/ResourceReference"
+        },
+        "subject": {
+          "$ref": "#/$defs/ResourceReference"
+        }
+      },
+      "required": [
+        "approval_request",
+        "subject"
+      ],
+      "title": "ApprovalRequestedPayload",
+      "type": "object"
+    },
+    "BoundingBox": {
+      "additionalProperties": false,
+      "properties": {
+        "height": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "title": "Height"
+        },
+        "page": {
+          "minimum": 1,
+          "title": "Page",
+          "type": "integer"
+        },
+        "width": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "title": "Width"
+        },
+        "x": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "title": "X"
+        },
+        "y": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "title": "Y"
+        }
+      },
+      "required": [
+        "page",
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "title": "BoundingBox",
+      "type": "object"
+    },
+    "CorrelationMetadata": {
+      "additionalProperties": false,
+      "description": "Request starts an interaction; correlation spans it; causation identifies its parent.",
+      "properties": {
+        "causation_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Causation Id"
+        },
+        "correlation_id": {
+          "format": "uuid",
+          "title": "Correlation Id",
+          "type": "string"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "request_id",
+        "correlation_id"
+      ],
+      "title": "CorrelationMetadata",
+      "type": "object"
+    },
+    "DocumentExtractedPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "extraction": {
+          "$ref": "#/$defs/DocumentExtraction"
+        }
+      },
+      "required": [
+        "extraction"
+      ],
+      "title": "DocumentExtractedPayload",
+      "type": "object"
+    },
+    "DocumentExtraction": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "fields": {
+                "contains": {
+                  "properties": {
+                    "is_critical": {
+                      "const": true
+                    },
+                    "state": {
+                      "enum": [
+                        "LOW_CONFIDENCE",
+                        "MISSING"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "is_critical",
+                    "state"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "fields"
+            ]
+          },
+          "then": {
+            "properties": {
+              "review_disposition": {
+                "enum": [
+                  "REVIEW_REQUIRED",
+                  "REVIEWED"
+                ]
+              },
+              "review_reason_codes": {
+                "minItems": 1
+              }
+            },
+            "required": [
+              "review_disposition",
+              "review_reason_codes"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "validation_issues": {
+                "contains": {
+                  "properties": {
+                    "severity": {
+                      "const": "ERROR"
+                    }
+                  },
+                  "required": [
+                    "severity"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "validation_issues"
+            ]
+          },
+          "then": {
+            "properties": {
+              "review_disposition": {
+                "enum": [
+                  "REVIEW_REQUIRED",
+                  "REVIEWED"
+                ]
+              },
+              "review_reason_codes": {
+                "minItems": 1
+              }
+            },
+            "required": [
+              "review_disposition",
+              "review_reason_codes"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "review_disposition": {
+                "const": "REVIEW_REQUIRED"
+              }
+            },
+            "required": [
+              "review_disposition"
+            ]
+          },
+          "then": {
+            "properties": {
+              "review_reason_codes": {
+                "minItems": 1
+              }
+            },
+            "required": [
+              "review_reason_codes"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "review_disposition": {
+                "const": "NOT_REQUIRED"
+              }
+            },
+            "required": [
+              "review_disposition"
+            ]
+          },
+          "then": {
+            "properties": {
+              "review_reason_codes": {
+                "maxItems": 0
+              }
+            },
+            "required": [
+              "review_reason_codes"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "review_disposition": {
+                "const": "REVIEWED"
+              }
+            },
+            "required": [
+              "review_disposition"
+            ]
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": "COMPLETED"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          }
+        }
+      ],
+      "properties": {
+        "classification": {
+          "enum": [
+            "INVOICE",
+            "RECEIPT",
+            "BANK_STATEMENT",
+            "UNKNOWN"
+          ],
+          "title": "Classification",
+          "type": "string"
+        },
+        "correlation": {
+          "$ref": "#/$defs/CorrelationMetadata"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "document_id": {
+          "format": "uuid",
+          "title": "Document Id",
+          "type": "string"
+        },
+        "document_version": {
+          "minLength": 1,
+          "title": "Document Version",
+          "type": "string"
+        },
+        "extraction_id": {
+          "format": "uuid",
+          "title": "Extraction Id",
+          "type": "string"
+        },
+        "fields": {
+          "items": {
+            "$ref": "#/$defs/ExtractedField"
+          },
+          "title": "Fields",
+          "type": "array"
+        },
+        "line_items": {
+          "items": {
+            "$ref": "#/$defs/ExtractedLineItem"
+          },
+          "title": "Line Items",
+          "type": "array"
+        },
+        "producer": {
+          "$ref": "#/$defs/ProducerMetadata"
+        },
+        "review_disposition": {
+          "$ref": "#/$defs/ReviewDisposition"
+        },
+        "review_reason_codes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Review Reason Codes",
+          "type": "array"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/ExtractionProcessingStatus"
+        },
+        "tenant_context": {
+          "$ref": "#/$defs/EntityTenantContext"
+        },
+        "updated_at": {
+          "format": "date-time",
+          "title": "Updated At",
+          "type": "string"
+        },
+        "validation_issues": {
+          "items": {
+            "$ref": "#/$defs/ValidationIssue"
+          },
+          "title": "Validation Issues",
+          "type": "array"
+        }
+      },
+      "required": [
+        "schema_version",
+        "extraction_id",
+        "document_id",
+        "document_version",
+        "tenant_context",
+        "classification",
+        "fields",
+        "status",
+        "review_disposition",
+        "review_reason_codes",
+        "producer",
+        "created_at",
+        "updated_at",
+        "correlation"
+      ],
+      "title": "DocumentExtraction",
+      "type": "object",
+      "x-ledgerai-pydantic-invariants": [
+        "Critical low-confidence or missing line-item fields also require review.",
+        "All ERROR validation issues require review."
+      ]
+    },
+    "DocumentLifecycle": {
+      "enum": [
+        "UPLOADED",
+        "PROCESSING",
+        "READY",
+        "QUARANTINED",
+        "FAILED"
+      ],
+      "title": "DocumentLifecycle",
+      "type": "string"
+    },
+    "DocumentMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "byte_size": {
+          "minimum": 0,
+          "title": "Byte Size",
+          "type": "integer"
+        },
+        "content_hash": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Content Hash",
+          "type": "string"
+        },
+        "correlation": {
+          "$ref": "#/$defs/CorrelationMetadata"
+        },
+        "detected_media_type": {
+          "pattern": "^[\\w.+-]+/[\\w.+-]+$",
+          "title": "Detected Media Type",
+          "type": "string"
+        },
+        "document_category": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Document Category"
+        },
+        "document_id": {
+          "format": "uuid",
+          "title": "Document Id",
+          "type": "string"
+        },
+        "hash_algorithm": {
+          "const": "SHA-256",
+          "default": "SHA-256",
+          "title": "Hash Algorithm",
+          "type": "string"
+        },
+        "lifecycle_status": {
+          "$ref": "#/$defs/DocumentLifecycle"
+        },
+        "original_filename": {
+          "description": "Untrusted display metadata",
+          "minLength": 1,
+          "title": "Original Filename",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "storage": {
+          "$ref": "#/$defs/StorageReference"
+        },
+        "tenant_context": {
+          "$ref": "#/$defs/EntityTenantContext"
+        },
+        "upload_actor": {
+          "$ref": "#/$defs/ActorReference"
+        },
+        "uploaded_at": {
+          "format": "date-time",
+          "title": "Uploaded At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "document_id",
+        "tenant_context",
+        "storage",
+        "original_filename",
+        "detected_media_type",
+        "byte_size",
+        "content_hash",
+        "upload_actor",
+        "uploaded_at",
+        "lifecycle_status",
+        "correlation"
+      ],
+      "title": "DocumentMetadata",
+      "type": "object"
+    },
+    "DocumentUploadedPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "document": {
+          "$ref": "#/$defs/DocumentMetadata"
+        }
+      },
+      "required": [
+        "document"
+      ],
+      "title": "DocumentUploadedPayload",
+      "type": "object"
+    },
+    "EntityTenantContext": {
+      "additionalProperties": false,
+      "properties": {
+        "legal_entity_id": {
+          "format": "uuid",
+          "title": "Legal Entity Id",
+          "type": "string"
+        },
+        "organization_id": {
+          "format": "uuid",
+          "title": "Organization Id",
+          "type": "string"
+        },
+        "tenant_id": {
+          "format": "uuid",
+          "title": "Tenant Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tenant_id",
+        "organization_id",
+        "legal_entity_id"
+      ],
+      "title": "EntityTenantContext",
+      "type": "object"
+    },
+    "ExceptionCreatedPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "exception": {
+          "$ref": "#/$defs/ExceptionRecord"
+        }
+      },
+      "required": [
+        "exception"
+      ],
+      "title": "ExceptionCreatedPayload",
+      "type": "object"
+    },
+    "ExceptionRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "correlation": {
+          "$ref": "#/$defs/CorrelationMetadata"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "detector": {
+          "$ref": "#/$defs/ProducerMetadata"
+        },
+        "exception_id": {
+          "format": "uuid",
+          "title": "Exception Id",
+          "type": "string"
+        },
+        "exception_type": {
+          "minLength": 1,
+          "title": "Exception Type",
+          "type": "string"
+        },
+        "explanation": {
+          "minLength": 1,
+          "title": "Explanation",
+          "type": "string"
+        },
+        "involved_resources": {
+          "items": {
+            "$ref": "#/$defs/ResourceReference"
+          },
+          "minItems": 1,
+          "title": "Involved Resources",
+          "type": "array"
+        },
+        "reason_codes": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Reason Codes",
+          "type": "array"
+        },
+        "required_action": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Required Action"
+        },
+        "resolution_reference": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ResourceReference"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "resolution_status": {
+          "enum": [
+            "OPEN",
+            "IN_REVIEW",
+            "RESOLVED",
+            "DISMISSED"
+          ],
+          "title": "Resolution Status",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "LOW",
+            "MEDIUM",
+            "HIGH",
+            "CRITICAL"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "suggested_action": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Suggested Action"
+        },
+        "supporting_evidence": {
+          "items": {
+            "$ref": "#/$defs/ProvenanceReference"
+          },
+          "title": "Supporting Evidence",
+          "type": "array"
+        },
+        "tenant_context": {
+          "$ref": "#/$defs/EntityTenantContext"
+        },
+        "updated_at": {
+          "format": "date-time",
+          "title": "Updated At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "exception_id",
+        "tenant_context",
+        "exception_type",
+        "severity",
+        "involved_resources",
+        "explanation",
+        "reason_codes",
+        "resolution_status",
+        "detector",
+        "created_at",
+        "updated_at",
+        "correlation"
+      ],
+      "title": "ExceptionRecord",
+      "type": "object"
+    },
+    "ExtractedField": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confidence"
+        },
+        "field_name": {
+          "minLength": 1,
+          "title": "Field Name",
+          "type": "string"
+        },
+        "is_critical": {
+          "title": "Is Critical",
+          "type": "boolean"
+        },
+        "provenance": {
+          "items": {
+            "$ref": "#/$defs/ProvenanceReference"
+          },
+          "title": "Provenance",
+          "type": "array"
+        },
+        "state": {
+          "$ref": "#/$defs/FieldState"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        }
+      },
+      "required": [
+        "field_name",
+        "is_critical",
+        "state"
+      ],
+      "title": "ExtractedField",
+      "type": "object"
+    },
+    "ExtractedLineItem": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "$ref": "#/$defs/ExtractedField"
+        },
+        "line_amount": {
+          "$ref": "#/$defs/ExtractedField"
+        },
+        "line_number": {
+          "minimum": 1,
+          "title": "Line Number",
+          "type": "integer"
+        },
+        "quantity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExtractedField"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "unit_price": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExtractedField"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "line_number",
+        "description",
+        "line_amount"
+      ],
+      "title": "ExtractedLineItem",
+      "type": "object"
+    },
+    "ExtractionProcessingStatus": {
+      "enum": [
+        "QUEUED",
+        "PROCESSING",
+        "COMPLETED",
+        "FAILED"
+      ],
+      "title": "ExtractionProcessingStatus",
+      "type": "string"
+    },
+    "ExtractionRequestedPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "document": {
+          "$ref": "#/$defs/ResourceReference"
+        },
+        "job": {
+          "$ref": "#/$defs/ResourceReference"
+        }
+      },
+      "required": [
+        "document",
+        "job"
+      ],
+      "title": "ExtractionRequestedPayload",
+      "type": "object"
+    },
+    "FieldState": {
+      "enum": [
+        "EXTRACTED",
+        "LOW_CONFIDENCE",
+        "MISSING"
+      ],
+      "title": "FieldState",
+      "type": "string"
+    },
+    "JournalProposal": {
+      "additionalProperties": false,
+      "properties": {
+        "accounting_validation": {
+          "pattern": "^NOT_VALIDATED$",
+          "title": "Accounting Validation",
+          "type": "string"
+        },
+        "approval_decision": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ResourceReference"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confidence"
+        },
+        "correlation": {
+          "$ref": "#/$defs/CorrelationMetadata"
+        },
+        "currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        },
+        "explanation": {
+          "minLength": 1,
+          "title": "Explanation",
+          "type": "string"
+        },
+        "lines": {
+          "items": {
+            "$ref": "#/$defs/ProposedJournalLine"
+          },
+          "minItems": 2,
+          "title": "Lines",
+          "type": "array"
+        },
+        "policy_decision": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ResourceReference"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "posting_status": {
+          "const": "UNPOSTED",
+          "title": "Posting Status",
+          "type": "string"
+        },
+        "producer": {
+          "$ref": "#/$defs/ProducerMetadata"
+        },
+        "proposal_id": {
+          "format": "uuid",
+          "title": "Proposal Id",
+          "type": "string"
+        },
+        "proposal_version": {
+          "description": "Immutable; edits create a new version",
+          "minimum": 1,
+          "title": "Proposal Version",
+          "type": "integer"
+        },
+        "proposed_journal_date": {
+          "format": "date",
+          "title": "Proposed Journal Date",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "source_evidence": {
+          "items": {
+            "$ref": "#/$defs/ProvenanceReference"
+          },
+          "minItems": 1,
+          "title": "Source Evidence",
+          "type": "array"
+        },
+        "tenant_context": {
+          "$ref": "#/$defs/EntityTenantContext"
+        }
+      },
+      "required": [
+        "schema_version",
+        "proposal_id",
+        "proposal_version",
+        "tenant_context",
+        "proposed_journal_date",
+        "currency",
+        "lines",
+        "source_evidence",
+        "explanation",
+        "producer",
+        "accounting_validation",
+        "posting_status",
+        "correlation"
+      ],
+      "title": "JournalProposal",
+      "type": "object"
+    },
+    "JournalProposalCreatedPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "proposal": {
+          "$ref": "#/$defs/JournalProposal"
+        }
+      },
+      "required": [
+        "proposal"
+      ],
+      "title": "JournalProposalCreatedPayload",
+      "type": "object"
+    },
+    "MatchConflict": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "pattern": "^[A-Z][A-Z0-9_]+$",
+          "title": "Code",
+          "type": "string"
+        },
+        "explanation": {
+          "minLength": 1,
+          "title": "Explanation",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "explanation"
+      ],
+      "title": "MatchConflict",
+      "type": "object"
+    },
+    "MatchProposal": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "title": "Confidence"
+        },
+        "conflicts": {
+          "items": {
+            "$ref": "#/$defs/MatchConflict"
+          },
+          "title": "Conflicts",
+          "type": "array"
+        },
+        "correlation": {
+          "$ref": "#/$defs/CorrelationMetadata"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "match_type": {
+          "enum": [
+            "ONE_TO_ONE",
+            "MANY_TO_ONE",
+            "ONE_TO_MANY",
+            "PARTIAL",
+            "UNMATCHED"
+          ],
+          "title": "Match Type",
+          "type": "string"
+        },
+        "producer": {
+          "$ref": "#/$defs/ProducerMetadata"
+        },
+        "proposal_id": {
+          "format": "uuid",
+          "title": "Proposal Id",
+          "type": "string"
+        },
+        "proposal_version": {
+          "minimum": 1,
+          "title": "Proposal Version",
+          "type": "integer"
+        },
+        "provenance": {
+          "items": {
+            "$ref": "#/$defs/ProvenanceReference"
+          },
+          "title": "Provenance",
+          "type": "array"
+        },
+        "reasons": {
+          "items": {
+            "$ref": "#/$defs/MatchReason"
+          },
+          "minItems": 1,
+          "title": "Reasons",
+          "type": "array"
+        },
+        "records": {
+          "items": {
+            "$ref": "#/$defs/ResourceReference"
+          },
+          "minItems": 1,
+          "title": "Records",
+          "type": "array"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "score": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Score"
+        },
+        "status": {
+          "enum": [
+            "PROPOSED",
+            "REVIEW_REQUIRED",
+            "ACCEPTED",
+            "REJECTED",
+            "SUPERSEDED"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "tenant_context": {
+          "$ref": "#/$defs/EntityTenantContext"
+        },
+        "updated_at": {
+          "format": "date-time",
+          "title": "Updated At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "proposal_id",
+        "proposal_version",
+        "tenant_context",
+        "records",
+        "match_type",
+        "confidence",
+        "reasons",
+        "producer",
+        "status",
+        "created_at",
+        "updated_at",
+        "correlation"
+      ],
+      "title": "MatchProposal",
+      "type": "object"
+    },
+    "MatchReason": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "pattern": "^[A-Z][A-Z0-9_]+$",
+          "title": "Code",
+          "type": "string"
+        },
+        "contribution": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": -1.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Contribution"
+        },
+        "explanation": {
+          "minLength": 1,
+          "title": "Explanation",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "explanation"
+      ],
+      "title": "MatchReason",
+      "type": "object"
+    },
+    "Money": {
+      "additionalProperties": false,
+      "description": "Exact money. JSON amount is always a decimal string; floats are forbidden.",
+      "properties": {
+        "amount": {
+          "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+          "title": "Amount",
+          "type": "string"
+        },
+        "currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        }
+      },
+      "required": [
+        "amount",
+        "currency"
+      ],
+      "title": "Money",
+      "type": "object"
+    },
+    "PolicyDecision": {
+      "additionalProperties": false,
+      "properties": {
+        "correlation": {
+          "$ref": "#/$defs/CorrelationMetadata"
+        },
+        "decided_at": {
+          "format": "date-time",
+          "title": "Decided At",
+          "type": "string"
+        },
+        "decision_id": {
+          "format": "uuid",
+          "title": "Decision Id",
+          "type": "string"
+        },
+        "evaluated_inputs": {
+          "additionalProperties": true,
+          "title": "Evaluated Inputs",
+          "type": "object"
+        },
+        "evaluator_version": {
+          "minLength": 1,
+          "title": "Evaluator Version",
+          "type": "string"
+        },
+        "explanation": {
+          "minLength": 1,
+          "title": "Explanation",
+          "type": "string"
+        },
+        "matched_rule_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Matched Rule Ids",
+          "type": "array"
+        },
+        "outcome": {
+          "enum": [
+            "AUTO_ELIGIBLE",
+            "REVIEW_REQUIRED",
+            "ESCALATED",
+            "BLOCKED"
+          ],
+          "title": "Outcome",
+          "type": "string"
+        },
+        "policy_set_id": {
+          "format": "uuid",
+          "title": "Policy Set Id",
+          "type": "string"
+        },
+        "policy_set_version": {
+          "minLength": 1,
+          "title": "Policy Set Version",
+          "type": "string"
+        },
+        "reason_codes": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Reason Codes",
+          "type": "array"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "subject": {
+          "$ref": "#/$defs/ResourceReference"
+        },
+        "tenant_context": {
+          "$ref": "#/$defs/EntityTenantContext"
+        }
+      },
+      "required": [
+        "schema_version",
+        "decision_id",
+        "tenant_context",
+        "subject",
+        "policy_set_id",
+        "policy_set_version",
+        "outcome",
+        "evaluated_inputs",
+        "matched_rule_ids",
+        "reason_codes",
+        "explanation",
+        "evaluator_version",
+        "decided_at",
+        "correlation"
+      ],
+      "title": "PolicyDecision",
+      "type": "object"
+    },
+    "PolicyEvaluatedPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "decision": {
+          "$ref": "#/$defs/PolicyDecision"
+        }
+      },
+      "required": [
+        "decision"
+      ],
+      "title": "PolicyEvaluatedPayload",
+      "type": "object"
+    },
+    "PositiveMoney": {
+      "additionalProperties": false,
+      "description": "Exact positive money for records whose DEBIT/CREDIT field carries the sign.",
+      "properties": {
+        "amount": {
+          "pattern": "^(?=.*[1-9])(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+          "title": "Amount",
+          "type": "string"
+        },
+        "currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        }
+      },
+      "required": [
+        "amount",
+        "currency"
+      ],
+      "title": "PositiveMoney",
+      "type": "object"
+    },
+    "ProducerMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "algorithm_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Algorithm Version"
+        },
+        "model_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model Name"
+        },
+        "model_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model Version"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "producer_type": {
+          "$ref": "#/$defs/ProducerType"
+        },
+        "prompt_template_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Prompt Template Version"
+        },
+        "rule_or_policy_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rule Or Policy Version"
+        },
+        "version": {
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "producer_type",
+        "name",
+        "version"
+      ],
+      "title": "ProducerMetadata",
+      "type": "object"
+    },
+    "ProducerType": {
+      "enum": [
+        "SERVICE",
+        "AGENT",
+        "MODEL",
+        "RULE_ENGINE",
+        "HUMAN"
+      ],
+      "title": "ProducerType",
+      "type": "string"
+    },
+    "ProposedJournalLine": {
+      "additionalProperties": false,
+      "properties": {
+        "account_reference": {
+          "minLength": 1,
+          "title": "Account Reference",
+          "type": "string"
+        },
+        "amount": {
+          "$ref": "#/$defs/PositiveMoney"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "direction": {
+          "enum": [
+            "DEBIT",
+            "CREDIT"
+          ],
+          "title": "Direction",
+          "type": "string"
+        },
+        "line_id": {
+          "format": "uuid",
+          "title": "Line Id",
+          "type": "string"
+        },
+        "source_evidence": {
+          "items": {
+            "$ref": "#/$defs/ProvenanceReference"
+          },
+          "minItems": 1,
+          "title": "Source Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "line_id",
+        "account_reference",
+        "direction",
+        "amount",
+        "source_evidence"
+      ],
+      "title": "ProposedJournalLine",
+      "type": "object"
+    },
+    "ProvenanceReference": {
+      "additionalProperties": false,
+      "properties": {
+        "bounding_box": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BoundingBox"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confidence"
+        },
+        "document_version": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Document Version"
+        },
+        "evidence_hash": {
+          "anyOf": [
+            {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evidence Hash"
+        },
+        "extraction_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Extraction Version"
+        },
+        "human_correction_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Human Correction Id"
+        },
+        "page_number": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Page Number"
+        },
+        "source_document_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Document Id"
+        },
+        "source_field": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Field"
+        },
+        "source_row": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Row"
+        }
+      },
+      "title": "ProvenanceReference",
+      "type": "object"
+    },
+    "ReconciliationProposedPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "proposal": {
+          "$ref": "#/$defs/MatchProposal"
+        }
+      },
+      "required": [
+        "proposal"
+      ],
+      "title": "ReconciliationProposedPayload",
+      "type": "object"
+    },
+    "ReconciliationRequestedPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "request": {
+          "$ref": "#/$defs/ResourceReference"
+        },
+        "transaction_ids": {
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Transaction Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "request",
+        "transaction_ids"
+      ],
+      "title": "ReconciliationRequestedPayload",
+      "type": "object"
+    },
+    "ResourceEventPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "resource": {
+          "$ref": "#/$defs/ResourceReference"
+        }
+      },
+      "required": [
+        "resource"
+      ],
+      "title": "ResourceEventPayload",
+      "type": "object"
+    },
+    "ResourceReference": {
+      "additionalProperties": false,
+      "properties": {
+        "resource_id": {
+          "format": "uuid",
+          "title": "Resource Id",
+          "type": "string"
+        },
+        "resource_type": {
+          "minLength": 1,
+          "title": "Resource Type",
+          "type": "string"
+        },
+        "resource_version": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Resource Version"
+        }
+      },
+      "required": [
+        "resource_type",
+        "resource_id"
+      ],
+      "title": "ResourceReference",
+      "type": "object"
+    },
+    "ReviewDisposition": {
+      "enum": [
+        "NOT_REQUIRED",
+        "REVIEW_REQUIRED",
+        "REVIEWED"
+      ],
+      "title": "ReviewDisposition",
+      "type": "string"
+    },
+    "StorageReference": {
+      "additionalProperties": false,
+      "description": "Opaque immutable locator; never an OS path or credential-bearing URL.",
+      "properties": {
+        "object_key": {
+          "minLength": 1,
+          "title": "Object Key",
+          "type": "string"
+        },
+        "storage_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Storage Version"
+        }
+      },
+      "required": [
+        "object_key"
+      ],
+      "title": "StorageReference",
+      "type": "object"
+    },
+    "TransactionsImportedPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "import_batch": {
+          "$ref": "#/$defs/ResourceReference"
+        },
+        "transaction_count": {
+          "minimum": 0,
+          "title": "Transaction Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "import_batch",
+        "transaction_count"
+      ],
+      "title": "TransactionsImportedPayload",
+      "type": "object"
+    },
+    "ValidationIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "pattern": "^[A-Z][A-Z0-9_]+$",
+          "title": "Code",
+          "type": "string"
+        },
+        "field": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Field"
+        },
+        "message": {
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "INFO",
+            "WARNING",
+            "ERROR"
+          ],
+          "title": "Severity",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "severity"
+      ],
+      "title": "ValidationIssue",
+      "type": "object"
+    },
+    "VersionedResourceReference": {
+      "additionalProperties": false,
+      "description": "Reference bound to an exact immutable resource version.",
+      "properties": {
+        "resource_id": {
+          "format": "uuid",
+          "title": "Resource Id",
+          "type": "string"
+        },
+        "resource_type": {
+          "minLength": 1,
+          "title": "Resource Type",
+          "type": "string"
+        },
+        "resource_version": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$",
+          "title": "Resource Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "resource_type",
+        "resource_id",
+        "resource_version"
+      ],
+      "title": "VersionedResourceReference",
+      "type": "object"
+    },
+    "WorkflowFailedPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "error_code": {
+          "pattern": "^[A-Z][A-Z0-9_]+$",
+          "title": "Error Code",
+          "type": "string"
+        },
+        "retryable": {
+          "title": "Retryable",
+          "type": "boolean"
+        },
+        "safe_message": {
+          "description": "User-safe text only; runtime middleware must still sanitize exceptions.",
+          "maxLength": 1000,
+          "minLength": 1,
+          "pattern": "^(?![\\s\\S]*(?:Traceback \\(most recent call last\\)|BEGIN (?:RSA )?PRIVATE KEY|(?:postgres(?:ql)?|mysql|mongodb|redis|jdbc):\\/\\/|Bearer eyJ|ghp_|sk_live_|AKIA|[A-Za-z]:\\\\|\\/(?:etc|var|home|Users|root|tmp)\\/|(?:\\b[Ss][Ee][Ll][Ee][Cc][Tt]\\s+(?:\\*|[A-Za-z_][A-Za-z0-9_]*\\s*,\\s*[A-Za-z_][A-Za-z0-9_]*(?:\\s*,\\s*[A-Za-z_][A-Za-z0-9_]*)*|[A-Za-z][A-Za-z0-9]*_[A-Za-z0-9_]+)\\s+[Ff][Rr][Oo][Mm]\\s+[A-Za-z_][A-Za-z0-9_]*\\b|\\b[Ss][Ee][Ll][Ee][Cc][Tt]\\s+[A-Za-z_][A-Za-z0-9_]*\\s+[Ff][Rr][Oo][Mm]\\s+[A-Za-z_][A-Za-z0-9_]*\\s*(?:;|$)|\\b[Ss][Ee][Ll][Ee][Cc][Tt]\\s+[A-Za-z_][A-Za-z0-9_]*\\s+[Ff][Rr][Oo][Mm]\\s+[A-Za-z_][A-Za-z0-9_]*\\s+(?:[Ww][Hh][Ee][Rr][Ee]|[Jj][Oo][Ii][Nn]|[Ll][Ii][Mm][Ii][Tt]|[Oo][Rr][Dd][Ee][Rr]\\s+[Bb][Yy]|[Gg][Rr][Oo][Uu][Pp]\\s+[Bb][Yy])\\b|\\b[Ii][Nn][Ss][Ee][Rr][Tt]\\s+[Ii][Nn][Tt][Oo]\\s+[A-Za-z_][A-Za-z0-9_]*\\s*(?:\\(|[Vv][Aa][Ll][Uu][Ee][Ss]\\b|[Ss][Ee][Ll][Ee][Cc][Tt]\\b)|\\b[Uu][Pp][Dd][Aa][Tt][Ee]\\s+[A-Za-z_][A-Za-z0-9_]*\\s+[Ss][Ee][Tt]\\s+[A-Za-z_][A-Za-z0-9_]*\\s*=|\\b[Dd][Ee][Ll][Ee][Tt][Ee]\\s+[Ff][Rr][Oo][Mm]\\s+[A-Za-z_][A-Za-z0-9_]*\\s*(?:;|$|[Ww][Hh][Ee][Rr][Ee]\\b)|\\b(?:[Dd][Rr][Oo][Pp]|[Aa][Ll][Tt][Ee][Rr]|[Tt][Rr][Uu][Nn][Cc][Aa][Tt][Ee]|[Cc][Rr][Ee][Aa][Tt][Ee])\\s+[Tt][Aa][Bb][Ll][Ee]\\s+[A-Za-z_][A-Za-z0-9_]*\\b)))[\\s\\S]{1,1000}$",
+          "title": "Safe Message",
+          "type": "string"
+        },
+        "workflow": {
+          "$ref": "#/$defs/ResourceReference"
+        }
+      },
+      "required": [
+        "workflow",
+        "error_code",
+        "safe_message",
+        "retryable"
+      ],
+      "title": "WorkflowFailedPayload",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "oneOf": [
+    {
+      "oneOf": [
+        {
+          "properties": {
+            "event_type": {
+              "const": "document.uploaded.v1"
+            },
+            "payload": {
+              "$ref": "#/$defs/DocumentUploadedPayload"
+            },
+            "payload_reference": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload"
+          ]
+        },
+        {
+          "properties": {
+            "event_type": {
+              "const": "document.uploaded.v1"
+            },
+            "payload": {
+              "type": "null"
+            },
+            "payload_reference": {
+              "$ref": "#/$defs/ResourceReference"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload_reference"
+          ]
+        }
+      ]
+    },
+    {
+      "oneOf": [
+        {
+          "properties": {
+            "event_type": {
+              "const": "document.extraction.requested.v1"
+            },
+            "payload": {
+              "$ref": "#/$defs/ExtractionRequestedPayload"
+            },
+            "payload_reference": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload"
+          ]
+        },
+        {
+          "properties": {
+            "event_type": {
+              "const": "document.extraction.requested.v1"
+            },
+            "payload": {
+              "type": "null"
+            },
+            "payload_reference": {
+              "$ref": "#/$defs/ResourceReference"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload_reference"
+          ]
+        }
+      ]
+    },
+    {
+      "oneOf": [
+        {
+          "properties": {
+            "event_type": {
+              "const": "document.extracted.v1"
+            },
+            "payload": {
+              "$ref": "#/$defs/DocumentExtractedPayload"
+            },
+            "payload_reference": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload"
+          ]
+        },
+        {
+          "properties": {
+            "event_type": {
+              "const": "document.extracted.v1"
+            },
+            "payload": {
+              "type": "null"
+            },
+            "payload_reference": {
+              "$ref": "#/$defs/ResourceReference"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload_reference"
+          ]
+        }
+      ]
+    },
+    {
+      "oneOf": [
+        {
+          "properties": {
+            "event_type": {
+              "const": "document.validated.v1"
+            },
+            "payload": {
+              "$ref": "#/$defs/ResourceEventPayload"
+            },
+            "payload_reference": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload"
+          ]
+        },
+        {
+          "properties": {
+            "event_type": {
+              "const": "document.validated.v1"
+            },
+            "payload": {
+              "type": "null"
+            },
+            "payload_reference": {
+              "$ref": "#/$defs/ResourceReference"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload_reference"
+          ]
+        }
+      ]
+    },
+    {
+      "oneOf": [
+        {
+          "properties": {
+            "event_type": {
+              "const": "transactions.imported.v1"
+            },
+            "payload": {
+              "$ref": "#/$defs/TransactionsImportedPayload"
+            },
+            "payload_reference": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload"
+          ]
+        },
+        {
+          "properties": {
+            "event_type": {
+              "const": "transactions.imported.v1"
+            },
+            "payload": {
+              "type": "null"
+            },
+            "payload_reference": {
+              "$ref": "#/$defs/ResourceReference"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload_reference"
+          ]
+        }
+      ]
+    },
+    {
+      "oneOf": [
+        {
+          "properties": {
+            "event_type": {
+              "const": "reconciliation.requested.v1"
+            },
+            "payload": {
+              "$ref": "#/$defs/ReconciliationRequestedPayload"
+            },
+            "payload_reference": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload"
+          ]
+        },
+        {
+          "properties": {
+            "event_type": {
+              "const": "reconciliation.requested.v1"
+            },
+            "payload": {
+              "type": "null"
+            },
+            "payload_reference": {
+              "$ref": "#/$defs/ResourceReference"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload_reference"
+          ]
+        }
+      ]
+    },
+    {
+      "oneOf": [
+        {
+          "properties": {
+            "event_type": {
+              "const": "reconciliation.proposed.v1"
+            },
+            "payload": {
+              "$ref": "#/$defs/ReconciliationProposedPayload"
+            },
+            "payload_reference": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload"
+          ]
+        },
+        {
+          "properties": {
+            "event_type": {
+              "const": "reconciliation.proposed.v1"
+            },
+            "payload": {
+              "type": "null"
+            },
+            "payload_reference": {
+              "$ref": "#/$defs/ResourceReference"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload_reference"
+          ]
+        }
+      ]
+    },
+    {
+      "oneOf": [
+        {
+          "properties": {
+            "event_type": {
+              "const": "exception.created.v1"
+            },
+            "payload": {
+              "$ref": "#/$defs/ExceptionCreatedPayload"
+            },
+            "payload_reference": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload"
+          ]
+        },
+        {
+          "properties": {
+            "event_type": {
+              "const": "exception.created.v1"
+            },
+            "payload": {
+              "type": "null"
+            },
+            "payload_reference": {
+              "$ref": "#/$defs/ResourceReference"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload_reference"
+          ]
+        }
+      ]
+    },
+    {
+      "oneOf": [
+        {
+          "properties": {
+            "event_type": {
+              "const": "journal.proposal.created.v1"
+            },
+            "payload": {
+              "$ref": "#/$defs/JournalProposalCreatedPayload"
+            },
+            "payload_reference": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload"
+          ]
+        },
+        {
+          "properties": {
+            "event_type": {
+              "const": "journal.proposal.created.v1"
+            },
+            "payload": {
+              "type": "null"
+            },
+            "payload_reference": {
+              "$ref": "#/$defs/ResourceReference"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload_reference"
+          ]
+        }
+      ]
+    },
+    {
+      "oneOf": [
+        {
+          "properties": {
+            "event_type": {
+              "const": "policy.evaluated.v1"
+            },
+            "payload": {
+              "$ref": "#/$defs/PolicyEvaluatedPayload"
+            },
+            "payload_reference": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload"
+          ]
+        },
+        {
+          "properties": {
+            "event_type": {
+              "const": "policy.evaluated.v1"
+            },
+            "payload": {
+              "type": "null"
+            },
+            "payload_reference": {
+              "$ref": "#/$defs/ResourceReference"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload_reference"
+          ]
+        }
+      ]
+    },
+    {
+      "oneOf": [
+        {
+          "properties": {
+            "event_type": {
+              "const": "approval.requested.v1"
+            },
+            "payload": {
+              "$ref": "#/$defs/ApprovalRequestedPayload"
+            },
+            "payload_reference": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload"
+          ]
+        },
+        {
+          "properties": {
+            "event_type": {
+              "const": "approval.requested.v1"
+            },
+            "payload": {
+              "type": "null"
+            },
+            "payload_reference": {
+              "$ref": "#/$defs/ResourceReference"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload_reference"
+          ]
+        }
+      ]
+    },
+    {
+      "oneOf": [
+        {
+          "properties": {
+            "event_type": {
+              "const": "approval.decided.v1"
+            },
+            "payload": {
+              "$ref": "#/$defs/ApprovalDecidedPayload"
+            },
+            "payload_reference": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload"
+          ]
+        },
+        {
+          "properties": {
+            "event_type": {
+              "const": "approval.decided.v1"
+            },
+            "payload": {
+              "type": "null"
+            },
+            "payload_reference": {
+              "$ref": "#/$defs/ResourceReference"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload_reference"
+          ]
+        }
+      ]
+    },
+    {
+      "oneOf": [
+        {
+          "properties": {
+            "event_type": {
+              "const": "journal.posting.requested.v1"
+            },
+            "payload": {
+              "$ref": "#/$defs/ResourceEventPayload"
+            },
+            "payload_reference": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload"
+          ]
+        },
+        {
+          "properties": {
+            "event_type": {
+              "const": "journal.posting.requested.v1"
+            },
+            "payload": {
+              "type": "null"
+            },
+            "payload_reference": {
+              "$ref": "#/$defs/ResourceReference"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload_reference"
+          ]
+        }
+      ]
+    },
+    {
+      "oneOf": [
+        {
+          "properties": {
+            "event_type": {
+              "const": "journal.posted.v1"
+            },
+            "payload": {
+              "$ref": "#/$defs/ResourceEventPayload"
+            },
+            "payload_reference": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload"
+          ]
+        },
+        {
+          "properties": {
+            "event_type": {
+              "const": "journal.posted.v1"
+            },
+            "payload": {
+              "type": "null"
+            },
+            "payload_reference": {
+              "$ref": "#/$defs/ResourceReference"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload_reference"
+          ]
+        }
+      ]
+    },
+    {
+      "oneOf": [
+        {
+          "properties": {
+            "event_type": {
+              "const": "period.close.requested.v1"
+            },
+            "payload": {
+              "$ref": "#/$defs/ResourceEventPayload"
+            },
+            "payload_reference": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload"
+          ]
+        },
+        {
+          "properties": {
+            "event_type": {
+              "const": "period.close.requested.v1"
+            },
+            "payload": {
+              "type": "null"
+            },
+            "payload_reference": {
+              "$ref": "#/$defs/ResourceReference"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload_reference"
+          ]
+        }
+      ]
+    },
+    {
+      "oneOf": [
+        {
+          "properties": {
+            "event_type": {
+              "const": "period.closed.v1"
+            },
+            "payload": {
+              "$ref": "#/$defs/ResourceEventPayload"
+            },
+            "payload_reference": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload"
+          ]
+        },
+        {
+          "properties": {
+            "event_type": {
+              "const": "period.closed.v1"
+            },
+            "payload": {
+              "type": "null"
+            },
+            "payload_reference": {
+              "$ref": "#/$defs/ResourceReference"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload_reference"
+          ]
+        }
+      ]
+    },
+    {
+      "oneOf": [
+        {
+          "properties": {
+            "event_type": {
+              "const": "workflow.failed.v1"
+            },
+            "payload": {
+              "$ref": "#/$defs/WorkflowFailedPayload"
+            },
+            "payload_reference": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload"
+          ]
+        },
+        {
+          "properties": {
+            "event_type": {
+              "const": "workflow.failed.v1"
+            },
+            "payload": {
+              "type": "null"
+            },
+            "payload_reference": {
+              "$ref": "#/$defs/ResourceReference"
+            }
+          },
+          "required": [
+            "event_type",
+            "payload_reference"
+          ]
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "causation_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Causation Id"
+    },
+    "correlation_id": {
+      "format": "uuid",
+      "title": "Correlation Id",
+      "type": "string"
+    },
+    "event_id": {
+      "format": "uuid",
+      "title": "Event Id",
+      "type": "string"
+    },
+    "event_type": {
+      "minLength": 1,
+      "title": "Event Type",
+      "type": "string"
+    },
+    "occurred_at": {
+      "format": "date-time",
+      "title": "Occurred At",
+      "type": "string"
+    },
+    "payload": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ResourceEventPayload"
+        },
+        {
+          "$ref": "#/$defs/DocumentUploadedPayload"
+        },
+        {
+          "$ref": "#/$defs/ExtractionRequestedPayload"
+        },
+        {
+          "$ref": "#/$defs/DocumentExtractedPayload"
+        },
+        {
+          "$ref": "#/$defs/TransactionsImportedPayload"
+        },
+        {
+          "$ref": "#/$defs/ReconciliationRequestedPayload"
+        },
+        {
+          "$ref": "#/$defs/ReconciliationProposedPayload"
+        },
+        {
+          "$ref": "#/$defs/ExceptionCreatedPayload"
+        },
+        {
+          "$ref": "#/$defs/JournalProposalCreatedPayload"
+        },
+        {
+          "$ref": "#/$defs/PolicyEvaluatedPayload"
+        },
+        {
+          "$ref": "#/$defs/ApprovalRequestedPayload"
+        },
+        {
+          "$ref": "#/$defs/ApprovalDecidedPayload"
+        },
+        {
+          "$ref": "#/$defs/WorkflowFailedPayload"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Payload"
+    },
+    "payload_reference": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ResourceReference"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "producer": {
+      "$ref": "#/$defs/ProducerMetadata"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "tenant_context": {
+      "$ref": "#/$defs/EntityTenantContext"
+    },
+    "trace_context": {
+      "anyOf": [
+        {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Trace Context"
+    }
+  },
+  "required": [
+    "event_id",
+    "event_type",
+    "schema_version",
+    "occurred_at",
+    "tenant_context",
+    "correlation_id",
+    "producer"
+  ],
+  "title": "EventEnvelope",
+  "type": "object",
+  "x-ledgerai-tenant-context-invariant": {
+    "enforcement": "Pydantic typed validation; JSON Schema cannot compare UUID values across paths",
+    "event_rules": {
+      "approval.decided.v1": "typed payload tenant must equal envelope tenant_context",
+      "approval.requested.v1": "envelope tenant_context is authoritative; payload contains references only",
+      "document.extracted.v1": "typed payload tenant must equal envelope tenant_context",
+      "document.extraction.requested.v1": "envelope tenant_context is authoritative; payload contains references only",
+      "document.uploaded.v1": "typed payload tenant must equal envelope tenant_context",
+      "document.validated.v1": "envelope tenant_context is authoritative; payload contains references only",
+      "exception.created.v1": "typed payload tenant must equal envelope tenant_context",
+      "journal.posted.v1": "envelope tenant_context is authoritative; payload contains references only",
+      "journal.posting.requested.v1": "envelope tenant_context is authoritative; payload contains references only",
+      "journal.proposal.created.v1": "typed payload tenant must equal envelope tenant_context",
+      "period.close.requested.v1": "envelope tenant_context is authoritative; payload contains references only",
+      "period.closed.v1": "envelope tenant_context is authoritative; payload contains references only",
+      "policy.evaluated.v1": "typed payload tenant must equal envelope tenant_context",
+      "reconciliation.proposed.v1": "typed payload tenant must equal envelope tenant_context",
+      "reconciliation.requested.v1": "envelope tenant_context is authoritative; payload contains references only",
+      "transactions.imported.v1": "envelope tenant_context is authoritative; payload contains references only",
+      "workflow.failed.v1": "envelope tenant_context is authoritative; payload contains references only"
+    },
+    "organization_scoped_events": []
+  }
+}

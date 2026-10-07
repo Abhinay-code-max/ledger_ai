@@ -1,0 +1,33 @@
+{
+  "action": "REJECT",
+  "actor": {
+    "actor_id": "fixture.reviewer@nova.invalid",
+    "actor_type": "HUMAN"
+  },
+  "approval_request_id": "00000000-0000-4000-8000-000000000021",
+  "authorization_roles": [
+    "LEDGER_REVIEWER"
+  ],
+  "correlation": {
+    "causation_id": null,
+    "correlation_id": "00000000-0000-4000-8000-000000000005",
+    "request_id": "00000000-0000-4000-8000-000000000004"
+  },
+  "decided_at": "2026-01-15T05:00:00Z",
+  "decision_id": "00000000-0000-4000-8000-000000000120",
+  "reason": "Synthetic fixture decision",
+  "reviewed_resource": {
+    "resource_id": "00000000-0000-4000-8000-000000000017",
+    "resource_type": "journal_proposal",
+    "resource_version": "1"
+  },
+  "schema_version": "1.0",
+  "separation_of_duties_checked": true,
+  "separation_of_duties_rule": "REQUESTER_CANNOT_APPROVE",
+  "structured_corrections": null,
+  "tenant_context": {
+    "legal_entity_id": "00000000-0000-4000-8000-000000000003",
+    "organization_id": "00000000-0000-4000-8000-000000000002",
+    "tenant_id": "00000000-0000-4000-8000-000000000001"
+  }
+}
