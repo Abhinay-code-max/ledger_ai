@@ -7,6 +7,7 @@ from sqlalchemy import engine_from_config, pool
 
 from ledgerai_backend.core.config import Settings
 from ledgerai_backend.database.base import Base
+from ledgerai_backend.ingestion import models as ingestion_models  # noqa: F401
 from ledgerai_backend.tenancy import models  # noqa: F401
 
 config = context.config

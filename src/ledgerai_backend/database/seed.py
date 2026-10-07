@@ -20,8 +20,8 @@ PERMISSIONS = {
     "workspace:read": "Read workspace hierarchy",
     "workspace:admin": "Administer workspace settings",
     "membership:admin": "Administer memberships",
-    "document:read": "Reserved document read capability",
-    "document:write": "Reserved document write capability",
+    "document:read": "Read documents, imports, and safe ingestion results",
+    "document:write": "Upload documents, import transactions, and retry ingestion jobs",
     "review:act": "Act on review items",
     "financial-statement:read": "Read financial statements",
     "period-close:request": "Request period close",
@@ -106,7 +106,8 @@ def seed(settings: Settings, *, allow_production: bool = False) -> dict[str, int
         for code, description in PERMISSIONS.items():
             connection.execute(
                 text(
-                    "INSERT INTO permissions (code, description) VALUES (:code, :description) ON CONFLICT (code) DO NOTHING"
+                    "INSERT INTO permissions (code, description) VALUES (:code, :description) "
+                    "ON CONFLICT (code) DO UPDATE SET description = EXCLUDED.description"
                 ),
                 {"code": code, "description": description},
             )

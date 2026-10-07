@@ -1,0 +1,1 @@
+"""Secure ingestion domain."""

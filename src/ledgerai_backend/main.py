@@ -16,6 +16,9 @@ from starlette.middleware.base import RequestResponseEndpoint
 from starlette.responses import Response
 
 from ledgerai_backend import __version__
+from ledgerai_backend.adapters.queue import CeleryJobQueue
+from ledgerai_backend.adapters.scanner import DeterministicMalwareScanner
+from ledgerai_backend.adapters.storage import S3ObjectStorage
 from ledgerai_backend.core.config import Settings, get_settings
 from ledgerai_backend.core.errors import (
     ApiError,
@@ -34,6 +37,8 @@ from ledgerai_backend.core.request_context import safe_external_id
 from ledgerai_backend.database.engine import create_engine
 from ledgerai_backend.database.session import create_session_factory
 from ledgerai_backend.health.routes import router as health_router
+from ledgerai_backend.ingestion.routes import router as ingestion_router
+from ledgerai_backend.ports import JobQueuePort, MalwareScannerPort, ObjectStoragePort
 from ledgerai_backend.tenancy.routes import router as tenancy_router
 
 
@@ -47,6 +52,9 @@ def create_app(
     *,
     engine: AsyncEngine | None = None,
     identity_provider: IdentityProviderPort | None = None,
+    object_storage: ObjectStoragePort | None = None,
+    malware_scanner: MalwareScannerPort | None = None,
+    job_queue: JobQueuePort | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
     configure_logging(settings.log_level)
@@ -70,6 +78,24 @@ def create_app(
     app.state.settings = settings
     app.state.engine = engine
     app.state.session_factory = create_session_factory(engine) if engine else None
+    if object_storage is not None:
+        app.state.object_storage = object_storage
+    elif settings.storage_endpoint_url:
+        app.state.object_storage = S3ObjectStorage(settings)
+    else:
+        app.state.object_storage = None
+    if malware_scanner is not None:
+        app.state.malware_scanner = malware_scanner
+    elif settings.scanner_adapter == "deterministic" and settings.environment != "production":
+        app.state.malware_scanner = DeterministicMalwareScanner()
+    else:
+        app.state.malware_scanner = None
+    if job_queue is not None:
+        app.state.job_queue = job_queue
+    elif settings.redis_url:
+        app.state.job_queue = CeleryJobQueue(settings)
+    else:
+        app.state.job_queue = None
     if identity_provider is not None:
         app.state.identity_provider = identity_provider
     elif (
@@ -85,7 +111,7 @@ def create_app(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
         allow_credentials=False,
-        allow_methods=["GET"],
+        allow_methods=["GET", "POST"],
         allow_headers=[
             "Authorization",
             "Content-Type",
@@ -93,6 +119,8 @@ def create_app(
             "X-Workspace-Code",
             "X-Organization-ID",
             "X-Legal-Entity-ID",
+            "Idempotency-Key",
+            "If-Match",
         ],
     )
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.allowed_hosts)
@@ -140,6 +168,7 @@ def create_app(
         return {"service": settings.service_name, "version": __version__}
 
     app.include_router(tenancy_router, prefix="/api/v1", tags=["workspace"])
+    app.include_router(ingestion_router, prefix="/api/v1", tags=["ingestion"])
     return app
 
 

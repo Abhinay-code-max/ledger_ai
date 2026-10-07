@@ -17,6 +17,11 @@ async def ready(request: Request) -> JSONResponse:
     engine = getattr(request.app.state, "engine", None)
     if engine is None:
         return JSONResponse(status_code=503, content={"status": "unavailable"})
+    if request.app.state.settings.environment == "production" and any(
+        getattr(request.app.state, dependency, None) is None
+        for dependency in ("object_storage", "malware_scanner", "job_queue")
+    ):
+        return JSONResponse(status_code=503, content={"status": "unavailable"})
     try:
         async with engine.connect() as connection:
             await connection.execute(text("SELECT 1"))
