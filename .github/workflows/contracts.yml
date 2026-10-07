@@ -111,6 +111,8 @@ jobs:
           NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS"
       - run: uv run --frozen alembic upgrade head
       - run: uv run --frozen alembic upgrade head
+      - run: uv run --frozen alembic downgrade 20261006_02
+      - run: uv run --frozen alembic upgrade head
       - run: uv run --frozen alembic current
       - run: uv run --frozen alembic heads
       - run: uv run --frozen ledgerai-seed
