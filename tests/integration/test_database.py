@@ -24,7 +24,7 @@ def test_migration_head_schema_and_rls_are_present(
     admin_connection: Connection[tuple[object, ...]],
 ) -> None:
     revision = admin_connection.execute("SELECT version_num FROM alembic_version").fetchone()
-    assert revision == ("20261006_01",)
+    assert revision == ("20261006_02",)
     tables = admin_connection.execute(
         "SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_name IN ('tenants','organizations','legal_entities','principals','memberships','roles','permissions','role_permissions','role_assignments')"
     ).fetchone()
@@ -32,7 +32,7 @@ def test_migration_head_schema_and_rls_are_present(
     policies = admin_connection.execute(
         "SELECT count(*) FROM pg_policies WHERE schemaname='public'"
     ).fetchone()
-    assert policies == (7,)
+    assert policies == (18,)
 
 
 def test_runtime_role_is_non_owner_non_superuser_without_bypassrls(

@@ -23,7 +23,7 @@ def test_liveness_version_and_unavailable_readiness() -> None:
         assert api.get("/health/live").json() == {"status": "ok"}
         assert api.get("/version").json() == {
             "service": "ledgerai-backend",
-            "version": "1.1.0",
+            "version": "1.2.0",
         }
         response = api.get("/health/ready")
         assert response.status_code == 503
