@@ -198,9 +198,13 @@ async def list_transactions(
     scope: Scope,
     limit: Annotated[int, Query(ge=1, le=100)] = 50,
     after: UUID | None = None,
+    import_id: UUID | None = None,
 ) -> BankTransactionList:
     require_permission(scope.context, PermissionCode.FINANCIAL_STATEMENT_READ)
-    rows = await _repository(scope).list_transactions(limit=limit, after=after)
+    repository = _repository(scope)
+    if import_id is not None and await repository.get_import(import_id) is None:
+        raise ApiError(404, "AUTHORIZATION", "RESOURCE_NOT_FOUND", "Resource not found.")
+    rows = await repository.list_transactions(limit=limit, after=after, import_id=import_id)
     has_more = len(rows) > limit
     items = rows[:limit]
     return BankTransactionList(

@@ -55,6 +55,12 @@ Valid rows become Phase 0 `BankTransaction` objects before persistence. Invalid 
 number, safe code, and safe message; narrations and entire rows are never logged. Fingerprints omit
 row order, so reordered imports still deduplicate by bank account and normalized content.
 
+Transaction lists use UUID-ascending keyset pagination (`after`) with the UUID as the unique,
+deterministic tie-breaker. A known import may be supplied as `import_id`; it is verified in the
+caller’s tenant/entity scope before its rows are listed, and foreign imports have the same neutral
+not-found behavior as other scoped resources. A newly imported row is therefore retrieved through
+its import filter, not assumed to occupy the first page of an unfiltered collection.
+
 ## Idempotency
 
 Records are uniquely scoped by tenant, actor, operation, and key. They store only a canonical

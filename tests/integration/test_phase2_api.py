@@ -454,6 +454,45 @@ def test_csv_import_partial_success_and_duplicate_request(
     )
     assert errors.status_code == 200
     assert errors.json()[0]["error_code"] == "INVALID_ROW"
-    transactions = api.get("/api/v1/transactions?limit=10", headers=request_headers)
+    transactions = api.get(
+        f"/api/v1/transactions?import_id={first.json()['id']}&limit=10",
+        headers=request_headers,
+    )
     assert transactions.status_code == 200
     assert any(item["import_id"] == first.json()["id"] for item in transactions.json()["items"])
+
+
+def test_transaction_import_filter_uses_stable_keyset_pagination(
+    ingestion_api: tuple[TestClient, MemoryStorage],
+) -> None:
+    api, _ = ingestion_api
+    bank_account_id = uuid4()
+    csv_content = b"booking_date,amount,currency,direction,narration\n" + b"".join(
+        f"2026-10-01,{row}.00,INR,DEBIT,Synthetic page {row}\n".encode() for row in range(1, 13)
+    )
+    created = api.post(
+        "/api/v1/transaction-imports",
+        headers=headers(key=f"csv-pages-{uuid4()}"),
+        data={"bank_account_id": str(bank_account_id), "mapping_json": "{}"},
+        files={"file": ("pages.csv", csv_content, "text/csv")},
+    )
+    assert created.status_code == 201
+    import_id = created.json()["id"]
+
+    seen: list[str] = []
+    after: str | None = None
+    while True:
+        query = f"/api/v1/transactions?import_id={import_id}&limit=5"
+        if after is not None:
+            query += f"&after={after}"
+        page = api.get(query, headers=headers(key=f"read-pages-{uuid4()}"))
+        assert page.status_code == 200
+        body = page.json()
+        seen.extend(item["id"] for item in body["items"])
+        after = body["next_cursor"]
+        if after is None:
+            break
+
+    assert len(seen) == 12
+    assert len(set(seen)) == 12
+    assert seen == sorted(seen)

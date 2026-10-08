@@ -259,12 +259,16 @@ class IngestionRepository:
             )
         )
 
-    async def list_transactions(self, *, limit: int, after: UUID | None) -> list[BankTransaction]:
+    async def list_transactions(
+        self, *, limit: int, after: UUID | None, import_id: UUID | None = None
+    ) -> list[BankTransaction]:
         query = select(BankTransaction).where(
             BankTransaction.tenant_id == self.tenant_id,
             BankTransaction.organization_id == self.organization_id,
             BankTransaction.legal_entity_id == self.legal_entity_id,
         )
+        if import_id:
+            query = query.where(BankTransaction.import_id == import_id)
         if after:
             query = query.where(BankTransaction.id > after)
         return list(await self.session.scalars(query.order_by(BankTransaction.id).limit(limit + 1)))
