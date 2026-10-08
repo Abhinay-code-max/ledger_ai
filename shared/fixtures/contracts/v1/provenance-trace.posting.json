@@ -1,0 +1,41 @@
+{
+  "edges": [
+    {
+      "relation": "POSTED_AS",
+      "source": {
+        "resource_id": "00000000-0000-4000-8000-000000000017",
+        "resource_type": "journal_proposal",
+        "resource_version": "1"
+      },
+      "target": {
+        "resource_id": "00000000-0000-4000-8000-000000000028",
+        "resource_type": "posted_journal",
+        "resource_version": "1"
+      }
+    }
+  ],
+  "missing_references": [],
+  "nodes": [
+    {
+      "resource_id": "00000000-0000-4000-8000-000000000017",
+      "resource_type": "journal_proposal",
+      "resource_version": "1"
+    },
+    {
+      "resource_id": "00000000-0000-4000-8000-000000000028",
+      "resource_type": "posted_journal",
+      "resource_version": "1"
+    }
+  ],
+  "root": {
+    "resource_id": "00000000-0000-4000-8000-000000000017",
+    "resource_type": "journal_proposal",
+    "resource_version": "1"
+  },
+  "schema_version": "1.0",
+  "tenant_context": {
+    "legal_entity_id": "00000000-0000-4000-8000-000000000003",
+    "organization_id": "00000000-0000-4000-8000-000000000002",
+    "tenant_id": "00000000-0000-4000-8000-000000000001"
+  }
+}

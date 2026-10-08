@@ -19,6 +19,7 @@ from ledgerai_backend import __version__
 from ledgerai_backend.adapters.queue import CeleryJobQueue
 from ledgerai_backend.adapters.scanner import DeterministicMalwareScanner
 from ledgerai_backend.adapters.storage import S3ObjectStorage
+from ledgerai_backend.assurance.routes import router as assurance_router
 from ledgerai_backend.core.config import Settings, get_settings
 from ledgerai_backend.core.errors import (
     ApiError,
@@ -157,6 +158,7 @@ def create_app(
             "X-Legal-Entity-ID",
             "Idempotency-Key",
             "If-Match",
+            "Last-Event-ID",
         ],
     )
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.allowed_hosts)
@@ -206,6 +208,11 @@ def create_app(
     app.include_router(tenancy_router, prefix="/api/v1", tags=["workspace"])
     app.include_router(ingestion_router, prefix="/api/v1", tags=["ingestion"])
     app.include_router(integration_router, prefix="/api/v1", tags=["integration", "review"])
+    app.include_router(
+        assurance_router,
+        prefix="/api/v1",
+        tags=["accounting-assurance", "audit", "progress"],
+    )
     return app
 
 

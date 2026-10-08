@@ -23,7 +23,7 @@ def test_liveness_version_and_unavailable_readiness() -> None:
         assert api.get("/health/live").json() == {"status": "ok"}
         assert api.get("/version").json() == {
             "service": "ledgerai-backend",
-            "version": "1.2.0",
+            "version": "1.3.0",
         }
         response = api.get("/health/ready")
         assert response.status_code == 503
@@ -64,3 +64,12 @@ def test_request_size_limit_is_safe() -> None:
         response = api.get("/health/live", headers={"content-length": "2048"})
     assert response.status_code == 413
     assert response.json()["code"] == "REQUEST_TOO_LARGE"
+
+
+def test_progress_stream_requires_authentication() -> None:
+    with client() as api:
+        response = api.get(
+            "/api/v1/progress-stream?once=true", headers={"X-Workspace-Code": "nova"}
+        )
+    assert response.status_code == 401
+    assert response.json()["code"] == "AUTHENTICATION_REQUIRED"

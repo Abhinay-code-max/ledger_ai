@@ -1,0 +1,145 @@
+{
+  "$defs": {
+    "EntityTenantContext": {
+      "additionalProperties": false,
+      "properties": {
+        "legal_entity_id": {
+          "format": "uuid",
+          "title": "Legal Entity Id",
+          "type": "string"
+        },
+        "organization_id": {
+          "format": "uuid",
+          "title": "Organization Id",
+          "type": "string"
+        },
+        "tenant_id": {
+          "format": "uuid",
+          "title": "Tenant Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tenant_id",
+        "organization_id",
+        "legal_entity_id"
+      ],
+      "title": "EntityTenantContext",
+      "type": "object"
+    },
+    "ResourceReference": {
+      "additionalProperties": false,
+      "properties": {
+        "resource_id": {
+          "format": "uuid",
+          "title": "Resource Id",
+          "type": "string"
+        },
+        "resource_type": {
+          "minLength": 1,
+          "title": "Resource Type",
+          "type": "string"
+        },
+        "resource_version": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Resource Version"
+        }
+      },
+      "required": [
+        "resource_type",
+        "resource_id"
+      ],
+      "title": "ResourceReference",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "correlation_id": {
+      "format": "uuid",
+      "title": "Correlation Id",
+      "type": "string"
+    },
+    "last_event_id": {
+      "format": "uuid",
+      "title": "Last Event Id",
+      "type": "string"
+    },
+    "occurred_at": {
+      "format": "date-time",
+      "title": "Occurred At",
+      "type": "string"
+    },
+    "percent": {
+      "anyOf": [
+        {
+          "maximum": 100,
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Percent"
+    },
+    "reason_code": {
+      "anyOf": [
+        {
+          "maxLength": 100,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reason Code"
+    },
+    "resource": {
+      "$ref": "#/$defs/ResourceReference"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "stage": {
+      "maxLength": 80,
+      "minLength": 1,
+      "title": "Stage",
+      "type": "string"
+    },
+    "status": {
+      "maxLength": 80,
+      "minLength": 1,
+      "title": "Status",
+      "type": "string"
+    },
+    "tenant_context": {
+      "$ref": "#/$defs/EntityTenantContext"
+    }
+  },
+  "required": [
+    "schema_version",
+    "tenant_context",
+    "resource",
+    "stage",
+    "status",
+    "last_event_id",
+    "occurred_at",
+    "correlation_id"
+  ],
+  "title": "ProgressProjection",
+  "type": "object"
+}

@@ -1,0 +1,28 @@
+{
+  "accounting_period_id": "00000000-0000-4000-8000-000000000023",
+  "correlation": {
+    "causation_id": null,
+    "correlation_id": "00000000-0000-4000-8000-000000000005",
+    "request_id": "00000000-0000-4000-8000-000000000004"
+  },
+  "operation_id": "00000000-0000-4000-8000-000000000026",
+  "period_end": "2026-01-31",
+  "period_start": "2026-01-01",
+  "producer": {
+    "algorithm_version": null,
+    "model_name": null,
+    "model_version": null,
+    "name": "ledgerai-contract-fixture",
+    "producer_type": "SERVICE",
+    "prompt_template_version": null,
+    "rule_or_policy_version": null,
+    "version": "1.0.0"
+  },
+  "requested_at": "2026-01-15T05:00:00Z",
+  "schema_version": "1.0",
+  "tenant_context": {
+    "legal_entity_id": "00000000-0000-4000-8000-000000000003",
+    "organization_id": "00000000-0000-4000-8000-000000000002",
+    "tenant_id": "00000000-0000-4000-8000-000000000001"
+  }
+}

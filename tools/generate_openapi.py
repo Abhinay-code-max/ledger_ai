@@ -17,7 +17,7 @@ def rendered_openapi() -> str:
     settings = Settings(
         environment="test",
         allowed_hosts=["testserver"],
-        service_version="1.1.0",
+        service_version="1.3.0",
     )
     document = create_app(settings).openapi()
     return json.dumps(document, indent=2, sort_keys=True) + "\n"

@@ -9,6 +9,20 @@ from typing import Any, cast
 import jsonschema  # type: ignore[import-untyped]
 import pytest
 
+from ledgerai_contracts.v1.accounting import (
+    AccountingValidationResult,
+    FinancialStatementRequest,
+    FinancialStatementSnapshot,
+    JournalPostingRequest,
+    JournalPostingResult,
+    PeriodCloseRequest,
+    PeriodCloseResult,
+    PeriodCloseValidationResult,
+    PostingStatusResult,
+    ProgressEvent,
+    ProgressProjection,
+    ProvenanceTrace,
+)
 from ledgerai_contracts.v1.approvals import ApprovalDecision
 from ledgerai_contracts.v1.audit import AuditEvent
 from ledgerai_contracts.v1.documents import DocumentExtraction, DocumentMetadata
@@ -26,6 +40,7 @@ FIXTURES = ROOT / "shared" / "fixtures" / "contracts" / "v1"
 SCHEMAS = ROOT / "shared" / "schemas" / "v1"
 
 MODEL_BY_PREFIX: list[tuple[str, type[Any], str]] = [
+    ("accounting-validation-result.", AccountingValidationResult, "accounting-validation-result"),
     ("approval-decision.", ApprovalDecision, "approval-decision"),
     ("audit-event.", AuditEvent, "audit-event"),
     ("bank-transaction.", BankTransaction, "bank-transaction"),
@@ -33,11 +48,26 @@ MODEL_BY_PREFIX: list[tuple[str, type[Any], str]] = [
     ("document-metadata.", DocumentMetadata, "document-metadata"),
     ("error.", ErrorEnvelope, "error-envelope"),
     ("event.", EventEnvelope, "event-envelope"),
+    ("financial-statement-request.", FinancialStatementRequest, "financial-statement-request"),
+    ("financial-statement-snapshot.", FinancialStatementSnapshot, "financial-statement-snapshot"),
     ("exception.", ExceptionRecord, "exception"),
     ("journal-proposal.", JournalProposal, "journal-proposal"),
+    ("journal-posting-request.", JournalPostingRequest, "journal-posting-request"),
+    ("journal-posting-result.", JournalPostingResult, "journal-posting-result"),
     ("match-proposal.", MatchProposal, "match-proposal"),
     ("policy-decision.", PolicyDecision, "policy-decision"),
+    ("period-close-request.", PeriodCloseRequest, "period-close-request"),
+    ("period-close-result.", PeriodCloseResult, "period-close-result"),
+    (
+        "period-close-validation-result.",
+        PeriodCloseValidationResult,
+        "period-close-validation-result",
+    ),
+    ("posting-status-result.", PostingStatusResult, "posting-status-result"),
     ("processing-job.", ProcessingJob, "processing-job"),
+    ("progress-event.", ProgressEvent, "progress-event"),
+    ("progress-projection.", ProgressProjection, "progress-projection"),
+    ("provenance-trace.", ProvenanceTrace, "provenance-trace"),
 ]
 
 

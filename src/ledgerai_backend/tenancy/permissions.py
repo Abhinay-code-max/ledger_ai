@@ -25,6 +25,8 @@ class PermissionCode(StrEnum):
     POLICY_ADMIN = "policy:admin"
     FINANCIAL_STATEMENT_READ = "financial-statement:read"
     PERIOD_CLOSE_REQUEST = "period-close:request"
+    POSTING_EXECUTE = "posting:execute"
+    PROGRESS_READ = "progress:read"
     AUDIT_READ = "audit:read"
 
 

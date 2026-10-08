@@ -1,0 +1,47 @@
+{
+  "accounting_period_id": "00000000-0000-4000-8000-000000000023",
+  "as_of": "2026-01-15T05:00:00Z",
+  "correlation": {
+    "causation_id": null,
+    "correlation_id": "00000000-0000-4000-8000-000000000005",
+    "request_id": "00000000-0000-4000-8000-000000000004"
+  },
+  "currency": "INR",
+  "lines": [
+    {
+      "account_reference": "1100",
+      "amount": {
+        "amount": "1250.00",
+        "currency": "INR"
+      },
+      "label": "Cash",
+      "ledger_references": [
+        {
+          "resource_id": "00000000-0000-4000-8000-000000000028",
+          "resource_type": "posted_journal",
+          "resource_version": "1"
+        }
+      ],
+      "line_id": "cash"
+    }
+  ],
+  "producer": {
+    "algorithm_version": null,
+    "model_name": null,
+    "model_version": null,
+    "name": "ledgerai-contract-fixture",
+    "producer_type": "SERVICE",
+    "prompt_template_version": null,
+    "rule_or_policy_version": null,
+    "version": "1.0.0"
+  },
+  "schema_version": "1.0",
+  "snapshot_id": "00000000-0000-4000-8000-000000000027",
+  "statement_type": "TRIAL_BALANCE",
+  "status": "AVAILABLE",
+  "tenant_context": {
+    "legal_entity_id": "00000000-0000-4000-8000-000000000003",
+    "organization_id": "00000000-0000-4000-8000-000000000002",
+    "tenant_id": "00000000-0000-4000-8000-000000000001"
+  }
+}

@@ -6,6 +6,9 @@ RUN CGO_ENABLED=0 GOBIN=/out go install github.com/minio/minio@${MINIO_VERSION} 
     && CGO_ENABLED=0 GOBIN=/out go install github.com/minio/mc@${MC_VERSION}
 
 FROM debian:bookworm-slim AS server
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends ca-certificates curl \
+    && rm -rf /var/lib/apt/lists/*
 COPY --from=build /out/minio /usr/local/bin/minio
 ENTRYPOINT ["/usr/local/bin/minio"]
 

@@ -1,0 +1,137 @@
+{
+  "$defs": {
+    "EntityTenantContext": {
+      "additionalProperties": false,
+      "properties": {
+        "legal_entity_id": {
+          "format": "uuid",
+          "title": "Legal Entity Id",
+          "type": "string"
+        },
+        "organization_id": {
+          "format": "uuid",
+          "title": "Organization Id",
+          "type": "string"
+        },
+        "tenant_id": {
+          "format": "uuid",
+          "title": "Tenant Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tenant_id",
+        "organization_id",
+        "legal_entity_id"
+      ],
+      "title": "EntityTenantContext",
+      "type": "object"
+    },
+    "ProvenanceEdge": {
+      "additionalProperties": false,
+      "properties": {
+        "relation": {
+          "maxLength": 80,
+          "minLength": 1,
+          "pattern": "^[A-Z][A-Z0-9_]*$",
+          "title": "Relation",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/ResourceReference"
+        },
+        "target": {
+          "$ref": "#/$defs/ResourceReference"
+        }
+      },
+      "required": [
+        "source",
+        "target",
+        "relation"
+      ],
+      "title": "ProvenanceEdge",
+      "type": "object"
+    },
+    "ResourceReference": {
+      "additionalProperties": false,
+      "properties": {
+        "resource_id": {
+          "format": "uuid",
+          "title": "Resource Id",
+          "type": "string"
+        },
+        "resource_type": {
+          "minLength": 1,
+          "title": "Resource Type",
+          "type": "string"
+        },
+        "resource_version": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Resource Version"
+        }
+      },
+      "required": [
+        "resource_type",
+        "resource_id"
+      ],
+      "title": "ResourceReference",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "edges": {
+      "items": {
+        "$ref": "#/$defs/ProvenanceEdge"
+      },
+      "maxItems": 1000,
+      "title": "Edges",
+      "type": "array"
+    },
+    "missing_references": {
+      "items": {
+        "$ref": "#/$defs/ResourceReference"
+      },
+      "maxItems": 100,
+      "title": "Missing References",
+      "type": "array"
+    },
+    "nodes": {
+      "items": {
+        "$ref": "#/$defs/ResourceReference"
+      },
+      "maxItems": 500,
+      "title": "Nodes",
+      "type": "array"
+    },
+    "root": {
+      "$ref": "#/$defs/ResourceReference"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "tenant_context": {
+      "$ref": "#/$defs/EntityTenantContext"
+    }
+  },
+  "required": [
+    "schema_version",
+    "tenant_context",
+    "root",
+    "nodes",
+    "edges"
+  ],
+  "title": "ProvenanceTrace",
+  "type": "object"
+}

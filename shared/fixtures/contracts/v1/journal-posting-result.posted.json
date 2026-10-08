@@ -1,0 +1,37 @@
+{
+  "correlation": {
+    "causation_id": null,
+    "correlation_id": "00000000-0000-4000-8000-000000000005",
+    "request_id": "00000000-0000-4000-8000-000000000004"
+  },
+  "issues": [],
+  "ledger_references": [
+    {
+      "resource_id": "00000000-0000-4000-8000-000000000028",
+      "resource_type": "posted_journal",
+      "resource_version": "1"
+    }
+  ],
+  "operation_id": "00000000-0000-4000-8000-000000000026",
+  "outcome": "POSTED",
+  "posted_at": "2026-01-15T05:00:00Z",
+  "posted_journal_id": "00000000-0000-4000-8000-000000000028",
+  "producer": {
+    "algorithm_version": null,
+    "model_name": null,
+    "model_version": null,
+    "name": "ledgerai-contract-fixture",
+    "producer_type": "SERVICE",
+    "prompt_template_version": null,
+    "rule_or_policy_version": null,
+    "version": "1.0.0"
+  },
+  "proposal_id": "00000000-0000-4000-8000-000000000017",
+  "proposal_version": 1,
+  "schema_version": "1.0",
+  "tenant_context": {
+    "legal_entity_id": "00000000-0000-4000-8000-000000000003",
+    "organization_id": "00000000-0000-4000-8000-000000000002",
+    "tenant_id": "00000000-0000-4000-8000-000000000001"
+  }
+}

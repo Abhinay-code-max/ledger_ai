@@ -35,6 +35,8 @@ PERMISSIONS = {
     "policy:admin": "Administer unpublished policy versions",
     "financial-statement:read": "Read financial statements",
     "period-close:request": "Request period close",
+    "posting:execute": "Execute an approved journal posting",
+    "progress:read": "Read and stream workflow progress",
     "audit:read": "Read audit records",
 }
 
@@ -49,6 +51,8 @@ ROLE_PERMISSIONS = {
         "review:act",
         "financial-statement:read",
         "period-close:request",
+        "posting:execute",
+        "progress:read",
         "audit:read",
     },
     "accountant": {
@@ -63,6 +67,7 @@ ROLE_PERMISSIONS = {
         "review:correct",
         "review:request_evidence",
         "policy:read",
+        "progress:read",
     },
     "reviewer": {
         "workspace:read",
@@ -76,6 +81,7 @@ ROLE_PERMISSIONS = {
         "review:request_evidence",
         "review:escalate",
         "policy:read",
+        "progress:read",
     },
     "operator": {
         "workspace:read",
@@ -84,6 +90,7 @@ ROLE_PERMISSIONS = {
         "reconciliation:read",
         "exception:read",
         "review:read",
+        "progress:read",
     },
     "viewer": {
         "workspace:read",

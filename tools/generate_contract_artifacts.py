@@ -13,6 +13,20 @@ from pydantic import BaseModel
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+from ledgerai_contracts.v1.accounting import (  # noqa: E402
+    AccountingValidationResult,
+    FinancialStatementRequest,
+    FinancialStatementSnapshot,
+    JournalPostingRequest,
+    JournalPostingResult,
+    PeriodCloseRequest,
+    PeriodCloseResult,
+    PeriodCloseValidationResult,
+    PostingStatusResult,
+    ProgressEvent,
+    ProgressProjection,
+    ProvenanceTrace,
+)
 from ledgerai_contracts.v1.approvals import ApprovalDecision  # noqa: E402
 from ledgerai_contracts.v1.audit import AuditEvent  # noqa: E402
 from ledgerai_contracts.v1.documents import DocumentExtraction, DocumentMetadata  # noqa: E402
@@ -26,6 +40,7 @@ from ledgerai_contracts.v1.reconciliation import MatchProposal  # noqa: E402
 from ledgerai_contracts.v1.transactions import BankTransaction  # noqa: E402
 
 SCHEMA_MODELS: dict[str, type[BaseModel]] = {
+    "accounting-validation-result": AccountingValidationResult,
     "approval-decision": ApprovalDecision,
     "audit-event": AuditEvent,
     "bank-transaction": BankTransaction,
@@ -33,11 +48,22 @@ SCHEMA_MODELS: dict[str, type[BaseModel]] = {
     "document-metadata": DocumentMetadata,
     "error-envelope": ErrorEnvelope,
     "event-envelope": EventEnvelope,
+    "financial-statement-request": FinancialStatementRequest,
+    "financial-statement-snapshot": FinancialStatementSnapshot,
     "exception": ExceptionRecord,
     "journal-proposal": JournalProposal,
+    "journal-posting-request": JournalPostingRequest,
+    "journal-posting-result": JournalPostingResult,
     "match-proposal": MatchProposal,
     "policy-decision": PolicyDecision,
+    "period-close-request": PeriodCloseRequest,
+    "period-close-result": PeriodCloseResult,
+    "period-close-validation-result": PeriodCloseValidationResult,
+    "posting-status-result": PostingStatusResult,
     "processing-job": ProcessingJob,
+    "progress-event": ProgressEvent,
+    "progress-projection": ProgressProjection,
+    "provenance-trace": ProvenanceTrace,
 }
 
 U = {
@@ -62,6 +88,10 @@ U = {
     "period": "00000000-0000-4000-8000-000000000023",
     "workflow": "00000000-0000-4000-8000-000000000024",
     "audit": "00000000-0000-4000-8000-000000000025",
+    "operation": "00000000-0000-4000-8000-000000000026",
+    "snapshot": "00000000-0000-4000-8000-000000000027",
+    "posted_journal": "00000000-0000-4000-8000-000000000028",
+    "progress": "00000000-0000-4000-8000-000000000029",
 }
 TS = "2026-01-15T10:30:00+05:30"
 UTC_TS = "2026-01-15T05:00:00Z"
@@ -491,7 +521,157 @@ def event(event_type: str, index: int) -> dict[str, Any]:
     }
 
 
+POSTING_REQUEST = {
+    "schema_version": "1.0",
+    "tenant_context": TENANT,
+    "operation_id": U["operation"],
+    "proposal": ref("journal_proposal", U["journal"]),
+    "proposal_version": 1,
+    "accounting_period_id": U["period"],
+    "requested_at": TS,
+    "producer": SERVICE,
+    "correlation": CORRELATION,
+}
+ACCOUNTING_VALIDATION = {
+    "schema_version": "1.0",
+    "tenant_context": TENANT,
+    "operation_id": U["operation"],
+    "proposal_id": U["journal"],
+    "proposal_version": 1,
+    "outcome": "VALIDATED",
+    "issues": [],
+    "producer": SERVICE,
+    "correlation": CORRELATION,
+}
+POSTING_RESULT = {
+    "schema_version": "1.0",
+    "tenant_context": TENANT,
+    "operation_id": U["operation"],
+    "proposal_id": U["journal"],
+    "proposal_version": 1,
+    "outcome": "POSTED",
+    "posted_journal_id": U["posted_journal"],
+    "posted_at": TS,
+    "ledger_references": [ref("posted_journal", U["posted_journal"])],
+    "issues": [],
+    "producer": SERVICE,
+    "correlation": CORRELATION,
+}
+POSTING_STATUS = {
+    **POSTING_RESULT,
+    "outcome": "IN_PROGRESS",
+    "posted_journal_id": None,
+    "posted_at": None,
+    "ledger_references": [],
+}
+PERIOD_CLOSE_REQUEST = {
+    "schema_version": "1.0",
+    "tenant_context": TENANT,
+    "operation_id": U["operation"],
+    "accounting_period_id": U["period"],
+    "period_start": "2026-01-01",
+    "period_end": "2026-01-31",
+    "requested_at": TS,
+    "producer": SERVICE,
+    "correlation": CORRELATION,
+}
+PERIOD_CLOSE_VALIDATION = {
+    "schema_version": "1.0",
+    "tenant_context": TENANT,
+    "operation_id": U["operation"],
+    "accounting_period_id": U["period"],
+    "outcome": "VALIDATED",
+    "issues": [],
+    "producer": SERVICE,
+    "correlation": CORRELATION,
+}
+PERIOD_CLOSE_RESULT = {
+    "schema_version": "1.0",
+    "tenant_context": TENANT,
+    "operation_id": U["operation"],
+    "accounting_period_id": U["period"],
+    "outcome": "CLOSED",
+    "issues": [],
+    "closed_at": TS,
+    "producer": SERVICE,
+    "correlation": CORRELATION,
+}
+STATEMENT_REQUEST = {
+    "schema_version": "1.0",
+    "tenant_context": TENANT,
+    "operation_id": U["operation"],
+    "accounting_period_id": U["period"],
+    "statement_type": "TRIAL_BALANCE",
+    "as_of": TS,
+    "correlation": CORRELATION,
+}
+STATEMENT_SNAPSHOT = {
+    "schema_version": "1.0",
+    "snapshot_id": U["snapshot"],
+    "tenant_context": TENANT,
+    "accounting_period_id": U["period"],
+    "statement_type": "TRIAL_BALANCE",
+    "currency": "INR",
+    "as_of": TS,
+    "status": "AVAILABLE",
+    "lines": [
+        {
+            "line_id": "cash",
+            "account_reference": "1100",
+            "label": "Cash",
+            "amount": {"amount": "1250.00", "currency": "INR"},
+            "ledger_references": [ref("posted_journal", U["posted_journal"])],
+        }
+    ],
+    "producer": SERVICE,
+    "correlation": CORRELATION,
+}
+PROVENANCE_TRACE = {
+    "schema_version": "1.0",
+    "tenant_context": TENANT,
+    "root": ref("journal_proposal", U["journal"]),
+    "nodes": [ref("journal_proposal", U["journal"]), ref("posted_journal", U["posted_journal"])],
+    "edges": [
+        {
+            "source": ref("journal_proposal", U["journal"]),
+            "target": ref("posted_journal", U["posted_journal"]),
+            "relation": "POSTED_AS",
+        }
+    ],
+    "missing_references": [],
+}
+PROGRESS_EVENT = {
+    "schema_version": "1.0",
+    "event_id": U["progress"],
+    "tenant_context": TENANT,
+    "resource": ref("posting_operation", U["operation"], "2"),
+    "stage": "JOURNAL_POSTING",
+    "status": "IN_PROGRESS",
+    "occurred_at": TS,
+    "correlation_id": U["correlation"],
+    "percent": 50,
+    "reason_code": None,
+}
+PROGRESS_PROJECTION = {
+    "schema_version": "1.0",
+    "tenant_context": TENANT,
+    "resource": ref("posting_operation", U["operation"], "2"),
+    "stage": "JOURNAL_POSTING",
+    "status": "IN_PROGRESS",
+    "last_event_id": U["progress"],
+    "occurred_at": TS,
+    "correlation_id": U["correlation"],
+    "percent": 50,
+    "reason_code": None,
+}
+
+
 CONTRACT_FIXTURES: list[tuple[str, type[Any], dict[str, Any]]] = [
+    (
+        "accounting-validation-result.validated.json",
+        AccountingValidationResult,
+        ACCOUNTING_VALIDATION,
+    ),
     ("document-metadata.valid.json", DocumentMetadata, DOCUMENT),
     ("document-extraction.valid-invoice.json", DocumentExtraction, EXTRACTION),
     ("document-extraction.low-confidence.json", DocumentExtraction, LOW_CONFIDENCE_EXTRACTION),
@@ -503,6 +683,25 @@ CONTRACT_FIXTURES: list[tuple[str, type[Any], dict[str, Any]]] = [
     ("approval-decision.approved.json", ApprovalDecision, APPROVAL),
     ("approval-decision.rejected.json", ApprovalDecision, REJECTED_APPROVAL),
     ("audit-event.approval.json", AuditEvent, AUDIT),
+    (
+        "financial-statement-request.trial-balance.json",
+        FinancialStatementRequest,
+        STATEMENT_REQUEST,
+    ),
+    ("financial-statement-snapshot.available.json", FinancialStatementSnapshot, STATEMENT_SNAPSHOT),
+    ("journal-posting-request.valid.json", JournalPostingRequest, POSTING_REQUEST),
+    ("journal-posting-result.posted.json", JournalPostingResult, POSTING_RESULT),
+    ("period-close-request.valid.json", PeriodCloseRequest, PERIOD_CLOSE_REQUEST),
+    ("period-close-result.closed.json", PeriodCloseResult, PERIOD_CLOSE_RESULT),
+    (
+        "period-close-validation-result.validated.json",
+        PeriodCloseValidationResult,
+        PERIOD_CLOSE_VALIDATION,
+    ),
+    ("posting-status-result.in-progress.json", PostingStatusResult, POSTING_STATUS),
+    ("progress-event.posting.json", ProgressEvent, PROGRESS_EVENT),
+    ("progress-projection.posting.json", ProgressProjection, PROGRESS_PROJECTION),
+    ("provenance-trace.posting.json", ProvenanceTrace, PROVENANCE_TRACE),
 ]
 CONTRACT_FIXTURES += [
     (f"processing-job.{state.lower().replace('_', '-')}.json", ProcessingJob, job(state, i))

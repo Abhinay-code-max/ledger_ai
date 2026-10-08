@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     enable_test_identity: bool = False
     log_level: str = "INFO"
     service_name: str = "ledgerai-backend"
-    service_version: str = "1.2.0"
+    service_version: str = "1.3.0"
     request_timeout_seconds: float = Field(default=30.0, gt=0, le=120)
     max_request_bytes: int = Field(default=1_048_576, ge=1_024, le=10_485_760)
     storage_endpoint_url: str | None = None

@@ -10,7 +10,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from hashlib import sha256
 from time import monotonic, time
-from typing import Any, Generic, Protocol, TypeVar
+from typing import Any, Generic, Protocol, TypeVar, cast
 from urllib.parse import urljoin, urlsplit
 from uuid import UUID
 
@@ -23,6 +23,14 @@ from ledgerai_backend.core.observability import (
     adapter_contract_rejections,
     adapter_latency,
     circuit_events,
+)
+from ledgerai_contracts.v1.accounting import (
+    AccountingValidationResult,
+    FinancialStatementSnapshot,
+    JournalPostingResult,
+    PeriodCloseResult,
+    PeriodCloseValidationResult,
+    PostingStatusResult,
 )
 from ledgerai_contracts.v1.documents import DocumentExtraction
 from ledgerai_contracts.v1.exceptions import ExceptionRecord
@@ -193,6 +201,7 @@ class SecureRoleAdapter(Generic[ResponseModel]):
         correlation_id: UUID,
         causation_id: UUID | None = None,
         expected_resource: tuple[str, UUID] | None = None,
+        response_model: type[BaseModel] | None = None,
     ) -> ResponseModel:
         if not path.startswith("/") or ".." in path or "?" in path or "#" in path:
             raise ValueError("adapter path is not a fixed safe path")
@@ -262,10 +271,11 @@ class SecureRoleAdapter(Generic[ResponseModel]):
                     raise AdapterError("RESPONSE_TOO_LARGE")
                 raw = _unique_json(body)
                 try:
-                    result = self.response_model.model_validate(raw)
+                    result = (response_model or self.response_model).model_validate(raw)
                 except ValidationError as exc:
                     raise AdapterError("CONTRACT_REJECTED") from exc
-                self._verify_context(result, tenant_context)
+                typed_result = cast(ResponseModel, result)
+                self._verify_context(typed_result, tenant_context)
                 if expected_resource:
                     serialized = json.dumps(result.model_dump(mode="json"), separators=(",", ":"))
                     if str(expected_resource[1]) not in serialized:
@@ -276,7 +286,7 @@ class SecureRoleAdapter(Generic[ResponseModel]):
                     monotonic() - call_started,
                     {"service": self.security.audience, "outcome": "success"},
                 )
-                return result
+                return typed_result
             except (httpx.TimeoutException, httpx.NetworkError, TimeoutError) as exc:
                 last = AdapterError("DOWNSTREAM_TIMEOUT", retryable=True, unknown_outcome=True)
                 self._circuit.failure()
@@ -365,6 +375,68 @@ class Role2Adapter(SecureRoleAdapter[AccountingAcceptance]):
 
     async def request_posting_validation(self, **kwargs: Any) -> AccountingAcceptance:
         return await self.call(path="/v1/journal-posting-requests", **kwargs)
+
+    async def validate_posting(self, **kwargs: Any) -> AccountingValidationResult:
+        return cast(
+            AccountingValidationResult,
+            await self.call(
+                path="/v1/accounting-validations",
+                response_model=AccountingValidationResult,
+                **kwargs,
+            ),
+        )
+
+    async def post_journal(self, **kwargs: Any) -> JournalPostingResult:
+        return cast(
+            JournalPostingResult,
+            await self.call(
+                path="/v1/journal-postings", response_model=JournalPostingResult, **kwargs
+            ),
+        )
+
+    async def posting_status(self, **kwargs: Any) -> PostingStatusResult:
+        return cast(
+            PostingStatusResult,
+            await self.call(
+                path="/v1/journal-posting-status",
+                response_model=PostingStatusResult,
+                **kwargs,
+            ),
+        )
+
+    async def validate_period_close(self, **kwargs: Any) -> PeriodCloseValidationResult:
+        return cast(
+            PeriodCloseValidationResult,
+            await self.call(
+                path="/v1/period-close-validations",
+                response_model=PeriodCloseValidationResult,
+                **kwargs,
+            ),
+        )
+
+    async def close_period(self, **kwargs: Any) -> PeriodCloseResult:
+        return cast(
+            PeriodCloseResult,
+            await self.call(path="/v1/period-closes", response_model=PeriodCloseResult, **kwargs),
+        )
+
+    async def period_close_status(self, **kwargs: Any) -> PeriodCloseResult:
+        return cast(
+            PeriodCloseResult,
+            await self.call(
+                path="/v1/period-close-status", response_model=PeriodCloseResult, **kwargs
+            ),
+        )
+
+    async def financial_statement(self, **kwargs: Any) -> FinancialStatementSnapshot:
+        return cast(
+            FinancialStatementSnapshot,
+            await self.call(
+                path="/v1/financial-statements",
+                response_model=FinancialStatementSnapshot,
+                **kwargs,
+            ),
+        )
 
 
 class Role6Classification(BaseModel):
