@@ -76,6 +76,10 @@ dispatcher after Redis recovers. Inbox claims use unique `consumer_name + event_
 broker delivery is harmless. Dead-letter inspection must use tenant-scoped operational queries;
 repair the cause and replay by creating an authorized new attempt, never by erasing history.
 
+The relay can also be given one known event ID for tenant-scoped operational recovery. That filter
+is applied before the row is locked, so a busy bounded batch cannot hide the selected event. It
+does not bypass RLS, due-time checks, or normal attempt/dead-letter accounting.
+
 Correlation IDs flow through database rows, event references, queue arguments, and inbox records.
 Metrics use only operation/outcome/state labels—never filenames, object keys, URLs, narrations,
 tokens, tenant IDs, or DSNs.

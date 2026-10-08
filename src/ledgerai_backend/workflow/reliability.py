@@ -6,7 +6,7 @@ import asyncio
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import ColumnElement, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -88,20 +88,32 @@ async def dispatch_pending_outbox(
     publisher: EventPublisherPort,
     *,
     tenant_id: UUID,
+    event_id: UUID | None = None,
     batch_size: int = 50,
     maximum_attempts: int = 8,
 ) -> int:
+    """Publish due outbox rows, optionally replaying one tenant-scoped event.
+
+    ``event_id`` is deliberately an additional predicate, rather than a
+    post-claim filter.  Operational recovery can therefore target one known
+    event without a busy tenant queue consuming a bounded relay batch first.
+    The row remains protected by the same tenant RLS context and row lock as
+    normal relay operation.
+    """
     published = 0
     async with session_factory() as session, session.begin():
         await set_tenant_context(session, tenant_id)
+        due: list[ColumnElement[bool]] = [
+            OutboxEvent.status.in_([DeliveryStatus.PENDING, DeliveryStatus.FAILED]),
+            (OutboxEvent.next_attempt_at.is_(None))
+            | (OutboxEvent.next_attempt_at <= datetime.now(UTC)),
+        ]
+        if event_id is not None:
+            due.append(OutboxEvent.event_id == event_id)
         rows = list(
             await session.scalars(
                 select(OutboxEvent)
-                .where(
-                    OutboxEvent.status.in_([DeliveryStatus.PENDING, DeliveryStatus.FAILED]),
-                    (OutboxEvent.next_attempt_at.is_(None))
-                    | (OutboxEvent.next_attempt_at <= datetime.now(UTC)),
-                )
+                .where(*due)
                 .order_by(OutboxEvent.created_at)
                 .limit(batch_size)
                 .with_for_update(skip_locked=True)

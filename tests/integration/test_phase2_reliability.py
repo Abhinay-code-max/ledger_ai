@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from uuid import UUID, uuid4
 
 import pytest
+from phase1_postgres_support import ACME_TENANT
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
@@ -65,18 +66,28 @@ async def test_outbox_survives_publish_failure_and_recovers(runtime_engine) -> N
         )
 
     failed = RecordingPublisher(fail=True)
-    assert await dispatch_pending_outbox(factory, failed, tenant_id=tenant_id, batch_size=50) == 0
+    assert (
+        await dispatch_pending_outbox(
+            factory, failed, tenant_id=tenant_id, event_id=event_id, batch_size=50
+        )
+        == 0
+    )
     async with factory() as session, session.begin():
         await set_tenant_context(session, tenant_id)
         row = await session.scalar(select(OutboxEvent).where(OutboxEvent.event_id == event_id))
         assert row is not None
         assert row.status == DeliveryStatus.FAILED
         assert row.attempt_count == 1
+        assert row.last_error_code == "PUBLISH_FAILED"
+        assert row.next_attempt_at is not None
         row.next_attempt_at = None
 
     recovered = RecordingPublisher()
     assert (
-        await dispatch_pending_outbox(factory, recovered, tenant_id=tenant_id, batch_size=50) >= 1
+        await dispatch_pending_outbox(
+            factory, recovered, tenant_id=tenant_id, event_id=event_id, batch_size=50
+        )
+        >= 1
     )
     assert event_id in recovered.events
     async with factory() as session, session.begin():
@@ -85,6 +96,40 @@ async def test_outbox_survives_publish_failure_and_recovers(runtime_engine) -> N
         assert row is not None
         assert row.status == DeliveryStatus.COMPLETED
         assert row.published_at is not None
+
+
+@pytest.mark.asyncio
+async def test_targeted_outbox_replay_cannot_claim_a_foreign_tenant_event(runtime_engine) -> None:  # type: ignore[no-untyped-def]
+    tenant_id = stable_id("nova:tenant")
+    organization_id = stable_id("nova:organization")
+    legal_entity_id = stable_id("nova:legal-entity")
+    event_id = uuid4()
+    factory = async_sessionmaker(runtime_engine, expire_on_commit=False)
+    async with factory() as session, session.begin():
+        await set_tenant_context(session, tenant_id)
+        session.add(
+            OutboxEvent(
+                tenant_id=tenant_id,
+                organization_id=organization_id,
+                legal_entity_id=legal_entity_id,
+                event_id=event_id,
+                event_type="workflow.failed.v1",
+                schema_version="1.0",
+                producer="integration-test",
+                payload_reference={"resource_type": "job", "resource_id": str(uuid4())},
+                correlation_id=uuid4(),
+                status=DeliveryStatus.PENDING,
+            )
+        )
+
+    publisher = RecordingPublisher()
+    assert (
+        await dispatch_pending_outbox(
+            factory, publisher, tenant_id=ACME_TENANT, event_id=event_id, batch_size=1
+        )
+        == 0
+    )
+    assert publisher.events == []
 
 
 @pytest.mark.asyncio
