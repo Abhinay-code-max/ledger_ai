@@ -1,0 +1,40 @@
+# syntax=docker/dockerfile:1
+FROM python:3.11-slim AS builder
+
+WORKDIR /build
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+RUN pip install --no-cache-dir uv
+
+COPY pyproject.toml uv.lock ./
+COPY src/ src/
+
+RUN uv pip install --no-cache-dir --system -e .
+
+# Final minimal runtime image
+FROM python:3.11-slim AS runner
+
+WORKDIR /app
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    LEDGERAI_ROLE1_ENVIRONMENT=production
+
+# Create non-root unprivileged user
+RUN groupadd -g 10001 appgroup && \
+    useradd -u 10001 -g appgroup -s /bin/sh -M appuser
+
+# Copy installed python site-packages and app files
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/bin/uvicorn /usr/local/bin/uvicorn
+COPY --from=builder /build/src /app/src
+COPY data/manifests /app/data/manifests
+
+USER appuser
+
+EXPOSE 8101
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8101/health/live')" || exit 1
+
+ENTRYPOINT ["uvicorn", "ledgerai_role1.service.app:app", "--host", "0.0.0.0", "--port", "8101"]
