@@ -11,6 +11,7 @@ from ledgerai_backend.database.base import Base
 from ledgerai_backend.ingestion import models as ingestion_models  # noqa: F401
 from ledgerai_backend.integration import models as integration_models  # noqa: F401
 from ledgerai_backend.tenancy import models  # noqa: F401
+from ledgerai_role2.database import models as role2_models  # noqa: F401
 
 config = context.config
 if config.config_file_name:
