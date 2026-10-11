@@ -1,0 +1,21 @@
+=======================================================
+DOCUMENT TYPE: BANK_STATEMENT
+SUPPLIER: Pacific Chartered Bank
+CUSTOMER: Nova Technologies Inc
+DOCUMENT NUMBER: PCB-STMT-202601
+ISSUE DATE: 2026-01-31
+
+
+
+
+BANK ACCOUNT: ****6677
+CURRENCY: USD
+-------------------------------------------------------
+LINE ITEMS:
+  1. Wire Transfer In - Client Retainer | Qty: 1 | Price: USD 15000.00 | Amount: USD 15000.00
+  2. Cloud Provider Auto-Debit | Qty: 1 | Price: USD 1080.00 | Amount: USD 1080.00
+-------------------------------------------------------
+
+
+TOTAL AMOUNT: USD 13920.00
+=======================================================

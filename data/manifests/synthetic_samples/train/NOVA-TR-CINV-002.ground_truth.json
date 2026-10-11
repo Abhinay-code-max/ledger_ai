@@ -1,0 +1,81 @@
+{
+  "document_type": "CUSTOMER_INVOICE",
+  "document_number": "NOVA-OUT-9912",
+  "issue_date": "2026-01-12",
+  "due_date": "2026-01-26",
+  "supplier_name": "Nova Technologies Inc",
+  "customer_name": "Global Retail Partners",
+  "supplier_tax_id": "US-EIN-98-7654321",
+  "customer_tax_id": "GB-VAT-9921827",
+  "purchase_order_reference": "GRP-PO-110",
+  "subtotal": "15000.00",
+  "tax_amount": "1200.00",
+  "total_amount": "16200.00",
+  "currency": "USD",
+  "bank_account_reference": "****9988",
+  "line_items": [
+    {
+      "line_number": 1,
+      "description": "Enterprise SaaS Annual License",
+      "quantity": "1",
+      "unit_price": "12000.00",
+      "line_amount": "12000.00",
+      "currency": "USD",
+      "confidence": "1.00",
+      "provenance": [
+        {
+          "page_number": 1,
+          "x": "10.0",
+          "y": "100.0",
+          "width": "200.0",
+          "height": "15.0",
+          "text_snippet": "Enterprise SaaS Annual License",
+          "confidence": "1.00",
+          "evidence_hash": "c06a2d67e9176326ea29d613d9133ab185a08be17b5740c5f7563669273f2b45"
+        }
+      ]
+    },
+    {
+      "line_number": 2,
+      "description": "Implementation Onboarding Support",
+      "quantity": "1",
+      "unit_price": "3000.00",
+      "line_amount": "3000.00",
+      "currency": "USD",
+      "confidence": "1.00",
+      "provenance": [
+        {
+          "page_number": 1,
+          "x": "10.0",
+          "y": "120.0",
+          "width": "200.0",
+          "height": "15.0",
+          "text_snippet": "Implementation Onboarding Support",
+          "confidence": "1.00",
+          "evidence_hash": "c06a2d67e9176326ea29d613d9133ab185a08be17b5740c5f7563669273f2b45"
+        }
+      ]
+    }
+  ],
+  "confidences": {
+    "supplier_name": "1.00",
+    "invoice_number": "1.00",
+    "invoice_date": "1.00",
+    "total": "1.00"
+  },
+  "provenances": {
+    "total": [
+      {
+        "page_number": 1,
+        "x": "150.0",
+        "y": "250.0",
+        "width": "60.0",
+        "height": "20.0",
+        "text_snippet": "16200.00",
+        "confidence": "1.00",
+        "evidence_hash": "c06a2d67e9176326ea29d613d9133ab185a08be17b5740c5f7563669273f2b45"
+      }
+    ]
+  },
+  "validation_issues": []
+}

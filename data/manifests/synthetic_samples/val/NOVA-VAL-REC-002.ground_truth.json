@@ -1,0 +1,60 @@
+{
+  "document_type": "RECEIPT",
+  "document_number": "CAB-88102",
+  "issue_date": "2026-01-19",
+  "due_date": null,
+  "supplier_name": "Metro Executive Rides",
+  "customer_name": null,
+  "supplier_tax_id": null,
+  "customer_tax_id": null,
+  "purchase_order_reference": null,
+  "subtotal": "65.00",
+  "tax_amount": "6.50",
+  "total_amount": "71.50",
+  "currency": "EUR",
+  "bank_account_reference": null,
+  "line_items": [
+    {
+      "line_number": 1,
+      "description": "Airport Transit Executive Car",
+      "quantity": "1",
+      "unit_price": "65.00",
+      "line_amount": "65.00",
+      "currency": "EUR",
+      "confidence": "1.00",
+      "provenance": [
+        {
+          "page_number": 1,
+          "x": "10.0",
+          "y": "100.0",
+          "width": "200.0",
+          "height": "15.0",
+          "text_snippet": "Airport Transit Executive Car",
+          "confidence": "1.00",
+          "evidence_hash": "2656bb94c23485fffc637a921f144bb611088f2d573879b99c8bb6d5266a7dc9"
+        }
+      ]
+    }
+  ],
+  "confidences": {
+    "supplier_name": "1.00",
+    "invoice_number": "1.00",
+    "invoice_date": "1.00",
+    "total": "1.00"
+  },
+  "provenances": {
+    "total": [
+      {
+        "page_number": 1,
+        "x": "150.0",
+        "y": "250.0",
+        "width": "60.0",
+        "height": "20.0",
+        "text_snippet": "71.50",
+        "confidence": "1.00",
+        "evidence_hash": "2656bb94c23485fffc637a921f144bb611088f2d573879b99c8bb6d5266a7dc9"
+      }
+    ]
+  },
+  "validation_issues": []
+}

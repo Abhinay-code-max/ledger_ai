@@ -1,0 +1,81 @@
+{
+  "document_type": "SUPPLIER_INVOICE",
+  "document_number": "ZT-2026-9041",
+  "issue_date": "2026-01-20",
+  "due_date": "2026-02-19",
+  "supplier_name": "Zenith Telecommunications Pte",
+  "customer_name": "Nova Technologies Inc",
+  "supplier_tax_id": "SG-GST-201938218M",
+  "customer_tax_id": "US-EIN-98-7654321",
+  "purchase_order_reference": "PO-TEST-501",
+  "subtotal": "3500.00",
+  "tax_amount": "280.00",
+  "total_amount": "3780.00",
+  "currency": "USD",
+  "bank_account_reference": "****5544",
+  "line_items": [
+    {
+      "line_number": 1,
+      "description": "Dedicated Fiber Uplink 10Gbps",
+      "quantity": "1",
+      "unit_price": "3200.00",
+      "line_amount": "3200.00",
+      "currency": "USD",
+      "confidence": "1.00",
+      "provenance": [
+        {
+          "page_number": 1,
+          "x": "10.0",
+          "y": "100.0",
+          "width": "200.0",
+          "height": "15.0",
+          "text_snippet": "Dedicated Fiber Uplink 10Gbps",
+          "confidence": "1.00",
+          "evidence_hash": "8b16f320df021a356c529fa8505b8a509387e81949cb217206c94feb758911fb"
+        }
+      ]
+    },
+    {
+      "line_number": 2,
+      "description": "Static IP Block /28",
+      "quantity": "1",
+      "unit_price": "300.00",
+      "line_amount": "300.00",
+      "currency": "USD",
+      "confidence": "1.00",
+      "provenance": [
+        {
+          "page_number": 1,
+          "x": "10.0",
+          "y": "120.0",
+          "width": "200.0",
+          "height": "15.0",
+          "text_snippet": "Static IP Block /28",
+          "confidence": "1.00",
+          "evidence_hash": "8b16f320df021a356c529fa8505b8a509387e81949cb217206c94feb758911fb"
+        }
+      ]
+    }
+  ],
+  "confidences": {
+    "supplier_name": "1.00",
+    "invoice_number": "1.00",
+    "invoice_date": "1.00",
+    "total": "1.00"
+  },
+  "provenances": {
+    "total": [
+      {
+        "page_number": 1,
+        "x": "150.0",
+        "y": "250.0",
+        "width": "60.0",
+        "height": "20.0",
+        "text_snippet": "3780.00",
+        "confidence": "1.00",
+        "evidence_hash": "8b16f320df021a356c529fa8505b8a509387e81949cb217206c94feb758911fb"
+      }
+    ]
+  },
+  "validation_issues": []
+}

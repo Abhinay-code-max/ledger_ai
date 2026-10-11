@@ -1,0 +1,21 @@
+=======================================================
+DOCUMENT TYPE: SUPPLIER_INVOICE
+SUPPLIER: Acme Cloud Services Ltd
+CUSTOMER: Nova Technologies Inc
+DOCUMENT NUMBER: ACME-2026-881
+ISSUE DATE: 2026-01-10
+DUE DATE: 2026-02-09
+SUPPLIER TAX ID: US-EIN-12-3456789
+CUSTOMER TAX ID: US-EIN-98-7654321
+PURCHASE ORDER: PO-2026-0042
+BANK ACCOUNT: ****4321
+CURRENCY: USD
+-------------------------------------------------------
+LINE ITEMS:
+  1. Cloud Compute Standard Tier | Qty: 2 | Price: USD 450.00 | Amount: USD 900.00
+  2. Storage Volume 10TB | Qty: 1 | Price: USD 100.00 | Amount: USD 100.00
+-------------------------------------------------------
+SUBTOTAL: USD 1000.00
+TAX: USD 80.00
+TOTAL AMOUNT: USD 1080.00
+=======================================================

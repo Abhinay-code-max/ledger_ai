@@ -1,0 +1,81 @@
+{
+  "document_type": "PURCHASE_ORDER",
+  "document_number": "PO-TEST-8801",
+  "issue_date": "2026-01-25",
+  "due_date": "2026-02-24",
+  "supplier_name": "Quantum Server Systems",
+  "customer_name": "Nova Technologies Inc",
+  "supplier_tax_id": "US-EIN-77-6655443",
+  "customer_tax_id": "US-EIN-98-7654321",
+  "purchase_order_reference": "PO-TEST-8801",
+  "subtotal": "11400.00",
+  "tax_amount": "912.00",
+  "total_amount": "12312.00",
+  "currency": "USD",
+  "bank_account_reference": null,
+  "line_items": [
+    {
+      "line_number": 1,
+      "description": "Rackmount Server Node 2U",
+      "quantity": "2",
+      "unit_price": "4500.00",
+      "line_amount": "9000.00",
+      "currency": "USD",
+      "confidence": "1.00",
+      "provenance": [
+        {
+          "page_number": 1,
+          "x": "10.0",
+          "y": "100.0",
+          "width": "200.0",
+          "height": "15.0",
+          "text_snippet": "Rackmount Server Node 2U",
+          "confidence": "1.00",
+          "evidence_hash": "09e8972ed90f0260d1cc35c3595072f987db88b4701ea41011d4fec0ccc16215"
+        }
+      ]
+    },
+    {
+      "line_number": 2,
+      "description": "Enterprise NVMe 7.68TB",
+      "quantity": "4",
+      "unit_price": "600.00",
+      "line_amount": "2400.00",
+      "currency": "USD",
+      "confidence": "1.00",
+      "provenance": [
+        {
+          "page_number": 1,
+          "x": "10.0",
+          "y": "120.0",
+          "width": "200.0",
+          "height": "15.0",
+          "text_snippet": "Enterprise NVMe 7.68TB",
+          "confidence": "1.00",
+          "evidence_hash": "09e8972ed90f0260d1cc35c3595072f987db88b4701ea41011d4fec0ccc16215"
+        }
+      ]
+    }
+  ],
+  "confidences": {
+    "supplier_name": "1.00",
+    "invoice_number": "1.00",
+    "invoice_date": "1.00",
+    "total": "1.00"
+  },
+  "provenances": {
+    "total": [
+      {
+        "page_number": 1,
+        "x": "150.0",
+        "y": "250.0",
+        "width": "60.0",
+        "height": "20.0",
+        "text_snippet": "12312.00",
+        "confidence": "1.00",
+        "evidence_hash": "09e8972ed90f0260d1cc35c3595072f987db88b4701ea41011d4fec0ccc16215"
+      }
+    ]
+  },
+  "validation_issues": []
+}

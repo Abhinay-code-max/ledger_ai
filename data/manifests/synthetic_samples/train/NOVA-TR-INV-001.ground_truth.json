@@ -1,0 +1,81 @@
+{
+  "document_type": "SUPPLIER_INVOICE",
+  "document_number": "ACME-2026-881",
+  "issue_date": "2026-01-10",
+  "due_date": "2026-02-09",
+  "supplier_name": "Acme Cloud Services Ltd",
+  "customer_name": "Nova Technologies Inc",
+  "supplier_tax_id": "US-EIN-12-3456789",
+  "customer_tax_id": "US-EIN-98-7654321",
+  "purchase_order_reference": "PO-2026-0042",
+  "subtotal": "1000.00",
+  "tax_amount": "80.00",
+  "total_amount": "1080.00",
+  "currency": "USD",
+  "bank_account_reference": "****4321",
+  "line_items": [
+    {
+      "line_number": 1,
+      "description": "Cloud Compute Standard Tier",
+      "quantity": "2",
+      "unit_price": "450.00",
+      "line_amount": "900.00",
+      "currency": "USD",
+      "confidence": "1.00",
+      "provenance": [
+        {
+          "page_number": 1,
+          "x": "10.0",
+          "y": "100.0",
+          "width": "200.0",
+          "height": "15.0",
+          "text_snippet": "Cloud Compute Standard Tier",
+          "confidence": "1.00",
+          "evidence_hash": "4db0b3cbbf89780b9e0a43285fa74dc8328231140559cc4a34adc37a944ddab0"
+        }
+      ]
+    },
+    {
+      "line_number": 2,
+      "description": "Storage Volume 10TB",
+      "quantity": "1",
+      "unit_price": "100.00",
+      "line_amount": "100.00",
+      "currency": "USD",
+      "confidence": "1.00",
+      "provenance": [
+        {
+          "page_number": 1,
+          "x": "10.0",
+          "y": "120.0",
+          "width": "200.0",
+          "height": "15.0",
+          "text_snippet": "Storage Volume 10TB",
+          "confidence": "1.00",
+          "evidence_hash": "4db0b3cbbf89780b9e0a43285fa74dc8328231140559cc4a34adc37a944ddab0"
+        }
+      ]
+    }
+  ],
+  "confidences": {
+    "supplier_name": "1.00",
+    "invoice_number": "1.00",
+    "invoice_date": "1.00",
+    "total": "1.00"
+  },
+  "provenances": {
+    "total": [
+      {
+        "page_number": 1,
+        "x": "150.0",
+        "y": "250.0",
+        "width": "60.0",
+        "height": "20.0",
+        "text_snippet": "1080.00",
+        "confidence": "1.00",
+        "evidence_hash": "4db0b3cbbf89780b9e0a43285fa74dc8328231140559cc4a34adc37a944ddab0"
+      }
+    ]
+  },
+  "validation_issues": []
+}

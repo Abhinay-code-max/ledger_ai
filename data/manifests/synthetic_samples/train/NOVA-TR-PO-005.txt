@@ -1,0 +1,21 @@
+=======================================================
+DOCUMENT TYPE: PURCHASE_ORDER
+SUPPLIER: Apex Office Systems
+CUSTOMER: Nova Technologies Inc
+DOCUMENT NUMBER: PO-2026-0042
+ISSUE DATE: 2026-01-05
+DUE DATE: 2026-01-20
+SUPPLIER TAX ID: US-EIN-55-1234567
+CUSTOMER TAX ID: US-EIN-98-7654321
+PURCHASE ORDER: PO-2026-0042
+
+CURRENCY: USD
+-------------------------------------------------------
+LINE ITEMS:
+  1. Ergonomic Mesh Chair | Qty: 5 | Price: USD 250.00 | Amount: USD 1250.00
+  2. Standing Desk Converter | Qty: 3 | Price: USD 180.00 | Amount: USD 540.00
+-------------------------------------------------------
+SUBTOTAL: USD 1790.00
+TAX: USD 143.20
+TOTAL AMOUNT: USD 1933.20
+=======================================================

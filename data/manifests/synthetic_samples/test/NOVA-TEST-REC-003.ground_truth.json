@@ -1,0 +1,81 @@
+{
+  "document_type": "RECEIPT",
+  "document_number": "SED-REC-3310",
+  "issue_date": "2026-01-24",
+  "due_date": null,
+  "supplier_name": "Skyline Express Dining",
+  "customer_name": null,
+  "supplier_tax_id": "GST-06BBBBB1111B2Z6",
+  "customer_tax_id": null,
+  "purchase_order_reference": null,
+  "subtotal": "950.00",
+  "tax_amount": "47.50",
+  "total_amount": "997.50",
+  "currency": "INR",
+  "bank_account_reference": null,
+  "line_items": [
+    {
+      "line_number": 1,
+      "description": "Executive Lunch Buffet",
+      "quantity": "1",
+      "unit_price": "850.00",
+      "line_amount": "850.00",
+      "currency": "INR",
+      "confidence": "1.00",
+      "provenance": [
+        {
+          "page_number": 1,
+          "x": "10.0",
+          "y": "100.0",
+          "width": "200.0",
+          "height": "15.0",
+          "text_snippet": "Executive Lunch Buffet",
+          "confidence": "1.00",
+          "evidence_hash": "bd364c4457b34787c3cb2de3c3c17b0a3cafd7bbc420d421b41d506267de24cf"
+        }
+      ]
+    },
+    {
+      "line_number": 2,
+      "description": "Mineral Water 1L",
+      "quantity": "2",
+      "unit_price": "50.00",
+      "line_amount": "100.00",
+      "currency": "INR",
+      "confidence": "1.00",
+      "provenance": [
+        {
+          "page_number": 1,
+          "x": "10.0",
+          "y": "120.0",
+          "width": "200.0",
+          "height": "15.0",
+          "text_snippet": "Mineral Water 1L",
+          "confidence": "1.00",
+          "evidence_hash": "bd364c4457b34787c3cb2de3c3c17b0a3cafd7bbc420d421b41d506267de24cf"
+        }
+      ]
+    }
+  ],
+  "confidences": {
+    "supplier_name": "1.00",
+    "invoice_number": "1.00",
+    "invoice_date": "1.00",
+    "total": "1.00"
+  },
+  "provenances": {
+    "total": [
+      {
+        "page_number": 1,
+        "x": "150.0",
+        "y": "250.0",
+        "width": "60.0",
+        "height": "20.0",
+        "text_snippet": "997.50",
+        "confidence": "1.00",
+        "evidence_hash": "bd364c4457b34787c3cb2de3c3c17b0a3cafd7bbc420d421b41d506267de24cf"
+      }
+    ]
+  },
+  "validation_issues": []
+}
