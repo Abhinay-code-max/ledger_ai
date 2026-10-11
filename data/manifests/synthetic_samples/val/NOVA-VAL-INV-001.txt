@@ -1,0 +1,21 @@
+=======================================================
+DOCUMENT TYPE: SUPPLIER_INVOICE
+SUPPLIER: CyberShield Defense GmbH
+CUSTOMER: Nova Technologies Inc
+DOCUMENT NUMBER: CSD-INV-4402
+ISSUE DATE: 2026-01-18
+DUE DATE: 2026-02-17
+SUPPLIER TAX ID: DE-VAT-123456789
+CUSTOMER TAX ID: US-EIN-98-7654321
+PURCHASE ORDER: PO-VAL-881
+BANK ACCOUNT: ****7766
+CURRENCY: EUR
+-------------------------------------------------------
+LINE ITEMS:
+  1. Endpoint Protection Suite Q1 | Qty: 1 | Price: EUR 2400.00 | Amount: EUR 2400.00
+  2. Security Audit Hours | Qty: 10 | Price: EUR 150.00 | Amount: EUR 1500.00
+-------------------------------------------------------
+SUBTOTAL: EUR 3900.00
+TAX: EUR 741.00
+TOTAL AMOUNT: EUR 4641.00
+=======================================================

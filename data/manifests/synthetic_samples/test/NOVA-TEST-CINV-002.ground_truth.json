@@ -1,0 +1,81 @@
+{
+  "document_type": "CUSTOMER_INVOICE",
+  "document_number": "NOVA-INV-1092",
+  "issue_date": "2026-01-22",
+  "due_date": "2026-02-05",
+  "supplier_name": "Nova Technologies Inc",
+  "customer_name": "Aura Logistics Group",
+  "supplier_tax_id": "US-EIN-98-7654321",
+  "customer_tax_id": "US-EIN-44-9988776",
+  "purchase_order_reference": "ALG-PO-882",
+  "subtotal": "10000.00",
+  "tax_amount": "800.00",
+  "total_amount": "10800.00",
+  "currency": "USD",
+  "bank_account_reference": "****1234",
+  "line_items": [
+    {
+      "line_number": 1,
+      "description": "Warehouse Optimization Module",
+      "quantity": "1",
+      "unit_price": "8500.00",
+      "line_amount": "8500.00",
+      "currency": "USD",
+      "confidence": "1.00",
+      "provenance": [
+        {
+          "page_number": 1,
+          "x": "10.0",
+          "y": "100.0",
+          "width": "200.0",
+          "height": "15.0",
+          "text_snippet": "Warehouse Optimization Module",
+          "confidence": "1.00",
+          "evidence_hash": "2fe24b0f89e4ec680894e9a2fb3cc7871df7cbdf4649a47584321b6647a8e33b"
+        }
+      ]
+    },
+    {
+      "line_number": 2,
+      "description": "Custom API Connector",
+      "quantity": "1",
+      "unit_price": "1500.00",
+      "line_amount": "1500.00",
+      "currency": "USD",
+      "confidence": "1.00",
+      "provenance": [
+        {
+          "page_number": 1,
+          "x": "10.0",
+          "y": "120.0",
+          "width": "200.0",
+          "height": "15.0",
+          "text_snippet": "Custom API Connector",
+          "confidence": "1.00",
+          "evidence_hash": "2fe24b0f89e4ec680894e9a2fb3cc7871df7cbdf4649a47584321b6647a8e33b"
+        }
+      ]
+    }
+  ],
+  "confidences": {
+    "supplier_name": "1.00",
+    "invoice_number": "1.00",
+    "invoice_date": "1.00",
+    "total": "1.00"
+  },
+  "provenances": {
+    "total": [
+      {
+        "page_number": 1,
+        "x": "150.0",
+        "y": "250.0",
+        "width": "60.0",
+        "height": "20.0",
+        "text_snippet": "10800.00",
+        "confidence": "1.00",
+        "evidence_hash": "2fe24b0f89e4ec680894e9a2fb3cc7871df7cbdf4649a47584321b6647a8e33b"
+      }
+    ]
+  },
+  "validation_issues": []
+}

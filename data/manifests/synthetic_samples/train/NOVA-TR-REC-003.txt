@@ -1,0 +1,21 @@
+=======================================================
+DOCUMENT TYPE: RECEIPT
+SUPPLIER: Station Cafe & Bistro
+
+DOCUMENT NUMBER: REC-77319
+ISSUE DATE: 2026-01-14
+
+SUPPLIER TAX ID: GST-27AAAAA0000A1Z5
+
+
+
+CURRENCY: USD
+-------------------------------------------------------
+LINE ITEMS:
+  1. Espresso Roast Single | Qty: 2 | Price: USD 4.50 | Amount: USD 9.00
+  2. Artisan Croissant | Qty: 2 | Price: USD 3.50 | Amount: USD 7.00
+-------------------------------------------------------
+SUBTOTAL: USD 16.00
+TAX: USD 1.28
+TOTAL AMOUNT: USD 17.28
+=======================================================

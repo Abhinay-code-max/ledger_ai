@@ -1,0 +1,21 @@
+=======================================================
+DOCUMENT TYPE: CUSTOMER_INVOICE
+SUPPLIER: Nova Technologies Inc
+CUSTOMER: Aura Logistics Group
+DOCUMENT NUMBER: NOVA-INV-1092
+ISSUE DATE: 2026-01-22
+DUE DATE: 2026-02-05
+SUPPLIER TAX ID: US-EIN-98-7654321
+CUSTOMER TAX ID: US-EIN-44-9988776
+PURCHASE ORDER: ALG-PO-882
+BANK ACCOUNT: ****1234
+CURRENCY: USD
+-------------------------------------------------------
+LINE ITEMS:
+  1. Warehouse Optimization Module | Qty: 1 | Price: USD 8500.00 | Amount: USD 8500.00
+  2. Custom API Connector | Qty: 1 | Price: USD 1500.00 | Amount: USD 1500.00
+-------------------------------------------------------
+SUBTOTAL: USD 10000.00
+TAX: USD 800.00
+TOTAL AMOUNT: USD 10800.00
+=======================================================

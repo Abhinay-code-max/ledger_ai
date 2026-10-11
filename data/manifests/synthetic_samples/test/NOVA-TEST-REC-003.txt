@@ -1,0 +1,21 @@
+=======================================================
+DOCUMENT TYPE: RECEIPT
+SUPPLIER: Skyline Express Dining
+
+DOCUMENT NUMBER: SED-REC-3310
+ISSUE DATE: 2026-01-24
+
+SUPPLIER TAX ID: GST-06BBBBB1111B2Z6
+
+
+
+CURRENCY: INR
+-------------------------------------------------------
+LINE ITEMS:
+  1. Executive Lunch Buffet | Qty: 1 | Price: INR 850.00 | Amount: INR 850.00
+  2. Mineral Water 1L | Qty: 2 | Price: INR 50.00 | Amount: INR 100.00
+-------------------------------------------------------
+SUBTOTAL: INR 950.00
+TAX: INR 47.50
+TOTAL AMOUNT: INR 997.50
+=======================================================

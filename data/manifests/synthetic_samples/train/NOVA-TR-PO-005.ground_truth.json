@@ -1,0 +1,81 @@
+{
+  "document_type": "PURCHASE_ORDER",
+  "document_number": "PO-2026-0042",
+  "issue_date": "2026-01-05",
+  "due_date": "2026-01-20",
+  "supplier_name": "Apex Office Systems",
+  "customer_name": "Nova Technologies Inc",
+  "supplier_tax_id": "US-EIN-55-1234567",
+  "customer_tax_id": "US-EIN-98-7654321",
+  "purchase_order_reference": "PO-2026-0042",
+  "subtotal": "1790.00",
+  "tax_amount": "143.20",
+  "total_amount": "1933.20",
+  "currency": "USD",
+  "bank_account_reference": null,
+  "line_items": [
+    {
+      "line_number": 1,
+      "description": "Ergonomic Mesh Chair",
+      "quantity": "5",
+      "unit_price": "250.00",
+      "line_amount": "1250.00",
+      "currency": "USD",
+      "confidence": "1.00",
+      "provenance": [
+        {
+          "page_number": 1,
+          "x": "10.0",
+          "y": "100.0",
+          "width": "200.0",
+          "height": "15.0",
+          "text_snippet": "Ergonomic Mesh Chair",
+          "confidence": "1.00",
+          "evidence_hash": "66d2098bbdc54ce076c7b2a6258d0b92764fe07f584b769665f8940560f589da"
+        }
+      ]
+    },
+    {
+      "line_number": 2,
+      "description": "Standing Desk Converter",
+      "quantity": "3",
+      "unit_price": "180.00",
+      "line_amount": "540.00",
+      "currency": "USD",
+      "confidence": "1.00",
+      "provenance": [
+        {
+          "page_number": 1,
+          "x": "10.0",
+          "y": "120.0",
+          "width": "200.0",
+          "height": "15.0",
+          "text_snippet": "Standing Desk Converter",
+          "confidence": "1.00",
+          "evidence_hash": "66d2098bbdc54ce076c7b2a6258d0b92764fe07f584b769665f8940560f589da"
+        }
+      ]
+    }
+  ],
+  "confidences": {
+    "supplier_name": "1.00",
+    "invoice_number": "1.00",
+    "invoice_date": "1.00",
+    "total": "1.00"
+  },
+  "provenances": {
+    "total": [
+      {
+        "page_number": 1,
+        "x": "150.0",
+        "y": "250.0",
+        "width": "60.0",
+        "height": "20.0",
+        "text_snippet": "1933.20",
+        "confidence": "1.00",
+        "evidence_hash": "66d2098bbdc54ce076c7b2a6258d0b92764fe07f584b769665f8940560f589da"
+      }
+    ]
+  },
+  "validation_issues": []
+}

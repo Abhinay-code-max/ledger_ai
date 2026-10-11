@@ -1,0 +1,21 @@
+=======================================================
+DOCUMENT TYPE: CUSTOMER_INVOICE
+SUPPLIER: Nova Technologies Inc
+CUSTOMER: Global Retail Partners
+DOCUMENT NUMBER: NOVA-OUT-9912
+ISSUE DATE: 2026-01-12
+DUE DATE: 2026-01-26
+SUPPLIER TAX ID: US-EIN-98-7654321
+CUSTOMER TAX ID: GB-VAT-9921827
+PURCHASE ORDER: GRP-PO-110
+BANK ACCOUNT: ****9988
+CURRENCY: USD
+-------------------------------------------------------
+LINE ITEMS:
+  1. Enterprise SaaS Annual License | Qty: 1 | Price: USD 12000.00 | Amount: USD 12000.00
+  2. Implementation Onboarding Support | Qty: 1 | Price: USD 3000.00 | Amount: USD 3000.00
+-------------------------------------------------------
+SUBTOTAL: USD 15000.00
+TAX: USD 1200.00
+TOTAL AMOUNT: USD 16200.00
+=======================================================

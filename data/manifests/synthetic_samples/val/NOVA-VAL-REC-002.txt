@@ -1,0 +1,20 @@
+=======================================================
+DOCUMENT TYPE: RECEIPT
+SUPPLIER: Metro Executive Rides
+
+DOCUMENT NUMBER: CAB-88102
+ISSUE DATE: 2026-01-19
+
+
+
+
+
+CURRENCY: EUR
+-------------------------------------------------------
+LINE ITEMS:
+  1. Airport Transit Executive Car | Qty: 1 | Price: EUR 65.00 | Amount: EUR 65.00
+-------------------------------------------------------
+SUBTOTAL: EUR 65.00
+TAX: EUR 6.50
+TOTAL AMOUNT: EUR 71.50
+=======================================================

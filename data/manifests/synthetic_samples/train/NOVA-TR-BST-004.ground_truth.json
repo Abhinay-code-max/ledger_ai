@@ -1,0 +1,88 @@
+{
+  "document_type": "BANK_STATEMENT",
+  "document_number": "STMT-2026-01",
+  "issue_date": "2026-01-31",
+  "due_date": null,
+  "supplier_name": "Metropolitan Commercial Bank",
+  "customer_name": "Nova Technologies Inc",
+  "supplier_tax_id": null,
+  "customer_tax_id": null,
+  "purchase_order_reference": null,
+  "subtotal": null,
+  "tax_amount": null,
+  "total_amount": "4340.50",
+  "currency": "USD",
+  "bank_account_reference": "****1122",
+  "line_items": [
+    {
+      "line_number": 1,
+      "description": "Deposit - Stripe Payout",
+      "quantity": "1",
+      "unit_price": "5420.50",
+      "line_amount": "5420.50",
+      "currency": "USD",
+      "confidence": "1.00",
+      "provenance": [
+        {
+          "page_number": 1,
+          "x": "10.0",
+          "y": "100.0",
+          "width": "200.0",
+          "height": "15.0",
+          "text_snippet": "Deposit - Stripe Payout",
+          "confidence": "1.00",
+          "evidence_hash": "0eac268be92e13ad6ba15ce23cddec5edc5ffd6f007f590474785c70f82116c9"
+        }
+      ]
+    },
+    {
+      "line_number": 2,
+      "description": "Direct Debit - Cloud Hosting",
+      "quantity": "1",
+      "unit_price": "1080.00",
+      "line_amount": "1080.00",
+      "currency": "USD",
+      "confidence": "1.00",
+      "provenance": [
+        {
+          "page_number": 1,
+          "x": "10.0",
+          "y": "120.0",
+          "width": "200.0",
+          "height": "15.0",
+          "text_snippet": "Direct Debit - Cloud Hosting",
+          "confidence": "1.00",
+          "evidence_hash": "0eac268be92e13ad6ba15ce23cddec5edc5ffd6f007f590474785c70f82116c9"
+        }
+      ]
+    }
+  ],
+  "confidences": {
+    "supplier_name": "1.00",
+    "invoice_number": "1.00",
+    "invoice_date": "1.00",
+    "total": "1.00"
+  },
+  "provenances": {
+    "total": [
+      {
+        "page_number": 1,
+        "x": "150.0",
+        "y": "250.0",
+        "width": "60.0",
+        "height": "20.0",
+        "text_snippet": "4340.50",
+        "confidence": "1.00",
+        "evidence_hash": "0eac268be92e13ad6ba15ce23cddec5edc5ffd6f007f590474785c70f82116c9"
+      }
+    ]
+  },
+  "validation_issues": [
+    {
+      "code": "LINE_ITEM_TOTAL_MISMATCH",
+      "message": "Line items sum 6500.50 differs from reference amount 4340.50",
+      "field": "line_items",
+      "severity": "WARNING"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+=======================================================
+DOCUMENT TYPE: BANK_STATEMENT
+SUPPLIER: Metropolitan Commercial Bank
+CUSTOMER: Nova Technologies Inc
+DOCUMENT NUMBER: STMT-2026-01
+ISSUE DATE: 2026-01-31
+
+
+
+
+BANK ACCOUNT: ****1122
+CURRENCY: USD
+-------------------------------------------------------
+LINE ITEMS:
+  1. Deposit - Stripe Payout | Qty: 1 | Price: USD 5420.50 | Amount: USD 5420.50
+  2. Direct Debit - Cloud Hosting | Qty: 1 | Price: USD 1080.00 | Amount: USD 1080.00
+-------------------------------------------------------
+
+
+TOTAL AMOUNT: USD 4340.50
+=======================================================

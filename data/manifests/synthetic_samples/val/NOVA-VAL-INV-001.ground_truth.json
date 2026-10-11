@@ -1,0 +1,81 @@
+{
+  "document_type": "SUPPLIER_INVOICE",
+  "document_number": "CSD-INV-4402",
+  "issue_date": "2026-01-18",
+  "due_date": "2026-02-17",
+  "supplier_name": "CyberShield Defense GmbH",
+  "customer_name": "Nova Technologies Inc",
+  "supplier_tax_id": "DE-VAT-123456789",
+  "customer_tax_id": "US-EIN-98-7654321",
+  "purchase_order_reference": "PO-VAL-881",
+  "subtotal": "3900.00",
+  "tax_amount": "741.00",
+  "total_amount": "4641.00",
+  "currency": "EUR",
+  "bank_account_reference": "****7766",
+  "line_items": [
+    {
+      "line_number": 1,
+      "description": "Endpoint Protection Suite Q1",
+      "quantity": "1",
+      "unit_price": "2400.00",
+      "line_amount": "2400.00",
+      "currency": "EUR",
+      "confidence": "1.00",
+      "provenance": [
+        {
+          "page_number": 1,
+          "x": "10.0",
+          "y": "100.0",
+          "width": "200.0",
+          "height": "15.0",
+          "text_snippet": "Endpoint Protection Suite Q1",
+          "confidence": "1.00",
+          "evidence_hash": "0a0afc2f3fd3c55a0b869cd648868da376ca83548565aeacef9f732889a4d68b"
+        }
+      ]
+    },
+    {
+      "line_number": 2,
+      "description": "Security Audit Hours",
+      "quantity": "10",
+      "unit_price": "150.00",
+      "line_amount": "1500.00",
+      "currency": "EUR",
+      "confidence": "1.00",
+      "provenance": [
+        {
+          "page_number": 1,
+          "x": "10.0",
+          "y": "120.0",
+          "width": "200.0",
+          "height": "15.0",
+          "text_snippet": "Security Audit Hours",
+          "confidence": "1.00",
+          "evidence_hash": "0a0afc2f3fd3c55a0b869cd648868da376ca83548565aeacef9f732889a4d68b"
+        }
+      ]
+    }
+  ],
+  "confidences": {
+    "supplier_name": "1.00",
+    "invoice_number": "1.00",
+    "invoice_date": "1.00",
+    "total": "1.00"
+  },
+  "provenances": {
+    "total": [
+      {
+        "page_number": 1,
+        "x": "150.0",
+        "y": "250.0",
+        "width": "60.0",
+        "height": "20.0",
+        "text_snippet": "4641.00",
+        "confidence": "1.00",
+        "evidence_hash": "0a0afc2f3fd3c55a0b869cd648868da376ca83548565aeacef9f732889a4d68b"
+      }
+    ]
+  },
+  "validation_issues": []
+}
