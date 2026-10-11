@@ -37,6 +37,7 @@ dev = [
 
 [project.scripts]
 ledgerai-seed = "ledgerai_backend.database.seed:main"
+ledgerai-demo = "ledgerai_backend.demo.runner:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

@@ -9,6 +9,7 @@ from pathlib import PurePath
 from time import perf_counter
 from uuid import UUID, uuid4
 
+from ledgerai_backend.assurance.service import record_audit_event
 from ledgerai_backend.core.errors import ApiError
 from ledgerai_backend.core.observability import (
     csv_rows,
@@ -356,6 +357,48 @@ class IngestionService:
                 resource_id=document.id,
                 correlation_id=UUID(self.context.correlation_id),
             )
+            await record_audit_event(
+                self.repository.session,
+                tenant_id=self.repository.tenant_id,
+                organization_id=self.repository.organization_id,
+                legal_entity_id=self.repository.legal_entity_id,
+                action="DOCUMENT_UPLOADED",
+                resource_type="document",
+                resource_id=document.id,
+                resource_version="1",
+                outcome="SUCCEEDED",
+                metadata={"filename": document.original_filename},
+                actor_id=str(self.context.principal_id),
+                correlation_id=UUID(self.context.correlation_id),
+            )
+            await record_audit_event(
+                self.repository.session,
+                tenant_id=self.repository.tenant_id,
+                organization_id=self.repository.organization_id,
+                legal_entity_id=self.repository.legal_entity_id,
+                action="DOCUMENT_SCANNED",
+                resource_type="document_version",
+                resource_id=version.id,
+                resource_version=str(version.version_number),
+                outcome="SUCCEEDED",
+                metadata={"scanner": result.scanner_name},
+                actor_id=str(self.context.principal_id),
+                correlation_id=UUID(self.context.correlation_id),
+            )
+            await record_audit_event(
+                self.repository.session,
+                tenant_id=self.repository.tenant_id,
+                organization_id=self.repository.organization_id,
+                legal_entity_id=self.repository.legal_entity_id,
+                action="DOCUMENT_ACCEPTED",
+                resource_type="document_version",
+                resource_id=version.id,
+                resource_version=str(version.version_number),
+                outcome="SUCCEEDED",
+                metadata={"sha256": actual_hash},
+                actor_id=str(self.context.principal_id),
+                correlation_id=UUID(self.context.correlation_id),
+            )
         elif result.outcome in {ScanOutcome.INFECTED, ScanOutcome.SUSPICIOUS}:
             version.status = document.status = DocumentStatus.REJECTED
             version.failure_code = result.reason_code
@@ -458,7 +501,22 @@ class IngestionService:
         )
         self.repository.session.add(import_row)
         await self.repository.session.flush()
-        self.repository.store_import_rows(import_row, parsed)
+        created_txs = self.repository.store_import_rows(import_row, parsed)
+        if created_txs:
+            await record_audit_event(
+                self.repository.session,
+                tenant_id=self.repository.tenant_id,
+                organization_id=self.repository.organization_id,
+                legal_entity_id=self.repository.legal_entity_id,
+                action="TRANSACTIONS_IMPORTED",
+                resource_type="bank_transaction",
+                resource_id=created_txs[0].id,
+                resource_version="1",
+                outcome="SUCCEEDED",
+                metadata={"count": len(created_txs), "import_id": str(import_id)},
+                actor_id=str(self.context.principal_id),
+                correlation_id=UUID(self.context.correlation_id),
+            )
         csv_rows.add(len(parsed.rows), {"outcome": "accepted"})
         csv_rows.add(len(parsed.errors), {"outcome": "rejected"})
         self.repository.add_outbox(

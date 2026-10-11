@@ -8,6 +8,9 @@ from datetime import UTC, datetime
 from typing import Any, Protocol
 from uuid import UUID, uuid4
 
+from sqlalchemy import select, text
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from ledgerai_backend.assurance.models import (
     AccountingPeriod,
     AuditEvent,
@@ -75,6 +78,131 @@ class Role2AssurancePort(Protocol):
 def _canonical_hash(value: object) -> str:
     encoded = json.dumps(value, sort_keys=True, separators=(",", ":"), default=str).encode()
     return hashlib.sha256(encoded).hexdigest()
+
+
+async def record_audit_event(
+    session: AsyncSession,
+    *,
+    tenant_id: UUID,
+    organization_id: UUID,
+    legal_entity_id: UUID,
+    action: str,
+    resource_type: str,
+    resource_id: UUID,
+    resource_version: str | None = "1",
+    outcome: str = "SUCCEEDED",
+    metadata: dict[str, object] | None = None,
+    actor_id: str = "system",
+    actor_type: str = "HUMAN",
+    correlation_id: UUID | None = None,
+    causation_id: UUID | None = None,
+    occurred_at: datetime | None = None,
+) -> AuditEvent:
+    await session.execute(
+        text("SELECT pg_advisory_xact_lock(hashtextextended(:tenant, 0))"),
+        {"tenant": str(tenant_id)},
+    )
+    previous = await session.scalar(
+        select(AuditEvent.event_hash)
+        .where(
+            AuditEvent.tenant_id == tenant_id,
+            AuditEvent.organization_id == organization_id,
+            AuditEvent.legal_entity_id == legal_entity_id,
+        )
+        .order_by(AuditEvent.occurred_at.desc(), AuditEvent.id.desc())
+        .limit(1)
+    )
+    now = occurred_at or datetime.now(UTC)
+    event_id = uuid4()
+    corr_id = correlation_id or uuid4()
+    meta = metadata or {}
+    material = {
+        "audit_event_id": str(event_id),
+        "tenant_id": str(tenant_id),
+        "actor_id": str(actor_id),
+        "action": action,
+        "resource_type": resource_type,
+        "resource_id": str(resource_id),
+        "resource_version": resource_version,
+        "outcome": outcome,
+        "correlation_id": str(corr_id),
+        "causation_id": str(causation_id) if causation_id else None,
+        "metadata": meta,
+        "occurred_at": now.isoformat(),
+        "previous_hash": previous,
+    }
+    encoded = json.dumps(material, sort_keys=True, separators=(",", ":"), default=str).encode()
+    event_hash = hashlib.sha256(encoded).hexdigest()
+    row = AuditEvent(
+        tenant_id=tenant_id,
+        organization_id=organization_id,
+        legal_entity_id=legal_entity_id,
+        audit_event_id=event_id,
+        actor_type=actor_type,
+        actor_id=str(actor_id),
+        action=action,
+        resource_type=resource_type,
+        resource_id=resource_id,
+        resource_version=resource_version,
+        outcome=outcome,
+        correlation_id=corr_id,
+        causation_id=causation_id,
+        audit_metadata=meta,
+        previous_hash=previous,
+        event_hash=event_hash,
+        occurred_at=now,
+    )
+    session.add(row)
+    await session.flush()
+    return row
+
+
+async def add_provenance_edge(
+    session: AsyncSession,
+    *,
+    tenant_id: UUID,
+    organization_id: UUID,
+    legal_entity_id: UUID,
+    from_type: str,
+    from_id: UUID,
+    from_version: str = "1",
+    to_type: str,
+    to_id: UUID,
+    to_version: str = "1",
+    relation: str,
+) -> ProvenanceEdge:
+    if hasattr(session, "scalar"):
+        existing = await session.scalar(
+            select(ProvenanceEdge).where(
+                ProvenanceEdge.tenant_id == tenant_id,
+                ProvenanceEdge.organization_id == organization_id,
+                ProvenanceEdge.legal_entity_id == legal_entity_id,
+                ProvenanceEdge.from_type == from_type,
+                ProvenanceEdge.from_id == from_id,
+                ProvenanceEdge.from_version == from_version,
+                ProvenanceEdge.to_type == to_type,
+                ProvenanceEdge.to_id == to_id,
+                ProvenanceEdge.to_version == to_version,
+                ProvenanceEdge.relation == relation,
+            )
+        )
+        if existing is not None:
+            return existing
+    edge = ProvenanceEdge(
+        tenant_id=tenant_id,
+        organization_id=organization_id,
+        legal_entity_id=legal_entity_id,
+        from_type=from_type,
+        from_id=from_id,
+        from_version=from_version,
+        to_type=to_type,
+        to_id=to_id,
+        to_version=to_version,
+        relation=relation,
+    )
+    session.add(edge)
+    await session.flush()
+    return edge
 
 
 class AssuranceService:
@@ -291,30 +419,57 @@ class AssuranceService:
         row.version += 1
         if state == PostingState.CONFIRMED:
             assert result.posted_journal_id is not None and result.posted_at is not None
-            self.repository.session.add(
-                PostingConfirmation(
-                    **self.repository.scope_values(),
-                    posting_operation_id=row.id,
-                    posted_journal_id=result.posted_journal_id,
-                    role2_version=result.producer.version,
-                    ledger_references=[
-                        item.model_dump(mode="json") for item in result.ledger_references
-                    ],
-                    confirmed_at=result.posted_at,
-                )
+            confirmation = PostingConfirmation(
+                **self.repository.scope_values(),
+                posting_operation_id=row.id,
+                posted_journal_id=result.posted_journal_id,
+                role2_version=result.producer.version,
+                ledger_references=[
+                    item.model_dump(mode="json") for item in result.ledger_references
+                ],
+                confirmed_at=result.posted_at,
+            )
+            self.repository.session.add(confirmation)
+            await self.repository.session.flush()
+            await add_provenance_edge(
+                self.repository.session,
+                tenant_id=self.context.tenant_id,
+                organization_id=self.repository.organization_id,
+                legal_entity_id=self.repository.legal_entity_id,
+                from_type="posting_confirmation",
+                from_id=confirmation.id,
+                from_version="1",
+                to_type="journal_proposal",
+                to_id=row.journal_proposal_id,
+                to_version=str(row.proposal_version),
+                relation="CONFIRMS",
+            )
+            await add_provenance_edge(
+                self.repository.session,
+                tenant_id=self.context.tenant_id,
+                organization_id=self.repository.organization_id,
+                legal_entity_id=self.repository.legal_entity_id,
+                from_type="posted_journal",
+                from_id=UUID(str(result.posted_journal_id)),
+                from_version="1",
+                to_type="posting_confirmation",
+                to_id=confirmation.id,
+                to_version="1",
+                relation="CONFIRMED_BY",
             )
             for reference in result.ledger_references:
-                self.repository.session.add(
-                    ProvenanceEdge(
-                        **self.repository.scope_values(),
-                        from_type="journal_proposal",
-                        from_id=row.journal_proposal_id,
-                        from_version=str(row.proposal_version),
-                        to_type=reference.resource_type,
-                        to_id=reference.resource_id,
-                        to_version=reference.resource_version or "",
-                        relation="POSTED_AS",
-                    )
+                await add_provenance_edge(
+                    self.repository.session,
+                    tenant_id=self.context.tenant_id,
+                    organization_id=self.repository.organization_id,
+                    legal_entity_id=self.repository.legal_entity_id,
+                    from_type="journal_proposal",
+                    from_id=row.journal_proposal_id,
+                    from_version=str(row.proposal_version),
+                    to_type=reference.resource_type,
+                    to_id=reference.resource_id,
+                    to_version=reference.resource_version or "",
+                    relation="POSTED_AS",
                 )
         await self._posting_progress(
             row, state.value, 100 if state != PostingState.IN_PROGRESS else 75
@@ -615,20 +770,34 @@ class AssuranceService:
         self.repository.session.add(row)
         await self.repository.session.flush()
         for line in result.lines:
-            self.repository.session.add(
-                FinancialStatementLine(
-                    **self.repository.scope_values(),
-                    snapshot_id=row.id,
-                    line_key=line.line_id,
-                    account_reference=line.account_reference,
-                    label=line.label,
-                    amount=line.amount.amount,
-                    currency=line.amount.currency,
-                    ledger_references=[
-                        reference.model_dump(mode="json") for reference in line.ledger_references
-                    ],
-                )
+            line_row = FinancialStatementLine(
+                **self.repository.scope_values(),
+                snapshot_id=row.id,
+                line_key=line.line_id,
+                account_reference=line.account_reference,
+                label=line.label,
+                amount=line.amount.amount,
+                currency=line.amount.currency,
+                ledger_references=[
+                    reference.model_dump(mode="json") for reference in line.ledger_references
+                ],
             )
+            self.repository.session.add(line_row)
+            await self.repository.session.flush()
+            for reference in line.ledger_references:
+                await add_provenance_edge(
+                    self.repository.session,
+                    tenant_id=self.context.tenant_id,
+                    organization_id=self.repository.organization_id,
+                    legal_entity_id=self.repository.legal_entity_id,
+                    from_type="statement_line",
+                    from_id=line_row.id,
+                    from_version="1",
+                    to_type=reference.resource_type,
+                    to_id=reference.resource_id,
+                    to_version=reference.resource_version or "1",
+                    relation="SUMMARIZES",
+                )
         await self.audit(
             action="FINANCIAL_STATEMENT_CAPTURED",
             resource_type="financial_statement_snapshot",

@@ -1,0 +1,18 @@
+{
+  "BALANCE_SHEET": {
+    "currency": "INR",
+    "lines": {"cash": "-1250.00", "payables": "-1250.00"}
+  },
+  "PROFIT_AND_LOSS": {
+    "currency": "INR",
+    "lines": {"office_expense": "1250.00"}
+  },
+  "TRIAL_BALANCE": {
+    "currency": "INR",
+    "lines": {"cash": "-1250.00", "office_expense": "1250.00"}
+  },
+  "period_end": "2026-09-30",
+  "period_start": "2026-09-01",
+  "producer": "ledgerai-demo-role2",
+  "producer_version": "1.0.0"
+}

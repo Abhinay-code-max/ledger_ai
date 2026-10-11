@@ -1,0 +1,22 @@
+{
+  "accounting_period": {"currency": "INR", "end": "2026-09-30", "start": "2026-09-01", "state": "CLOSED"},
+  "audit_actions": [
+    "DEMO_RESET", "DOCUMENT_UPLOADED", "DOCUMENT_SCANNED", "DOCUMENT_ACCEPTED",
+    "TRANSACTIONS_IMPORTED", "DOCUMENT_EXTRACTED", "DOCUMENT_VALIDATED",
+    "RECONCILIATION_PROPOSED", "EXCEPTION_CREATED", "EXCEPTION_RESOLVED",
+    "JOURNAL_PROPOSED", "POLICY_EVALUATED", "APPROVAL_RECORDED",
+    "JOURNAL_POSTING_REQUESTED", "JOURNAL_POSTING_CONFIRMED",
+    "PERIOD_CLOSE_REQUESTED", "PERIOD_CLOSE_CONFIRMED", "STATEMENT_CAPTURED"
+  ],
+  "exception": {"resolution": "RESOLVED", "severity": "HIGH", "type": "AMOUNT_MISMATCH"},
+  "financials": {"currency": "INR", "invoice_total": "1250.00", "planted_mismatch": "50.00"},
+  "maker_checker": {"maker_rejected": true, "reviewer_approved": true, "stale_rejected": true},
+  "posting": {"confirmation_count": 1, "effective_posts": 1, "proposal_version": 1, "state": "CONFIRMED"},
+  "provenance_path": [
+    "statement_line", "posted_journal", "posting_confirmation", "journal_proposal",
+    "policy_decision", "approval_action", "match_proposal", "bank_transaction",
+    "document_extraction", "document_version", "source_evidence"
+  ],
+  "scenario": "nova-phase4-v1",
+  "statements": ["BALANCE_SHEET", "PROFIT_AND_LOSS", "TRIAL_BALANCE"]
+}

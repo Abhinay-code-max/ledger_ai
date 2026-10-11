@@ -55,6 +55,7 @@ def _service(request: Request, scope: RequestScope) -> AssuranceService:
 async def _posting_response(
     repository: AssuranceRepository, operation: object
 ) -> PostingOperationResponse:
+    await repository.session.refresh(operation)
     response = PostingOperationResponse.model_validate(operation)
     confirmation = await repository.confirmation(response.operation_id)
     if confirmation is not None:
@@ -123,14 +124,18 @@ async def close_period(
     idempotency_key: IdempotencyKey,
 ) -> CloseRunResponse:
     require_permission(scope.context, PermissionCode.PERIOD_CLOSE_REQUEST)
-    row = await _service(request, scope).start_close(period_id, idempotency_key=idempotency_key)
+    service = _service(request, scope)
+    row = await service.start_close(period_id, idempotency_key=idempotency_key)
+    await service.repository.session.refresh(row)
     return CloseRunResponse.model_validate(row)
 
 
 @router.post("/period-close-operations/{operation_id}/recover", response_model=CloseRunResponse)
 async def recover_close(operation_id: UUID, request: Request, scope: Scope) -> CloseRunResponse:
     require_permission(scope.context, PermissionCode.PERIOD_CLOSE_REQUEST)
-    row = await _service(request, scope).refresh_close(operation_id)
+    service = _service(request, scope)
+    row = await service.refresh_close(operation_id)
+    await service.repository.session.refresh(row)
     return CloseRunResponse.model_validate(row)
 
 
@@ -160,6 +165,7 @@ async def capture_statement(
         created_at=row.created_at,
         lines=[
             StatementLineResponse(
+                id=line.id,
                 line_id=line.line_key,
                 account_reference=line.account_reference,
                 label=line.label,
@@ -191,6 +197,7 @@ async def get_statement(snapshot_id: UUID, scope: Scope) -> StatementSnapshotRes
         created_at=row.created_at,
         lines=[
             StatementLineResponse(
+                id=line.id,
                 line_id=line.line_key,
                 account_reference=line.account_reference,
                 label=line.label,

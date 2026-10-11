@@ -1,0 +1,85 @@
+{
+  "manifest_version": "1.0.0",
+  "scenario": "nova-phase4-v1",
+  "timestamp": "2026-10-11T16:52:00Z",
+  "integration_coordinator": "Agent 4",
+  "roles": {
+    "role1": {
+      "name": "Document Intelligence",
+      "branch": "role1/document-intelligence",
+      "commit": "ce4b2ec41b1d11a245039102d78aadc14acc6b06",
+      "contract_version": "1.0",
+      "endpoints": [
+        "POST /v1/extractions"
+      ],
+      "integration_mode": "dual (live service and protocol-faithful deterministic stub)",
+      "contract_test_status": "PASSED",
+      "schema_drift": "NONE",
+      "openapi_drift": "NONE"
+    },
+    "role2": {
+      "name": "Accounting Core",
+      "branch": "role2/accounting-core",
+      "commit": "8096a7bec94cf6061b260af1875b4b65334cba97",
+      "contract_version": "1.0",
+      "endpoints": [
+        "POST /v1/journal-postings",
+        "GET /v1/journal-posting-status",
+        "POST /v1/period-close",
+        "GET /v1/period-close-status",
+        "POST /v1/financial-statements"
+      ],
+      "integration_mode": "dual (live service and protocol-faithful deterministic stub)",
+      "contract_test_status": "PASSED",
+      "schema_drift": "NONE",
+      "openapi_drift": "NONE"
+    },
+    "role3": {
+      "name": "Reconciliation Core",
+      "branch": "role3/reconciliation",
+      "commit": "18dce7558f6bd7136d53d0517d32542ae025f50b",
+      "contract_version": "1.0",
+      "endpoints": [
+        "POST /v1/reconciliations"
+      ],
+      "integration_mode": "dual (live service and protocol-faithful deterministic stub)",
+      "contract_test_status": "PASSED",
+      "schema_drift": "NONE",
+      "openapi_drift": "NONE"
+    },
+    "role4": {
+      "name": "Backend Orchestration and Assurance",
+      "branch": "integration/nova-demo",
+      "base_commit": "18dce7558f6bd7136d53d0517d32542ae025f50b",
+      "contract_version": "1.0",
+      "endpoints": [
+        "POST /api/v1/documents/uploads",
+        "POST /api/v1/documents/uploads/{id}/complete",
+        "POST /api/v1/transaction-imports",
+        "POST /api/v1/documents/{id}/extractions",
+        "POST /api/v1/reconciliations",
+        "POST /api/v1/exceptions/{id}/resolve",
+        "POST /api/v1/approval-requests/{id}/approve",
+        "POST /api/v1/accounting-periods",
+        "POST /api/v1/posting-operations",
+        "POST /api/v1/posting-operations/{id}/recover",
+        "POST /api/v1/accounting-periods/{id}/close",
+        "POST /api/v1/accounting-periods/{id}/statements/{type}",
+        "GET /api/v1/audit-events",
+        "GET /api/v1/provenance/statement_line/{id}"
+      ],
+      "integration_mode": "live HTTP orchestration",
+      "contract_test_status": "PASSED",
+      "schema_drift": "NONE",
+      "openapi_drift": "NONE"
+    }
+  },
+  "compatibility_guarantees": {
+    "total_contract_artifacts": 79,
+    "openapi_spec": "shared/openapi/v1.json",
+    "backward_compatible": true,
+    "direct_db_writes_for_workflow": false,
+    "multi_tenant_isolation": true,
+    "maker_checker_enforced": true
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "classification": "INVOICE",
+  "currency": "INR",
+  "invoice_number": "NOVA-DEMO-INV-001",
+  "supplier_name": "SYNTHETIC OFFICE SUPPLIES",
+  "total": "1250.00",
+  "validation_outcome": "VALIDATED"
+}
