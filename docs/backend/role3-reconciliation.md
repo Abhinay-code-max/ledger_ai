@@ -4,7 +4,7 @@ Role 3 proposes reconciliation evidence. It never approves a proposal, posts a j
 period, or writes another role's database. Its only write-like state is a bounded, process-local
 idempotency cache keyed by `(tenant_id, operation_id)`.
 
-## Boundary
+## Boundary and Canonical v1 Wire Contract
 
 Run the standalone ASGI app by calling `create_reconciliation_app(Role3Security(...))`. Role 4
 calls `POST /v1/reconciliations` with the canonical request body and these headers:
@@ -13,15 +13,62 @@ calls `POST /v1/reconciliations` with the canonical request body and these heade
 - `X-Operation-ID`, `X-Correlation-ID`
 - `X-Tenant-ID`, `X-Organization-ID`, `X-Legal-Entity-ID`
 
-The JWT must have issuer `ledgerai-backend`, audience `ledgerai-role3`, an allowed service subject,
-and matching `tenant_id` and `operation_id` claims. The header, claim, and body contexts must all
-agree. Unknown fields, unsupported schema versions, foreign tenants, mixed legal entities, invalid
-money strings, and reused operation IDs with changed payloads fail closed.
+### Canonical Service Audience
 
-The response is deliberately compatible with Role 4's existing `ReconciliationResult`: one best
-`proposal` plus up to 100 canonical `ExceptionRecord` objects. Input and output resources are bound
-to immutable versions. Blocking exceptions change an otherwise proposed match to
-`REVIEW_REQUIRED`.
+The integration configuration selected this canonical Role 3 audience:
+
+```
+ledgerai-role3
+```
+
+Role 3 enforces this exact audience strictly and fails closed on:
+- `ledgerai:role3` (colon delimiter rejected)
+- `role3`, `role1`, `role2`, `ledgerai-role6`
+- missing `aud` claims or array audiences containing unauthorized values
+
+The JWT must carry `iss: "ledgerai-backend"`, `aud: "ledgerai-role3"`, an allowed subject,
+`tenant_id`, and `operation_id`. All HTTP headers, JWT claims, and payload contexts must agree.
+
+### Wire Compatibility
+
+The response model strictly satisfies Role 4's canonical `ReconciliationResult`:
+
+```python
+class ReconciliationResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    schema_version: str = Field(pattern=r"^1\.0$")
+    tenant_context: EntityTenantContext
+    proposal: MatchProposal
+    exceptions: list[ExceptionRecord] = Field(default_factory=list, max_length=100)
+```
+
+No undeclared fields are returned across the wire. The frozen canonical v1 `MatchProposal` and
+`ExceptionRecord` schemas are preserved without modification.
+
+Deterministic algorithm version (`reconciliation-deterministic/1.0.0`) and rule version
+(`reconciliation-rules/1.0.0`) are preserved using fields already supported by canonical v1:
+- `MatchProposal.producer.algorithm_version`
+- `MatchProposal.producer.rule_or_policy_version`
+- `ExceptionRecord.detector.algorithm_version`
+- `ExceptionRecord.detector.rule_or_policy_version`
+- `MatchProposal.correlation.request_id` (preserves `operation_id`)
+- `ExceptionRecord.correlation.request_id` (preserves `operation_id`)
+
+## Internal Domain Models and Translator
+
+To provide explainable matching without violating the frozen canonical v1 wire surface, Role 3
+maintains internal domain models in `ledgerai_backend.reconciliation.domain`:
+
+1. `ConfidenceComponent`: deterministic breakdown of individual score weights and values.
+2. `CandidateScore`: record references, total score, eligibility status, components, and conflicts.
+3. `InternalMatchProposal`: includes `candidate_scores`, `confidence_components`, and `operation_id`.
+4. `InternalExceptionRecord`: includes `blocks_posting`, `blocks_close`, `algorithm_version`, and `rule_version`.
+5. `InternalReconciliationResult`: rich internal output container.
+
+Dedicated adapter/translator functions map internal models into the canonical v1 wire contracts:
+- `to_canonical_proposal(internal: InternalMatchProposal) -> MatchProposal`
+- `to_canonical_exception(internal: InternalExceptionRecord) -> ExceptionRecord`
+- `to_canonical_response(internal: InternalReconciliationResult) -> ReconciliationResponse`
 
 ## Strategy `reconciliation-rules/1.0.0`
 
@@ -46,7 +93,7 @@ many-to-one groups. Group size is limited to 5 and only same-currency, expected-
 in-window records enter the search. Reference-aligned amount differences become `PARTIAL` proposals
 requiring review. All remaining records receive explicit unmatched exceptions.
 
-## Complexity and operational limits
+## Complexity and Operational Limits
 
 | Limit | Value |
 |---|---:|
@@ -65,11 +112,24 @@ Normalization is a linear scan over schema-bounded strings; no user-provided reg
 unbounded fuzzy search is executed. The service emits no raw narration, reference, party, or bank
 account data to logs.
 
-The in-memory idempotency cache is suitable for one process and deterministic replay tests. A
-production multi-replica deployment should provide an atomic tenant-scoped external operation
-store with TTL while preserving the same digest-conflict semantics.
+## Future v2 Proposal (Additive Contract Evolution)
 
-## Tuning and versioning
+When cross-role consensus is reached to update the wire schema, Role 3 proposes the following
+additive enhancements in `ledgerai_contracts.v2`:
+
+1. `MatchProposal.candidate_scores: list[CandidateScore]`:
+   Allows upstream consumers (Role 4, UI) to inspect top ranked alternatives and component scores
+   directly over the wire.
+2. `MatchProposal.confidence_components: list[ConfidenceComponent]`:
+   Provides per-proposal explainability on reference, amount, date, counterparty, and evidence scores.
+3. `ExceptionRecord.blocks_posting: bool` and `ExceptionRecord.blocks_close: bool`:
+   Replaces inferred severity/reason-code parsing with explicit blocking flags.
+4. `MatchProposal.operation_id: UUID` and `ExceptionRecord.operation_id: UUID`:
+   Direct top-level correlation attribute alongside `correlation.request_id`.
+
+Until v2 is formally adopted, these properties remain internal to Role 3 domain models.
+
+## Tuning and Versioning
 
 Configuration lives in `config/reconciliation-strategies.v1.json`. Any change to a threshold,
 weight, normalization rule, supported currency, grouping behavior, or exception policy requires a
@@ -83,23 +143,21 @@ and is a known limitation for currencies with differing minor units.
 Regenerate and verify artifacts with:
 
 ```powershell
-python tools/generate_contract_artifacts.py
 python tools/generate_contract_artifacts.py --check
-python tools/generate_role3_artifacts.py
 python tools/generate_role3_artifacts.py --check
 ```
 
 The Role 3 OpenAPI artifact is `shared/openapi/role3-v1.json`. The NOVA request, expected match
 graph, labeled cases, and measured results are under `shared/fixtures/reconciliation/v1`.
 
-## Fixture measurements
+## Fixture Measurements
 
 `tools/generate_role3_artifacts.py` computes metrics from the committed labeled fixture, never from
 unlabeled traffic. Version `reconciliation-labeled/1.0.0` currently contains six cases and measures
 edge precision `1.0000`, edge recall `1.0000`, and ambiguity rate `0.1667`. These are synthetic
 fixture measurements, not model or production-accuracy claims.
 
-## Known limitations
+## Known Limitations
 
 - Only one best proposal is returned per operation because that is the current Role 4 adapter
   contract. Unselected records are explicit exceptions; callers may split batches for more
@@ -110,5 +168,4 @@ fixture measurements, not model or production-accuracy claims.
   partition.
 - Partial-payment balance tracking is advisory and requires human review.
 - Exchange-rate conversion, credit notes, fees, and netting are not inferred.
-- The service authenticates with the repository's existing symmetric service-token convention.
-  Independent key rotation or asymmetric workload identity is deployment follow-up work.
+- In-memory idempotency cache is process-local; multi-replica deployments require Redis or DB store.
