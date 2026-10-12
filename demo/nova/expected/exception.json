@@ -1,0 +1,7 @@
+{
+  "blocks_workflow": true,
+  "exception_type": "AMOUNT_MISMATCH",
+  "reason_code": "PLANTED_AMOUNT_MISMATCH",
+  "resolution": "RESOLVED",
+  "severity": "HIGH"
+}

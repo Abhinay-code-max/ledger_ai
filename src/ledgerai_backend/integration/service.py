@@ -8,7 +8,6 @@ from uuid import UUID
 
 from ledgerai_backend.core.errors import ApiError
 from ledgerai_backend.core.observability import (
-    approval_actions,
     posting_request_deduplications,
     stale_approval_rejections,
 )
@@ -149,8 +148,37 @@ class ApprovalService:
             resource_id=row.id,
             correlation_id=UUID(self.context.correlation_id),
         )
-        approval_actions.add(1, {"action": action_type.value})
         if action_type == ApprovalActionType.APPROVE:
+            await self.repository.record_audit(
+                action="APPROVAL_RECORDED",
+                resource_type="approval_action",
+                resource_id=row.id,
+                resource_version="1",
+                outcome="SUCCEEDED",
+                metadata={"action": action_type.value},
+                actor_id=str(self.context.principal_id),
+                correlation_id=UUID(self.context.correlation_id),
+            )
+            await self.repository.add_edge(
+                from_type="journal_proposal",
+                from_id=request.subject_id,
+                from_version=request.subject_version,
+                to_type="approval_action",
+                to_id=row.id,
+                to_version="1",
+                relation="APPROVED_BY",
+            )
+            match_row = await self.repository.latest_match_proposal()
+            if match_row:
+                await self.repository.add_edge(
+                    from_type="approval_action",
+                    from_id=row.id,
+                    from_version="1",
+                    to_type="match_proposal",
+                    to_id=match_row.id,
+                    to_version="1",
+                    relation="APPROVES_MATCH",
+                )
             await self._request_posting(request)
         elif action_type == ApprovalActionType.CORRECT:
             await self._create_corrected_version(request, body)

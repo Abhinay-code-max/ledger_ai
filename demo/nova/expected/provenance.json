@@ -1,0 +1,15 @@
+{
+  "path": [
+    "statement_line",
+    "posted_journal",
+    "posting_confirmation",
+    "journal_proposal",
+    "policy_decision",
+    "approval_action",
+    "match_proposal",
+    "bank_transaction",
+    "document_extraction",
+    "document_version",
+    "source_evidence"
+  ]
+}

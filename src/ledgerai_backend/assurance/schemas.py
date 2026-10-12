@@ -143,6 +143,7 @@ class ProgressProjectionResponse(ApiModel):
 
 
 class StatementLineResponse(ApiModel):
+    id: UUID
     line_id: str
     account_reference: str
     label: str

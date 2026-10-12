@@ -37,6 +37,8 @@ dev = [
 
 [project.scripts]
 ledgerai-seed = "ledgerai_backend.database.seed:main"
+ledgerai-demo = "ledgerai_backend.demo.runner:main"
+ledgerai-demo-compare = "ledgerai_backend.demo.comparator:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

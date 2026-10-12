@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import UTC, datetime
 from uuid import UUID, uuid5
 
 from sqlalchemy import create_engine, text
@@ -115,6 +116,7 @@ def seed(settings: Settings, *, allow_production: bool = False) -> dict[str, int
     principals = {
         "nova-admin": "NOVA Demo Administrator",
         "nova-accountant": "NOVA Demo Accountant",
+        "nova-reviewer": "NOVA Demo Reviewer",
         "nova-viewer": "NOVA Demo Viewer",
     }
     engine = create_engine(settings.migration_dsn.get_secret_value())
@@ -204,6 +206,7 @@ def seed(settings: Settings, *, allow_production: bool = False) -> dict[str, int
             role_code = {
                 "nova-admin": "tenant-administrator",
                 "nova-accountant": "accountant",
+                "nova-reviewer": "reviewer",
                 "nova-viewer": "viewer",
             }[subject]
             connection.execute(
@@ -217,6 +220,43 @@ def seed(settings: Settings, *, allow_production: bool = False) -> dict[str, int
                     "role": stable_id(f"nova:role:{role_code}"),
                 },
             )
+        now = datetime.now(UTC)
+        policy_set_id = stable_id("nova:demo:policy-set")
+        connection.execute(
+            text("""
+                INSERT INTO policy_sets
+                  (id, tenant_id, organization_id, legal_entity_id, code, policy_version,
+                   default_outcome, active_from, published_at)
+                VALUES (:id, :tenant, :org, :entity, 'nova-demo-review', '1.0',
+                        'REVIEW_REQUIRED', :now, :now)
+                ON CONFLICT (id) DO NOTHING
+            """),
+            {
+                "id": policy_set_id,
+                "tenant": tenant_id,
+                "org": organization_id,
+                "entity": legal_entity_id,
+                "now": now,
+            },
+        )
+        connection.execute(
+            text("""
+                INSERT INTO policy_rules
+                  (id, tenant_id, organization_id, legal_entity_id, policy_set_id, rule_id,
+                   priority, conditions, outcome, reason_code, explanation)
+                VALUES (:id, :tenant, :org, :entity, :set_id, 'human-review',
+                        100, '[]'::jsonb, 'REVIEW_REQUIRED', 'MAKER_CHECKER',
+                        'Synthetic demo requires review')
+                ON CONFLICT (id) DO NOTHING
+            """),
+            {
+                "id": stable_id("nova:demo:policy-rule"),
+                "tenant": tenant_id,
+                "org": organization_id,
+                "entity": legal_entity_id,
+                "set_id": policy_set_id,
+            },
+        )
     engine.dispose()
     return {
         "tenants": 1,
@@ -224,6 +264,8 @@ def seed(settings: Settings, *, allow_production: bool = False) -> dict[str, int
         "legal_entities": 1,
         "principals": len(principals),
         "roles": len(ROLE_PERMISSIONS),
+        "policy_sets": 1,
+        "policy_rules": 1,
     }
 
 

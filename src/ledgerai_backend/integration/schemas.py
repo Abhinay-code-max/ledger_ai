@@ -83,3 +83,37 @@ class ApprovalActionResponse(ApiModel):
     reviewed_resource_version: str
     reason: str | None
     created_at: datetime
+
+
+class ExceptionResolveRequest(ApiModel):
+    reason: str = Field(min_length=1, max_length=1000)
+
+
+class ExtractionRequest(ApiModel):
+    document_version_id: UUID | None = None
+
+
+class ExtractionResponse(ApiModel):
+    id: UUID
+    document_id: UUID
+    document_version_id: UUID
+    extraction_version: int
+    status: str
+    validation_outcome: str
+    review_disposition: str
+    created_at: datetime
+
+
+class ReconciliationCreateRequest(ApiModel):
+    document_id: UUID
+    document_version_id: UUID
+    transaction_ids: list[UUID] = Field(min_length=1, max_length=100)
+    correlation_id: UUID | None = None
+
+
+class ReconciliationWorkflowResponse(ApiModel):
+    match_proposal_id: UUID
+    exception_id: UUID | None = None
+    journal_proposal_id: UUID
+    policy_decision_id: UUID
+    approval_request_id: UUID | None = None
