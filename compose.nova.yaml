@@ -1,0 +1,149 @@
+x-nova-environment: &nova-environment
+  LEDGERAI_ENVIRONMENT: test
+  LEDGERAI_DEMO_ENABLED: "true"
+  LEDGERAI_DEMO_RESET_CONFIRM: RESET_NOVA_ONLY
+  LEDGERAI_DEMO_MAKER_TOKEN: synthetic-maker-token-for-nova
+  LEDGERAI_DEMO_REVIEWER_TOKEN: synthetic-reviewer-token-for-nova
+  LEDGERAI_SERVICE_TOKEN_SECRET: synthetic-service-secret-for-nova-0001
+  LEDGERAI_SERVICE_TOKEN_ISSUER: ledgerai-backend
+
+x-nova-image: &nova-image
+  build:
+    context: .
+    dockerfile: tools/nova.Dockerfile
+  image: ledgerai-nova:${LEDGERAI_NOVA_IMAGE_TAG:-local}
+
+services:
+  nova-migrate:
+    <<: *nova-image
+    profiles: ["nova-stub"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      <<: *nova-environment
+      LEDGERAI_MIGRATION_DSN: postgresql+psycopg://ledgerai_migrator:local-migration-only@postgres:5432/ledgerai
+      LEDGERAI_DATABASE_DSN: postgresql+psycopg://ledgerai_runtime:local-runtime-only@postgres:5432/ledgerai
+    command: ["alembic", "upgrade", "head"]
+
+  nova-role1:
+    <<: *nova-image
+    profiles: ["nova-stub"]
+    environment: *nova-environment
+    command: ["uvicorn", "ledgerai_backend.demo.role1:app", "--host", "0.0.0.0", "--port", "8101"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8101/health/ready')"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+
+  nova-role2:
+    <<: *nova-image
+    profiles: ["nova-stub"]
+    environment: *nova-environment
+    command: ["uvicorn", "ledgerai_backend.demo.role2:app", "--host", "0.0.0.0", "--port", "8102"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8102/health/ready')"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+
+  nova-role3:
+    <<: *nova-image
+    profiles: ["nova-stub"]
+    environment: *nova-environment
+    command: ["uvicorn", "ledgerai_backend.demo.role3:app", "--host", "0.0.0.0", "--port", "8103"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8103/health/ready')"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+
+  nova-role6:
+    <<: *nova-image
+    profiles: ["nova-stub"]
+    environment: *nova-environment
+    command: ["uvicorn", "ledgerai_backend.demo.role6:app", "--host", "0.0.0.0", "--port", "8106"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8106/health/ready')"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+
+  nova-api:
+    <<: *nova-image
+    profiles: ["nova-stub"]
+    depends_on:
+      nova-migrate:
+        condition: service_completed_successfully
+      nova-role1:
+        condition: service_healthy
+      nova-role2:
+        condition: service_healthy
+      nova-role3:
+        condition: service_healthy
+      nova-role6:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    environment:
+      <<: *nova-environment
+      LEDGERAI_DATABASE_DSN: postgresql+psycopg://ledgerai_runtime:local-runtime-only@postgres:5432/ledgerai
+      LEDGERAI_MIGRATION_DSN: postgresql+psycopg://ledgerai_migrator:local-migration-only@postgres:5432/ledgerai
+      LEDGERAI_REDIS_URL: redis://redis:6379/0
+      LEDGERAI_STORAGE_ENDPOINT_URL: http://minio:9000
+      LEDGERAI_STORAGE_ACCESS_KEY: ledgerai-minio-local
+      LEDGERAI_STORAGE_SECRET_KEY: local-storage-only-change-me
+      LEDGERAI_DEMO_ROLE1_URL: http://nova-role1:8101
+      LEDGERAI_DEMO_ROLE2_URL: http://nova-role2:8102
+      LEDGERAI_DEMO_ROLE3_URL: http://nova-role3:8103
+      LEDGERAI_DEMO_ROLE6_URL: http://nova-role6:8106
+    command: ["uvicorn", "ledgerai_backend.demo.api:app", "--host", "0.0.0.0", "--port", "8100"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8100/health/live')"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
+  nova-runner-stub:
+    <<: *nova-image
+    profiles: ["nova-stub"]
+    depends_on:
+      nova-api:
+        condition: service_healthy
+    environment:
+      <<: *nova-environment
+      LEDGERAI_DATABASE_DSN: postgresql+psycopg://ledgerai_runtime:local-runtime-only@postgres:5432/ledgerai
+      LEDGERAI_MIGRATION_DSN: postgresql+psycopg://ledgerai_migrator:local-migration-only@postgres:5432/ledgerai
+      LEDGERAI_REDIS_URL: redis://redis:6379/0
+      LEDGERAI_STORAGE_ENDPOINT_URL: http://minio:9000
+      LEDGERAI_STORAGE_ACCESS_KEY: ledgerai-minio-local
+      LEDGERAI_STORAGE_SECRET_KEY: local-storage-only-change-me
+      LEDGERAI_DEMO_ALLOWED_HOSTS: nova-api,nova-role1,nova-role2,nova-role3,nova-role6
+      LEDGERAI_DEMO_API_URL: http://nova-api:8100
+      LEDGERAI_DEMO_ROLE1_URL: http://nova-role1:8101
+      LEDGERAI_DEMO_ROLE2_URL: http://nova-role2:8102
+      LEDGERAI_DEMO_ROLE3_URL: http://nova-role3:8103
+      LEDGERAI_DEMO_ROLE6_URL: http://nova-role6:8106
+    command: ["ledgerai-demo", "--external-services"]
+
+  nova-runner-real:
+    <<: *nova-image
+    profiles: ["nova-real"]
+    environment:
+      <<: *nova-environment
+      LEDGERAI_DATABASE_DSN: ${LEDGERAI_DATABASE_DSN:-}
+      LEDGERAI_MIGRATION_DSN: ${LEDGERAI_MIGRATION_DSN:-}
+      LEDGERAI_REDIS_URL: ${LEDGERAI_REDIS_URL:-}
+      LEDGERAI_STORAGE_ENDPOINT_URL: ${LEDGERAI_STORAGE_ENDPOINT_URL:-}
+      LEDGERAI_STORAGE_ACCESS_KEY: ${LEDGERAI_STORAGE_ACCESS_KEY:-}
+      LEDGERAI_STORAGE_SECRET_KEY: ${LEDGERAI_STORAGE_SECRET_KEY:-}
+      LEDGERAI_DEMO_ALLOWED_HOSTS: ${LEDGERAI_DEMO_ALLOWED_HOSTS:-}
+      LEDGERAI_DEMO_API_URL: ${LEDGERAI_DEMO_API_URL:-}
+      LEDGERAI_DEMO_ROLE1_URL: ${LEDGERAI_DEMO_ROLE1_URL:-}
+      LEDGERAI_DEMO_ROLE2_URL: ${LEDGERAI_DEMO_ROLE2_URL:-}
+      LEDGERAI_DEMO_ROLE3_URL: ${LEDGERAI_DEMO_ROLE3_URL:-}
+      LEDGERAI_DEMO_ROLE6_URL: ${LEDGERAI_DEMO_ROLE6_URL:-}
+    command: ["ledgerai-demo", "--external-services"]

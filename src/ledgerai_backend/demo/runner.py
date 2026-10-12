@@ -115,7 +115,12 @@ def _required(name: str, *, minimum: int = 1) -> str:
 def _safe_local_url(name: str, default: str) -> str:
     value = os.environ.get(name, default)
     parsed = urlparse(value)
-    if parsed.scheme != "http" or parsed.hostname not in {"127.0.0.1", "localhost"}:
+    allowed = {
+        item.strip().lower()
+        for item in os.environ.get("LEDGERAI_DEMO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+        if item.strip()
+    }
+    if parsed.scheme != "http" or parsed.hostname is None or parsed.hostname.lower() not in allowed:
         raise DemoFailure(f"{name} must use an allowlisted loopback HTTP endpoint")
     if parsed.username or parsed.password or parsed.query or parsed.fragment:
         raise DemoFailure(f"{name} contains prohibited URL components")
