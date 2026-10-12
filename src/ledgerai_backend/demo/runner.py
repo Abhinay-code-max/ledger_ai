@@ -133,7 +133,7 @@ def _settings(
     role1_url: str = "http://127.0.0.1:8101",
     role2_url: str = "http://127.0.0.1:8102",
     role3_url: str = "http://127.0.0.1:8103",
-    role6_url: str = "http://127.0.0.1:8106",
+    role6_url: str = "http://127.0.0.1:8006",
 ) -> Settings:
     environment = os.environ.get("LEDGERAI_ENVIRONMENT", "")
     if environment == "production":
@@ -613,7 +613,7 @@ def run(*, embedded_services: bool = True) -> dict[str, object]:
     role1_url = _safe_local_url("LEDGERAI_DEMO_ROLE1_URL", "http://127.0.0.1:8101")
     role2_url = _safe_local_url("LEDGERAI_DEMO_ROLE2_URL", "http://127.0.0.1:8102")
     role3_url = _safe_local_url("LEDGERAI_DEMO_ROLE3_URL", "http://127.0.0.1:8103")
-    role6_url = _safe_local_url("LEDGERAI_DEMO_ROLE6_URL", "http://127.0.0.1:8106")
+    role6_url = _safe_local_url("LEDGERAI_DEMO_ROLE6_URL", "http://127.0.0.1:8006")
     api_url = _safe_local_url("LEDGERAI_DEMO_API_URL", "http://127.0.0.1:8100")
     settings = _settings(role1_url, role2_url, role3_url, role6_url)
     if not embedded_services:

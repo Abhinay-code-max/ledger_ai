@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Any
 from uuid import UUID
 
 from fastapi import FastAPI, Request
@@ -80,6 +81,21 @@ def create_role6_app(
     app.state.backend = backend
     app.state.queue_manager = queue_manager
     app.state.idempotency_store = {}
+    app.dependency_overrides[get_role6_settings] = lambda: settings
+
+    @app.middleware("http")
+    async def enforce_content_length(request: Request, call_next: Any) -> Any:
+        content_length = request.headers.get("content-length")
+        if content_length:
+            try:
+                if int(content_length) > settings.max_request_bytes:
+                    return JSONResponse(
+                        status_code=413,
+                        content={"detail": "Request content-length exceeds maximum allowed"},
+                    )
+            except ValueError:
+                pass
+        return await call_next(request)
 
     @app.exception_handler(RequestValidationError)
     async def validation_handler(request: Request, exc: RequestValidationError) -> JSONResponse:

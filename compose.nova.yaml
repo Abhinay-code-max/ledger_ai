@@ -63,9 +63,9 @@ services:
     <<: *nova-image
     profiles: ["nova-stub"]
     environment: *nova-environment
-    command: ["uvicorn", "ledgerai_backend.demo.role6:app", "--host", "0.0.0.0", "--port", "8106"]
+    command: ["uvicorn", "ledgerai_backend.demo.role6:app", "--host", "0.0.0.0", "--port", "8006"]
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8106/health/ready')"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8006/health/ready')"]
       interval: 2s
       timeout: 2s
       retries: 20
@@ -99,7 +99,7 @@ services:
       LEDGERAI_DEMO_ROLE1_URL: http://nova-role1:8101
       LEDGERAI_DEMO_ROLE2_URL: http://nova-role2:8102
       LEDGERAI_DEMO_ROLE3_URL: http://nova-role3:8103
-      LEDGERAI_DEMO_ROLE6_URL: http://nova-role6:8106
+      LEDGERAI_DEMO_ROLE6_URL: http://nova-role6:8006
     command: ["uvicorn", "ledgerai_backend.demo.api:app", "--host", "0.0.0.0", "--port", "8100"]
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8100/health/live')"]
@@ -126,7 +126,7 @@ services:
       LEDGERAI_DEMO_ROLE1_URL: http://nova-role1:8101
       LEDGERAI_DEMO_ROLE2_URL: http://nova-role2:8102
       LEDGERAI_DEMO_ROLE3_URL: http://nova-role3:8103
-      LEDGERAI_DEMO_ROLE6_URL: http://nova-role6:8106
+      LEDGERAI_DEMO_ROLE6_URL: http://nova-role6:8006
     command: ["ledgerai-demo", "--external-services"]
 
   nova-runner-real:

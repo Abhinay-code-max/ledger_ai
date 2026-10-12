@@ -187,9 +187,29 @@ async def classify_compatible(
     payload: dict[str, Any],
     request: Request,
     auth: AuthScope,
+    settings: Annotated[Role6Settings, Depends(get_role6_settings)],
 ) -> dict[str, Any]:
     """Compatible endpoint matching Role4Adapter classify expectation."""
+    content_length = request.headers.get("content-length")
+    if content_length:
+        try:
+            if int(content_length) > settings.max_request_bytes:
+                raise HTTPException(
+                    status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                    detail="Request content-length exceeds maximum allowed",
+                )
+        except ValueError as exc:
+            raise HTTPException(400, "Invalid content length") from exc
+
     caller, tenant_context = auth
+
+    payload_operation = payload.get("operation_id")
+    if payload_operation is not None and str(payload_operation) != str(caller.operation_id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Payload operation ID does not match authenticated token operation ID",
+        )
+
     resource_id = payload.get("resource_id") or str(caller.operation_id)
     return {
         "schema_version": "1.0",

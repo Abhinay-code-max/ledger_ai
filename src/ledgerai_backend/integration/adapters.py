@@ -34,6 +34,12 @@ from ledgerai_contracts.v1.accounting import (
 )
 from ledgerai_contracts.v1.documents import DocumentExtraction
 from ledgerai_contracts.v1.exceptions import ExceptionRecord
+from ledgerai_contracts.v1.model_runtime import (
+    ModelInferenceRequest,
+    ModelInferenceResponse,
+    ModelManifest,
+    RuntimeHealthStatus,
+)
 from ledgerai_contracts.v1.reconciliation import MatchProposal
 from ledgerai_contracts.v1.tenancy import EntityTenantContext
 
@@ -139,7 +145,7 @@ class _Circuit:
             self.opened_at = monotonic()
 
 
-def _unique_json(data: bytes) -> object:
+def _unique_json(data: bytes, *, allow_float: bool = False) -> object:
     def pairs(items: list[tuple[str, object]]) -> dict[str, object]:
         result: dict[str, object] = {}
         for key, value in items:
@@ -149,6 +155,8 @@ def _unique_json(data: bytes) -> object:
         return result
 
     try:
+        if allow_float:
+            return json.loads(data, object_pairs_hook=pairs)
         return json.loads(
             data,
             object_pairs_hook=pairs,
@@ -202,6 +210,7 @@ class SecureRoleAdapter(Generic[ResponseModel]):
         causation_id: UUID | None = None,
         expected_resource: tuple[str, UUID] | None = None,
         response_model: type[BaseModel] | None = None,
+        allow_float: bool = False,
     ) -> ResponseModel:
         if not path.startswith("/") or ".." in path or "?" in path or "#" in path:
             raise ValueError("adapter path is not a fixed safe path")
@@ -269,7 +278,7 @@ class SecureRoleAdapter(Generic[ResponseModel]):
                 body = response.content
                 if len(body) > self.security.maximum_response_bytes:
                     raise AdapterError("RESPONSE_TOO_LARGE")
-                raw = _unique_json(body)
+                raw = _unique_json(body, allow_float=allow_float)
                 try:
                     result = (response_model or self.response_model).model_validate(raw)
                 except ValidationError as exc:
@@ -457,6 +466,71 @@ class Role6Adapter(SecureRoleAdapter[Role6Classification]):
 
     async def classify(self, **kwargs: Any) -> Role6Classification:
         return await self.call(path="/v1/classifications", **kwargs)
+
+    async def infer(
+        self,
+        *,
+        payload: ModelInferenceRequest | Mapping[str, object],
+        tenant_context: EntityTenantContext,
+        operation_id: UUID,
+        correlation_id: UUID,
+        causation_id: UUID | None = None,
+    ) -> ModelInferenceResponse:
+        body = payload.model_dump(mode="json") if isinstance(payload, BaseModel) else dict(payload)
+        return cast(
+            ModelInferenceResponse,
+            await self.call(
+                path="/v1/models/infer",
+                payload=body,
+                tenant_context=tenant_context,
+                operation_id=operation_id,
+                correlation_id=correlation_id,
+                causation_id=causation_id,
+                response_model=ModelInferenceResponse,
+                allow_float=True,
+            ),
+        )
+
+    async def health_live(self) -> dict[str, str]:
+        url = urljoin(self.security.base_url.rstrip("/") + "/", "health/live")
+        resp = await self._client.get(url, timeout=self.security.total_timeout)
+        if resp.status_code != 200:
+            raise AdapterError(f"HTTP_{resp.status_code}")
+        return cast(dict[str, str], resp.json())
+
+    async def health_ready(self) -> RuntimeHealthStatus:
+        url = urljoin(self.security.base_url.rstrip("/") + "/", "health/ready")
+        resp = await self._client.get(url, timeout=self.security.total_timeout)
+        if resp.status_code != 200:
+            raise AdapterError(f"HTTP_{resp.status_code}")
+        return RuntimeHealthStatus.model_validate(resp.json())
+
+    async def manifest(
+        self,
+        *,
+        tenant_context: EntityTenantContext,
+        operation_id: UUID,
+        correlation_id: UUID,
+    ) -> ModelManifest:
+        url = urljoin(self.security.base_url.rstrip("/") + "/", "v1/models/manifest")
+        headers = {
+            "Accept": "application/json",
+            "Authorization": "Bearer "
+            + self.token_provider.token(
+                audience=self.security.audience,
+                tenant_id=tenant_context.tenant_id,
+                operation_id=operation_id,
+            ),
+            "X-Operation-ID": str(operation_id),
+            "X-Correlation-ID": str(correlation_id),
+            "X-Tenant-ID": str(tenant_context.tenant_id),
+            "X-Organization-ID": str(tenant_context.organization_id),
+            "X-Legal-Entity-ID": str(tenant_context.legal_entity_id),
+        }
+        resp = await self._client.get(url, headers=headers, timeout=self.security.total_timeout)
+        if resp.status_code != 200:
+            raise AdapterError(f"HTTP_{resp.status_code}")
+        return ModelManifest.model_validate(resp.json())
 
 
 def verify_webhook_signature(body: bytes, *, signature: str, secret: bytes) -> bool:

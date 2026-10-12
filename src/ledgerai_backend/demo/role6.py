@@ -1,41 +1,32 @@
-"""Deterministic, protocol-faithful Role 6 classification stub for NOVA."""
+"""Role 6 application factory delegating directly to the real Role 6 local model gateway."""
 
 from __future__ import annotations
 
-from fastapi import FastAPI, HTTPException, Request
+import os
 
-from ledgerai_backend.demo.service_auth import authenticated_payload
+from fastapi import FastAPI
+from pydantic import SecretStr
+
+from ledgerai_role6.app import create_role6_app
+from ledgerai_role6.config import Role6Settings
 
 
 def create_demo_role6_app() -> FastAPI:
-    app = FastAPI(title="LedgerAI NOVA demo Role 6", docs_url=None, redoc_url=None)
-
-    @app.get("/health/ready")
-    async def ready() -> dict[str, str]:
-        return {"status": "ready"}
-
-    @app.post("/v1/classifications")
-    async def classify(request: Request) -> dict[str, object]:
-        payload = await authenticated_payload(request, audience="ledgerai-role6")
-        resource_id = payload.get("resource_id")
-        if resource_id is None:
-            raise HTTPException(422, "resource_id is required")
-        return {
-            "schema_version": "1.0",
-            "tenant_context": payload["tenant_context"],
-            "resource_id": resource_id,
-            "category": "INVOICE",
-            "confidence": "0.99",
-            "provenance": [
-                {
-                    "producer": "ledgerai-demo-role6",
-                    "producer_version": "1.0.0",
-                    "model_version": "nova-deterministic-v1",
-                }
-            ],
-        }
-
-    return app
+    """Delegate to the real Role 6 local model gateway runtime."""
+    secret = os.environ.get(
+        "LEDGERAI_ROLE6_SERVICE_TOKEN_SECRET",
+        os.environ.get(
+            "LEDGERAI_SERVICE_TOKEN_SECRET", "local-service-token-secret-32-chars-minimum"
+        ),
+    )
+    settings = Role6Settings(
+        environment="development",
+        service_token_secret=SecretStr(secret),
+        service_audience="ledgerai-role6",
+        active_backend="deterministic",
+        max_request_bytes=1_048_576,
+    )
+    return create_role6_app(settings)
 
 
 app = create_demo_role6_app()
