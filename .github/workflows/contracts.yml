@@ -30,6 +30,7 @@ on:
       - main
       - role4/backend-orchestration
       - integration/nova-demo
+      - integration/backend-e2e
     paths:
       - "src/ledgerai_contracts/**"
       - "src/ledgerai_backend/**"
