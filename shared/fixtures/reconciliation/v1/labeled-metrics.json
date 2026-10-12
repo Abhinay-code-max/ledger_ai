@@ -1,0 +1,11 @@
+{
+  "ambiguity_rate": "0.1667",
+  "false_negative_edges": 0,
+  "false_positive_edges": 0,
+  "fixture_version": "reconciliation-labeled/1.0.0",
+  "labeled_case_count": 6,
+  "precision": "1.0000",
+  "recall": "1.0000",
+  "scope": "Synthetic labeled fixtures only; not a production accuracy claim.",
+  "true_positive_edges": 6
+}

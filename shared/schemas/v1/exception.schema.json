@@ -367,8 +367,9 @@
       "title": "ProvenanceReference",
       "type": "object"
     },
-    "ResourceReference": {
+    "VersionedResourceReference": {
       "additionalProperties": false,
+      "description": "Reference bound to an exact immutable resource version.",
       "properties": {
         "resource_id": {
           "format": "uuid",
@@ -381,29 +382,38 @@
           "type": "string"
         },
         "resource_version": {
-          "anyOf": [
-            {
-              "minLength": 1,
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Resource Version"
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$",
+          "title": "Resource Version",
+          "type": "string"
         }
       },
       "required": [
         "resource_type",
-        "resource_id"
+        "resource_id",
+        "resource_version"
       ],
-      "title": "ResourceReference",
+      "title": "VersionedResourceReference",
       "type": "object"
     }
   },
   "additionalProperties": false,
   "properties": {
+    "algorithm_version": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Algorithm Version",
+      "type": "string"
+    },
+    "blocks_close": {
+      "title": "Blocks Close",
+      "type": "boolean"
+    },
+    "blocks_posting": {
+      "title": "Blocks Posting",
+      "type": "boolean"
+    },
     "correlation": {
       "$ref": "#/$defs/CorrelationMetadata"
     },
@@ -426,22 +436,30 @@
       "type": "string"
     },
     "explanation": {
+      "maxLength": 1000,
       "minLength": 1,
       "title": "Explanation",
       "type": "string"
     },
     "involved_resources": {
       "items": {
-        "$ref": "#/$defs/ResourceReference"
+        "$ref": "#/$defs/VersionedResourceReference"
       },
+      "maxItems": 20,
       "minItems": 1,
       "title": "Involved Resources",
       "type": "array"
+    },
+    "operation_id": {
+      "format": "uuid",
+      "title": "Operation Id",
+      "type": "string"
     },
     "reason_codes": {
       "items": {
         "type": "string"
       },
+      "maxItems": 20,
       "minItems": 1,
       "title": "Reason Codes",
       "type": "array"
@@ -461,7 +479,7 @@
     "resolution_reference": {
       "anyOf": [
         {
-          "$ref": "#/$defs/ResourceReference"
+          "$ref": "#/$defs/VersionedResourceReference"
         },
         {
           "type": "null"
@@ -477,6 +495,12 @@
         "DISMISSED"
       ],
       "title": "Resolution Status",
+      "type": "string"
+    },
+    "rule_version": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Rule Version",
       "type": "string"
     },
     "schema_version": {
@@ -510,6 +534,7 @@
       "items": {
         "$ref": "#/$defs/ProvenanceReference"
       },
+      "maxItems": 100,
       "title": "Supporting Evidence",
       "type": "array"
     },
@@ -528,10 +553,15 @@
     "tenant_context",
     "exception_type",
     "severity",
+    "operation_id",
     "involved_resources",
     "explanation",
     "reason_codes",
     "resolution_status",
+    "blocks_posting",
+    "blocks_close",
+    "algorithm_version",
+    "rule_version",
     "detector",
     "created_at",
     "updated_at",

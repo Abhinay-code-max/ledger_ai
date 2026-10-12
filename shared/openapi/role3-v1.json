@@ -1,0 +1,1622 @@
+{
+  "components": {
+    "schemas": {
+      "BankTransaction": {
+        "additionalProperties": false,
+        "properties": {
+          "bank_account_id": {
+            "format": "uuid",
+            "title": "Bank Account Id",
+            "type": "string"
+          },
+          "booking_date": {
+            "format": "date",
+            "title": "Booking Date",
+            "type": "string"
+          },
+          "content_fingerprint": {
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Content Fingerprint",
+            "type": "string"
+          },
+          "correlation": {
+            "$ref": "#/components/schemas/CorrelationMetadata"
+          },
+          "counterparty": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Counterparty"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "direction": {
+            "enum": [
+              "DEBIT",
+              "CREDIT"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "external_source_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Source Id"
+          },
+          "import_batch_id": {
+            "format": "uuid",
+            "title": "Import Batch Id",
+            "type": "string"
+          },
+          "money": {
+            "$ref": "#/components/schemas/PositiveMoney"
+          },
+          "narration": {
+            "default": "",
+            "title": "Narration",
+            "type": "string"
+          },
+          "normalization_status": {
+            "enum": [
+              "NORMALIZED",
+              "REVIEW_REQUIRED",
+              "REJECTED"
+            ],
+            "title": "Normalization Status",
+            "type": "string"
+          },
+          "provenance": {
+            "items": {
+              "$ref": "#/components/schemas/ProvenanceReference-Input"
+            },
+            "title": "Provenance",
+            "type": "array"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "schema_version": {
+            "const": "1.0",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "source_row_number": {
+            "minimum": 1.0,
+            "title": "Source Row Number",
+            "type": "integer"
+          },
+          "tenant_context": {
+            "$ref": "#/components/schemas/EntityTenantContext"
+          },
+          "transaction_id": {
+            "format": "uuid",
+            "title": "Transaction Id",
+            "type": "string"
+          },
+          "value_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value Date"
+          }
+        },
+        "required": [
+          "schema_version",
+          "transaction_id",
+          "tenant_context",
+          "bank_account_id",
+          "import_batch_id",
+          "source_row_number",
+          "booking_date",
+          "money",
+          "direction",
+          "normalization_status",
+          "provenance",
+          "content_fingerprint",
+          "correlation"
+        ],
+        "title": "BankTransaction",
+        "type": "object"
+      },
+      "BoundingBox-Input": {
+        "additionalProperties": false,
+        "properties": {
+          "height": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Height"
+          },
+          "page": {
+            "minimum": 1.0,
+            "title": "Page",
+            "type": "integer"
+          },
+          "width": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Width"
+          },
+          "x": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "X"
+          },
+          "y": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Y"
+          }
+        },
+        "required": [
+          "page",
+          "x",
+          "y",
+          "width",
+          "height"
+        ],
+        "title": "BoundingBox",
+        "type": "object"
+      },
+      "BoundingBox-Output": {
+        "additionalProperties": false,
+        "properties": {
+          "height": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Height",
+            "type": "string"
+          },
+          "page": {
+            "minimum": 1.0,
+            "title": "Page",
+            "type": "integer"
+          },
+          "width": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Width",
+            "type": "string"
+          },
+          "x": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "X",
+            "type": "string"
+          },
+          "y": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Y",
+            "type": "string"
+          }
+        },
+        "required": [
+          "page",
+          "x",
+          "y",
+          "width",
+          "height"
+        ],
+        "title": "BoundingBox",
+        "type": "object"
+      },
+      "CandidateScore": {
+        "additionalProperties": false,
+        "properties": {
+          "components": {
+            "items": {
+              "$ref": "#/components/schemas/ConfidenceComponent"
+            },
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Components",
+            "type": "array"
+          },
+          "conflicts": {
+            "items": {
+              "$ref": "#/components/schemas/MatchConflict"
+            },
+            "maxItems": 20,
+            "title": "Conflicts",
+            "type": "array"
+          },
+          "eligible": {
+            "title": "Eligible",
+            "type": "boolean"
+          },
+          "records": {
+            "items": {
+              "$ref": "#/components/schemas/VersionedResourceReference"
+            },
+            "maxItems": 6,
+            "minItems": 2,
+            "title": "Records",
+            "type": "array"
+          },
+          "score": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Score",
+            "type": "string"
+          }
+        },
+        "required": [
+          "records",
+          "score",
+          "eligible",
+          "components"
+        ],
+        "title": "CandidateScore",
+        "type": "object"
+      },
+      "ConfidenceComponent": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "pattern": "^[A-Z][A-Z0-9_]+$",
+            "title": "Code",
+            "type": "string"
+          },
+          "explanation": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Explanation",
+            "type": "string"
+          },
+          "value": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Value",
+            "type": "string"
+          },
+          "weight": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Weight",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "value",
+          "weight",
+          "explanation"
+        ],
+        "title": "ConfidenceComponent",
+        "type": "object"
+      },
+      "CorrelationMetadata": {
+        "additionalProperties": false,
+        "description": "Request starts an interaction; correlation spans it; causation identifies its parent.",
+        "properties": {
+          "causation_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Causation Id"
+          },
+          "correlation_id": {
+            "format": "uuid",
+            "title": "Correlation Id",
+            "type": "string"
+          },
+          "request_id": {
+            "format": "uuid",
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "request_id",
+          "correlation_id"
+        ],
+        "title": "CorrelationMetadata",
+        "type": "object"
+      },
+      "Counterparty": {
+        "additionalProperties": false,
+        "properties": {
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "masked_account_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Masked Account Reference"
+          }
+        },
+        "title": "Counterparty",
+        "type": "object"
+      },
+      "EntityTenantContext": {
+        "additionalProperties": false,
+        "properties": {
+          "legal_entity_id": {
+            "format": "uuid",
+            "title": "Legal Entity Id",
+            "type": "string"
+          },
+          "organization_id": {
+            "format": "uuid",
+            "title": "Organization Id",
+            "type": "string"
+          },
+          "tenant_id": {
+            "format": "uuid",
+            "title": "Tenant Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tenant_id",
+          "organization_id",
+          "legal_entity_id"
+        ],
+        "title": "EntityTenantContext",
+        "type": "object"
+      },
+      "ExceptionRecord": {
+        "additionalProperties": false,
+        "properties": {
+          "algorithm_version": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Algorithm Version",
+            "type": "string"
+          },
+          "blocks_close": {
+            "title": "Blocks Close",
+            "type": "boolean"
+          },
+          "blocks_posting": {
+            "title": "Blocks Posting",
+            "type": "boolean"
+          },
+          "correlation": {
+            "$ref": "#/components/schemas/CorrelationMetadata"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "detector": {
+            "$ref": "#/components/schemas/ProducerMetadata"
+          },
+          "exception_id": {
+            "format": "uuid",
+            "title": "Exception Id",
+            "type": "string"
+          },
+          "exception_type": {
+            "minLength": 1,
+            "title": "Exception Type",
+            "type": "string"
+          },
+          "explanation": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Explanation",
+            "type": "string"
+          },
+          "involved_resources": {
+            "items": {
+              "$ref": "#/components/schemas/VersionedResourceReference"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Involved Resources",
+            "type": "array"
+          },
+          "operation_id": {
+            "format": "uuid",
+            "title": "Operation Id",
+            "type": "string"
+          },
+          "reason_codes": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Reason Codes",
+            "type": "array"
+          },
+          "required_action": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Required Action"
+          },
+          "resolution_reference": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VersionedResourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "resolution_status": {
+            "enum": [
+              "OPEN",
+              "IN_REVIEW",
+              "RESOLVED",
+              "DISMISSED"
+            ],
+            "title": "Resolution Status",
+            "type": "string"
+          },
+          "rule_version": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Rule Version",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": "1.0",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "severity": {
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "CRITICAL"
+            ],
+            "title": "Severity",
+            "type": "string"
+          },
+          "suggested_action": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested Action"
+          },
+          "supporting_evidence": {
+            "items": {
+              "$ref": "#/components/schemas/ProvenanceReference-Output"
+            },
+            "maxItems": 100,
+            "title": "Supporting Evidence",
+            "type": "array"
+          },
+          "tenant_context": {
+            "$ref": "#/components/schemas/EntityTenantContext"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "exception_id",
+          "tenant_context",
+          "exception_type",
+          "severity",
+          "operation_id",
+          "involved_resources",
+          "explanation",
+          "reason_codes",
+          "resolution_status",
+          "blocks_posting",
+          "blocks_close",
+          "algorithm_version",
+          "rule_version",
+          "detector",
+          "created_at",
+          "updated_at",
+          "correlation"
+        ],
+        "title": "ExceptionRecord",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "InvoiceFact": {
+        "additionalProperties": false,
+        "description": "Role 1 facts reduced to the immutable evidence needed for matching.",
+        "properties": {
+          "amount": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "content_fingerprint": {
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Content Fingerprint",
+            "type": "string"
+          },
+          "document_id": {
+            "format": "uuid",
+            "title": "Document Id",
+            "type": "string"
+          },
+          "document_version": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$",
+            "title": "Document Version",
+            "type": "string"
+          },
+          "evidence_complete": {
+            "title": "Evidence Complete",
+            "type": "boolean"
+          },
+          "expected_transaction_direction": {
+            "enum": [
+              "DEBIT",
+              "CREDIT"
+            ],
+            "title": "Expected Transaction Direction",
+            "type": "string"
+          },
+          "extraction_id": {
+            "format": "uuid",
+            "title": "Extraction Id",
+            "type": "string"
+          },
+          "extraction_version": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$",
+            "title": "Extraction Version",
+            "type": "string"
+          },
+          "invoice_date": {
+            "format": "date",
+            "title": "Invoice Date",
+            "type": "string"
+          },
+          "party_name": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Party Name"
+          },
+          "provenance": {
+            "items": {
+              "$ref": "#/components/schemas/ProvenanceReference-Input"
+            },
+            "maxItems": 50,
+            "title": "Provenance",
+            "type": "array"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "maxLength": 128,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "tenant_context": {
+            "$ref": "#/components/schemas/EntityTenantContext"
+          }
+        },
+        "required": [
+          "extraction_id",
+          "extraction_version",
+          "document_id",
+          "document_version",
+          "tenant_context",
+          "amount",
+          "invoice_date",
+          "expected_transaction_direction",
+          "evidence_complete",
+          "content_fingerprint"
+        ],
+        "title": "InvoiceFact",
+        "type": "object"
+      },
+      "MatchConflict": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "pattern": "^[A-Z][A-Z0-9_]+$",
+            "title": "Code",
+            "type": "string"
+          },
+          "explanation": {
+            "minLength": 1,
+            "title": "Explanation",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "explanation"
+        ],
+        "title": "MatchConflict",
+        "type": "object"
+      },
+      "MatchProposal": {
+        "additionalProperties": false,
+        "properties": {
+          "algorithm_version": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Algorithm Version",
+            "type": "string"
+          },
+          "candidate_scores": {
+            "items": {
+              "$ref": "#/components/schemas/CandidateScore"
+            },
+            "maxItems": 100,
+            "title": "Candidate Scores",
+            "type": "array"
+          },
+          "confidence": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Confidence",
+            "type": "string"
+          },
+          "confidence_components": {
+            "items": {
+              "$ref": "#/components/schemas/ConfidenceComponent"
+            },
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Confidence Components",
+            "type": "array"
+          },
+          "conflicts": {
+            "items": {
+              "$ref": "#/components/schemas/MatchConflict"
+            },
+            "maxItems": 20,
+            "title": "Conflicts",
+            "type": "array"
+          },
+          "correlation": {
+            "$ref": "#/components/schemas/CorrelationMetadata"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "match_type": {
+            "enum": [
+              "ONE_TO_ONE",
+              "MANY_TO_ONE",
+              "ONE_TO_MANY",
+              "PARTIAL",
+              "UNMATCHED"
+            ],
+            "title": "Match Type",
+            "type": "string"
+          },
+          "operation_id": {
+            "format": "uuid",
+            "title": "Operation Id",
+            "type": "string"
+          },
+          "producer": {
+            "$ref": "#/components/schemas/ProducerMetadata"
+          },
+          "proposal_id": {
+            "format": "uuid",
+            "title": "Proposal Id",
+            "type": "string"
+          },
+          "proposal_version": {
+            "minimum": 1.0,
+            "title": "Proposal Version",
+            "type": "integer"
+          },
+          "provenance": {
+            "items": {
+              "$ref": "#/components/schemas/ProvenanceReference-Output"
+            },
+            "maxItems": 100,
+            "title": "Provenance",
+            "type": "array"
+          },
+          "reasons": {
+            "items": {
+              "$ref": "#/components/schemas/MatchReason"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Reasons",
+            "type": "array"
+          },
+          "records": {
+            "items": {
+              "$ref": "#/components/schemas/VersionedResourceReference"
+            },
+            "maxItems": 6,
+            "minItems": 1,
+            "title": "Records",
+            "type": "array"
+          },
+          "schema_version": {
+            "const": "1.0",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "status": {
+            "enum": [
+              "PROPOSED",
+              "REVIEW_REQUIRED",
+              "ACCEPTED",
+              "REJECTED",
+              "SUPERSEDED"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "strategy_version": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Strategy Version",
+            "type": "string"
+          },
+          "tenant_context": {
+            "$ref": "#/components/schemas/EntityTenantContext"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "proposal_id",
+          "proposal_version",
+          "tenant_context",
+          "operation_id",
+          "records",
+          "match_type",
+          "confidence",
+          "strategy_version",
+          "algorithm_version",
+          "confidence_components",
+          "reasons",
+          "producer",
+          "status",
+          "created_at",
+          "updated_at",
+          "correlation"
+        ],
+        "title": "MatchProposal",
+        "type": "object"
+      },
+      "MatchReason": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "pattern": "^[A-Z][A-Z0-9_]+$",
+            "title": "Code",
+            "type": "string"
+          },
+          "contribution": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contribution"
+          },
+          "explanation": {
+            "minLength": 1,
+            "title": "Explanation",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "explanation"
+        ],
+        "title": "MatchReason",
+        "type": "object"
+      },
+      "Money": {
+        "additionalProperties": false,
+        "description": "Exact money. JSON amount is always a decimal string; floats are forbidden.",
+        "properties": {
+          "amount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "title": "Amount",
+            "type": "string"
+          },
+          "currency": {
+            "pattern": "^[A-Z]{3}$",
+            "title": "Currency",
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount",
+          "currency"
+        ],
+        "title": "Money",
+        "type": "object"
+      },
+      "PositiveMoney": {
+        "additionalProperties": false,
+        "description": "Exact positive money for records whose DEBIT/CREDIT field carries the sign.",
+        "properties": {
+          "amount": {
+            "pattern": "^(?=.*[1-9])(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "title": "Amount",
+            "type": "string"
+          },
+          "currency": {
+            "pattern": "^[A-Z]{3}$",
+            "title": "Currency",
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount",
+          "currency"
+        ],
+        "title": "PositiveMoney",
+        "type": "object"
+      },
+      "ProducerMetadata": {
+        "additionalProperties": false,
+        "properties": {
+          "algorithm_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Algorithm Version"
+          },
+          "model_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Name"
+          },
+          "model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Version"
+          },
+          "name": {
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "producer_type": {
+            "$ref": "#/components/schemas/ProducerType"
+          },
+          "prompt_template_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Template Version"
+          },
+          "rule_or_policy_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rule Or Policy Version"
+          },
+          "version": {
+            "minLength": 1,
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "producer_type",
+          "name",
+          "version"
+        ],
+        "title": "ProducerMetadata",
+        "type": "object"
+      },
+      "ProducerType": {
+        "enum": [
+          "SERVICE",
+          "AGENT",
+          "MODEL",
+          "RULE_ENGINE",
+          "HUMAN"
+        ],
+        "title": "ProducerType",
+        "type": "string"
+      },
+      "ProvenanceReference-Input": {
+        "additionalProperties": false,
+        "properties": {
+          "bounding_box": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BoundingBox-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "document_version": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Version"
+          },
+          "evidence_hash": {
+            "anyOf": [
+              {
+                "pattern": "^[a-f0-9]{64}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Hash"
+          },
+          "extraction_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extraction Version"
+          },
+          "human_correction_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Human Correction Id"
+          },
+          "page_number": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page Number"
+          },
+          "source_document_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Document Id"
+          },
+          "source_field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Field"
+          },
+          "source_row": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Row"
+          }
+        },
+        "title": "ProvenanceReference",
+        "type": "object"
+      },
+      "ProvenanceReference-Output": {
+        "additionalProperties": false,
+        "properties": {
+          "bounding_box": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BoundingBox-Output"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "document_version": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Version"
+          },
+          "evidence_hash": {
+            "anyOf": [
+              {
+                "pattern": "^[a-f0-9]{64}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Hash"
+          },
+          "extraction_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extraction Version"
+          },
+          "human_correction_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Human Correction Id"
+          },
+          "page_number": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page Number"
+          },
+          "source_document_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Document Id"
+          },
+          "source_field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Field"
+          },
+          "source_row": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Row"
+          }
+        },
+        "title": "ProvenanceReference",
+        "type": "object"
+      },
+      "ReconciliationRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "causation_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Causation Id"
+          },
+          "correlation_id": {
+            "format": "uuid",
+            "title": "Correlation Id",
+            "type": "string"
+          },
+          "invoices": {
+            "items": {
+              "$ref": "#/components/schemas/InvoiceFact"
+            },
+            "maxItems": 500,
+            "title": "Invoices",
+            "type": "array"
+          },
+          "operation_id": {
+            "format": "uuid",
+            "title": "Operation Id",
+            "type": "string"
+          },
+          "operation_started_at": {
+            "format": "date-time",
+            "title": "Operation Started At",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": "1.0",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "strategy_version": {
+            "const": "reconciliation-rules/1.0.0",
+            "title": "Strategy Version",
+            "type": "string"
+          },
+          "tenant_context": {
+            "$ref": "#/components/schemas/EntityTenantContext"
+          },
+          "transactions": {
+            "items": {
+              "$ref": "#/components/schemas/VersionedBankTransaction"
+            },
+            "maxItems": 500,
+            "title": "Transactions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "schema_version",
+          "tenant_context",
+          "operation_id",
+          "correlation_id",
+          "operation_started_at",
+          "strategy_version"
+        ],
+        "title": "ReconciliationRequest",
+        "type": "object"
+      },
+      "ReconciliationResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "exceptions": {
+            "items": {
+              "$ref": "#/components/schemas/ExceptionRecord"
+            },
+            "maxItems": 100,
+            "title": "Exceptions",
+            "type": "array"
+          },
+          "proposal": {
+            "$ref": "#/components/schemas/MatchProposal"
+          },
+          "schema_version": {
+            "const": "1.0",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "tenant_context": {
+            "$ref": "#/components/schemas/EntityTenantContext"
+          }
+        },
+        "required": [
+          "schema_version",
+          "tenant_context",
+          "proposal"
+        ],
+        "title": "ReconciliationResponse",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "VersionedBankTransaction": {
+        "additionalProperties": false,
+        "properties": {
+          "transaction": {
+            "$ref": "#/components/schemas/BankTransaction"
+          },
+          "transaction_version": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$",
+            "title": "Transaction Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "transaction_version",
+          "transaction"
+        ],
+        "title": "VersionedBankTransaction",
+        "type": "object"
+      },
+      "VersionedResourceReference": {
+        "additionalProperties": false,
+        "description": "Reference bound to an exact immutable resource version.",
+        "properties": {
+          "resource_id": {
+            "format": "uuid",
+            "title": "Resource Id",
+            "type": "string"
+          },
+          "resource_type": {
+            "minLength": 1,
+            "title": "Resource Type",
+            "type": "string"
+          },
+          "resource_version": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$",
+            "title": "Resource Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "resource_type",
+          "resource_id",
+          "resource_version"
+        ],
+        "title": "VersionedResourceReference",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "LedgerAI Role 3 Reconciliation",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/v1/reconciliations": {
+      "post": {
+        "operationId": "reconcile_v1_reconciliations_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": true,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Operation-ID",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "X-Operation-Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Correlation-ID",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "X-Correlation-Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Tenant-ID",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "X-Tenant-Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Organization-ID",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "X-Organization-Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Legal-Entity-ID",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "X-Legal-Entity-Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReconciliationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReconciliationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reconcile"
+      }
+    }
+  }
+}

@@ -1,0 +1,152 @@
+{
+  "causation_id": null,
+  "correlation_id": "1d54cf81-2f85-519c-a8fa-4677c7a83964",
+  "invoices": [
+    {
+      "amount": {
+        "amount": "1250.00",
+        "currency": "INR"
+      },
+      "content_fingerprint": "46018977294ab066c87d12be09fcd0737f8faa6853e8a5745ad8769151e22d7b",
+      "document_id": "0f12b032-2c5e-5641-8d6d-d2f79bee43d4",
+      "document_version": "1",
+      "evidence_complete": true,
+      "expected_transaction_direction": "DEBIT",
+      "extraction_id": "4d1a6df6-60de-5317-823d-0710d5381d56",
+      "extraction_version": "1",
+      "invoice_date": "2026-09-15",
+      "party_name": "Synthetic Fixture Supplier",
+      "provenance": [
+        {
+          "bounding_box": null,
+          "confidence": null,
+          "document_version": "1",
+          "evidence_hash": "90cad19ad8d32432a78def420a6f0bc64ad5b76f84f99bd303a53c83d9d880cf",
+          "extraction_version": null,
+          "human_correction_id": null,
+          "page_number": null,
+          "source_document_id": "0f12b032-2c5e-5641-8d6d-d2f79bee43d4",
+          "source_field": "invoice_total",
+          "source_row": null
+        }
+      ],
+      "reference": "NOVA-DEMO-PAY-001",
+      "tenant_context": {
+        "legal_entity_id": "f5d640ec-2b23-55a8-9097-35f478b5702f",
+        "organization_id": "54d35525-26fe-5369-a3d8-23e5e33607c0",
+        "tenant_id": "0496c240-d94b-52cf-9f70-4287d23b28dd"
+      }
+    }
+  ],
+  "operation_id": "55218384-2664-5d46-aa7c-a4672cb46fbc",
+  "operation_started_at": "2026-09-20T10:00:00Z",
+  "schema_version": "1.0",
+  "strategy_version": "reconciliation-rules/1.0.0",
+  "tenant_context": {
+    "legal_entity_id": "f5d640ec-2b23-55a8-9097-35f478b5702f",
+    "organization_id": "54d35525-26fe-5369-a3d8-23e5e33607c0",
+    "tenant_id": "0496c240-d94b-52cf-9f70-4287d23b28dd"
+  },
+  "transactions": [
+    {
+      "transaction": {
+        "bank_account_id": "f3ad50d4-5ae0-57a6-a49d-f91249852c8e",
+        "booking_date": "2026-09-15",
+        "content_fingerprint": "41dd12383c53539922b4886ec8b224514d5a6a2eee25aef87e1fef74278056ea",
+        "correlation": {
+          "causation_id": null,
+          "correlation_id": "1d54cf81-2f85-519c-a8fa-4677c7a83964",
+          "request_id": "195a7424-990d-517c-854e-514c3f598d70"
+        },
+        "counterparty": {
+          "display_name": "Synthetic Fixture Supplier",
+          "masked_account_reference": null
+        },
+        "direction": "DEBIT",
+        "external_source_id": "SYNTH-nova-planted-mismatch-nova-payment",
+        "import_batch_id": "57b0d544-f1e1-52b7-9ae5-70a3180509dc",
+        "money": {
+          "amount": "1250.00",
+          "currency": "INR"
+        },
+        "narration": "Synthetic labeled fixture",
+        "normalization_status": "NORMALIZED",
+        "provenance": [
+          {
+            "bounding_box": null,
+            "confidence": null,
+            "document_version": "1",
+            "evidence_hash": "4bdabe069406a3fe1f1af89e62934f7a69c7fc787b6aabd6b1c94dbd2b1ef579",
+            "extraction_version": null,
+            "human_correction_id": null,
+            "page_number": null,
+            "source_document_id": "ecd4e726-3952-56dc-a166-0cefd90feac0",
+            "source_field": "bank_row",
+            "source_row": null
+          }
+        ],
+        "reference": "NOVA-DEMO-PAY-001",
+        "schema_version": "1.0",
+        "source_row_number": 1,
+        "tenant_context": {
+          "legal_entity_id": "f5d640ec-2b23-55a8-9097-35f478b5702f",
+          "organization_id": "54d35525-26fe-5369-a3d8-23e5e33607c0",
+          "tenant_id": "0496c240-d94b-52cf-9f70-4287d23b28dd"
+        },
+        "transaction_id": "685d18ae-3e85-5ce4-a07a-847e5596be21",
+        "value_date": "2026-09-15"
+      },
+      "transaction_version": "1"
+    },
+    {
+      "transaction": {
+        "bank_account_id": "f3ad50d4-5ae0-57a6-a49d-f91249852c8e",
+        "booking_date": "2026-09-16",
+        "content_fingerprint": "89c8a2f2ca0e19fc01ba59621e7fab74cf0cd132cc6dd8306c316477055726c2",
+        "correlation": {
+          "causation_id": null,
+          "correlation_id": "1d54cf81-2f85-519c-a8fa-4677c7a83964",
+          "request_id": "195a7424-990d-517c-854e-514c3f598d70"
+        },
+        "counterparty": {
+          "display_name": "Synthetic Fixture Supplier",
+          "masked_account_reference": null
+        },
+        "direction": "DEBIT",
+        "external_source_id": "SYNTH-nova-planted-mismatch-nova-planted-50",
+        "import_batch_id": "57b0d544-f1e1-52b7-9ae5-70a3180509dc",
+        "money": {
+          "amount": "50.00",
+          "currency": "INR"
+        },
+        "narration": "Synthetic labeled fixture",
+        "normalization_status": "NORMALIZED",
+        "provenance": [
+          {
+            "bounding_box": null,
+            "confidence": null,
+            "document_version": "1",
+            "evidence_hash": "242a3979ac2b46aad83ec21931b2fbbf79678415c8073618c5f368df14ef04ef",
+            "extraction_version": null,
+            "human_correction_id": null,
+            "page_number": null,
+            "source_document_id": "d8c5f071-b976-563e-8ae9-dedf613d5723",
+            "source_field": "bank_row",
+            "source_row": null
+          }
+        ],
+        "reference": "NOVA-DEMO-ISSUE-001",
+        "schema_version": "1.0",
+        "source_row_number": 2,
+        "tenant_context": {
+          "legal_entity_id": "f5d640ec-2b23-55a8-9097-35f478b5702f",
+          "organization_id": "54d35525-26fe-5369-a3d8-23e5e33607c0",
+          "tenant_id": "0496c240-d94b-52cf-9f70-4287d23b28dd"
+        },
+        "transaction_id": "f57dda78-055d-5f0a-a09d-611be5df8910",
+        "value_date": "2026-09-16"
+      },
+      "transaction_version": "1"
+    }
+  ]
+}
