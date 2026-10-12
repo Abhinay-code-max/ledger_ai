@@ -238,115 +238,6 @@
       "title": "BoundingBox",
       "type": "object"
     },
-    "CandidateScore": {
-      "additionalProperties": false,
-      "properties": {
-        "components": {
-          "items": {
-            "$ref": "#/$defs/ConfidenceComponent"
-          },
-          "maxItems": 10,
-          "minItems": 1,
-          "title": "Components",
-          "type": "array"
-        },
-        "conflicts": {
-          "items": {
-            "$ref": "#/$defs/MatchConflict"
-          },
-          "maxItems": 20,
-          "title": "Conflicts",
-          "type": "array"
-        },
-        "eligible": {
-          "title": "Eligible",
-          "type": "boolean"
-        },
-        "records": {
-          "items": {
-            "$ref": "#/$defs/VersionedResourceReference"
-          },
-          "maxItems": 6,
-          "minItems": 2,
-          "title": "Records",
-          "type": "array"
-        },
-        "score": {
-          "anyOf": [
-            {
-              "maximum": 1.0,
-              "minimum": 0.0,
-              "type": "number"
-            },
-            {
-              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-              "type": "string"
-            }
-          ],
-          "title": "Score"
-        }
-      },
-      "required": [
-        "records",
-        "score",
-        "eligible",
-        "components"
-      ],
-      "title": "CandidateScore",
-      "type": "object"
-    },
-    "ConfidenceComponent": {
-      "additionalProperties": false,
-      "properties": {
-        "code": {
-          "pattern": "^[A-Z][A-Z0-9_]+$",
-          "title": "Code",
-          "type": "string"
-        },
-        "explanation": {
-          "maxLength": 500,
-          "minLength": 1,
-          "title": "Explanation",
-          "type": "string"
-        },
-        "value": {
-          "anyOf": [
-            {
-              "maximum": 1.0,
-              "minimum": 0.0,
-              "type": "number"
-            },
-            {
-              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-              "type": "string"
-            }
-          ],
-          "title": "Value"
-        },
-        "weight": {
-          "anyOf": [
-            {
-              "maximum": 1.0,
-              "minimum": 0.0,
-              "type": "number"
-            },
-            {
-              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-              "type": "string"
-            }
-          ],
-          "title": "Weight"
-        }
-      },
-      "required": [
-        "code",
-        "value",
-        "weight",
-        "explanation"
-      ],
-      "title": "ConfidenceComponent",
-      "type": "object"
-    },
     "CorrelationMetadata": {
       "additionalProperties": false,
       "description": "Request starts an interaction; correlation spans it; causation identifies its parent.",
@@ -813,20 +704,6 @@
     "ExceptionRecord": {
       "additionalProperties": false,
       "properties": {
-        "algorithm_version": {
-          "maxLength": 128,
-          "minLength": 1,
-          "title": "Algorithm Version",
-          "type": "string"
-        },
-        "blocks_close": {
-          "title": "Blocks Close",
-          "type": "boolean"
-        },
-        "blocks_posting": {
-          "title": "Blocks Posting",
-          "type": "boolean"
-        },
         "correlation": {
           "$ref": "#/$defs/CorrelationMetadata"
         },
@@ -849,30 +726,22 @@
           "type": "string"
         },
         "explanation": {
-          "maxLength": 1000,
           "minLength": 1,
           "title": "Explanation",
           "type": "string"
         },
         "involved_resources": {
           "items": {
-            "$ref": "#/$defs/VersionedResourceReference"
+            "$ref": "#/$defs/ResourceReference"
           },
-          "maxItems": 20,
           "minItems": 1,
           "title": "Involved Resources",
           "type": "array"
-        },
-        "operation_id": {
-          "format": "uuid",
-          "title": "Operation Id",
-          "type": "string"
         },
         "reason_codes": {
           "items": {
             "type": "string"
           },
-          "maxItems": 20,
           "minItems": 1,
           "title": "Reason Codes",
           "type": "array"
@@ -892,7 +761,7 @@
         "resolution_reference": {
           "anyOf": [
             {
-              "$ref": "#/$defs/VersionedResourceReference"
+              "$ref": "#/$defs/ResourceReference"
             },
             {
               "type": "null"
@@ -908,12 +777,6 @@
             "DISMISSED"
           ],
           "title": "Resolution Status",
-          "type": "string"
-        },
-        "rule_version": {
-          "maxLength": 128,
-          "minLength": 1,
-          "title": "Rule Version",
           "type": "string"
         },
         "schema_version": {
@@ -947,7 +810,6 @@
           "items": {
             "$ref": "#/$defs/ProvenanceReference"
           },
-          "maxItems": 100,
           "title": "Supporting Evidence",
           "type": "array"
         },
@@ -966,15 +828,10 @@
         "tenant_context",
         "exception_type",
         "severity",
-        "operation_id",
         "involved_resources",
         "explanation",
         "reason_codes",
         "resolution_status",
-        "blocks_posting",
-        "blocks_close",
-        "algorithm_version",
-        "rule_version",
         "detector",
         "created_at",
         "updated_at",
@@ -1307,20 +1164,6 @@
     "MatchProposal": {
       "additionalProperties": false,
       "properties": {
-        "algorithm_version": {
-          "maxLength": 128,
-          "minLength": 1,
-          "title": "Algorithm Version",
-          "type": "string"
-        },
-        "candidate_scores": {
-          "items": {
-            "$ref": "#/$defs/CandidateScore"
-          },
-          "maxItems": 100,
-          "title": "Candidate Scores",
-          "type": "array"
-        },
         "confidence": {
           "anyOf": [
             {
@@ -1335,20 +1178,10 @@
           ],
           "title": "Confidence"
         },
-        "confidence_components": {
-          "items": {
-            "$ref": "#/$defs/ConfidenceComponent"
-          },
-          "maxItems": 10,
-          "minItems": 1,
-          "title": "Confidence Components",
-          "type": "array"
-        },
         "conflicts": {
           "items": {
             "$ref": "#/$defs/MatchConflict"
           },
-          "maxItems": 20,
           "title": "Conflicts",
           "type": "array"
         },
@@ -1371,11 +1204,6 @@
           "title": "Match Type",
           "type": "string"
         },
-        "operation_id": {
-          "format": "uuid",
-          "title": "Operation Id",
-          "type": "string"
-        },
         "producer": {
           "$ref": "#/$defs/ProducerMetadata"
         },
@@ -1393,7 +1221,6 @@
           "items": {
             "$ref": "#/$defs/ProvenanceReference"
           },
-          "maxItems": 100,
           "title": "Provenance",
           "type": "array"
         },
@@ -1401,16 +1228,14 @@
           "items": {
             "$ref": "#/$defs/MatchReason"
           },
-          "maxItems": 20,
           "minItems": 1,
           "title": "Reasons",
           "type": "array"
         },
         "records": {
           "items": {
-            "$ref": "#/$defs/VersionedResourceReference"
+            "$ref": "#/$defs/ResourceReference"
           },
-          "maxItems": 6,
           "minItems": 1,
           "title": "Records",
           "type": "array"
@@ -1423,8 +1248,6 @@
         "score": {
           "anyOf": [
             {
-              "maximum": 1.0,
-              "minimum": 0.0,
               "type": "number"
             },
             {
@@ -1449,12 +1272,6 @@
           "title": "Status",
           "type": "string"
         },
-        "strategy_version": {
-          "maxLength": 128,
-          "minLength": 1,
-          "title": "Strategy Version",
-          "type": "string"
-        },
         "tenant_context": {
           "$ref": "#/$defs/EntityTenantContext"
         },
@@ -1469,13 +1286,9 @@
         "proposal_id",
         "proposal_version",
         "tenant_context",
-        "operation_id",
         "records",
         "match_type",
         "confidence",
-        "strategy_version",
-        "algorithm_version",
-        "confidence_components",
         "reasons",
         "producer",
         "status",
