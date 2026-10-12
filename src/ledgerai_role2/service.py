@@ -26,6 +26,7 @@ from ledgerai_contracts.v1.common import (
     ValidationIssue,
 )
 from ledgerai_contracts.v1.tenancy import EntityTenantContext
+from ledgerai_role2.database.in_memory import InMemoryRole2Repository
 from ledgerai_role2.database.repository import Role2Repository
 from ledgerai_role2.domain.calculator import (
     calculate_balance_sheet,
@@ -55,7 +56,7 @@ from ledgerai_role2.domain.state_machine import (
 class Role2Service:
     def __init__(
         self,
-        repository: Role2Repository,
+        repository: Role2Repository | InMemoryRole2Repository,
         *,
         service_version: str = "2.0.0",
     ) -> None:

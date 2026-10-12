@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+from typing import Any
 from uuid import UUID, uuid4
 
 import httpx
@@ -58,7 +59,7 @@ def headers(
 
 
 @pytest.fixture
-def app():
+def app() -> Any:
     settings = Role2Settings(
         service_token_secret=SECRET,  # type: ignore[arg-type]
         service_token_audience=AUDIENCE,
@@ -69,7 +70,7 @@ def app():
 
 
 @pytest.mark.asyncio
-async def test_valid_token_allows_request(app) -> None:
+async def test_valid_token_allows_request(app: Any) -> None:
     op_id = uuid4()
     token = make_token(operation_id=op_id)
     async with httpx.AsyncClient(
@@ -85,7 +86,7 @@ async def test_valid_token_allows_request(app) -> None:
 
 
 @pytest.mark.asyncio
-async def test_missing_token_returns_401(app) -> None:
+async def test_missing_token_returns_401(app: Any) -> None:
     op_id = uuid4()
     h = headers("dummy", op_id)
     del h["Authorization"]
@@ -101,7 +102,7 @@ async def test_missing_token_returns_401(app) -> None:
 
 
 @pytest.mark.asyncio
-async def test_expired_token_returns_401(app) -> None:
+async def test_expired_token_returns_401(app: Any) -> None:
     op_id = uuid4()
     token = make_token(operation_id=op_id, ttl=-10)  # already expired!
     async with httpx.AsyncClient(
@@ -117,7 +118,7 @@ async def test_expired_token_returns_401(app) -> None:
 
 
 @pytest.mark.asyncio
-async def test_wrong_audience_returns_401(app) -> None:
+async def test_wrong_audience_returns_401(app: Any) -> None:
     op_id = uuid4()
     token = make_token(operation_id=op_id, audience="role3-reconciliation")
     async with httpx.AsyncClient(
@@ -133,7 +134,7 @@ async def test_wrong_audience_returns_401(app) -> None:
 
 
 @pytest.mark.asyncio
-async def test_wrong_issuer_returns_401(app) -> None:
+async def test_wrong_issuer_returns_401(app: Any) -> None:
     op_id = uuid4()
     token = make_token(operation_id=op_id, issuer="untrusted-attacker")
     async with httpx.AsyncClient(
@@ -149,7 +150,7 @@ async def test_wrong_issuer_returns_401(app) -> None:
 
 
 @pytest.mark.asyncio
-async def test_wrong_secret_signature_returns_401(app) -> None:
+async def test_wrong_secret_signature_returns_401(app: Any) -> None:
     op_id = uuid4()
     token = make_token(operation_id=op_id, secret="b" * 32)
     async with httpx.AsyncClient(
@@ -164,7 +165,7 @@ async def test_wrong_secret_signature_returns_401(app) -> None:
 
 
 @pytest.mark.asyncio
-async def test_tenant_binding_mismatch_returns_403(app) -> None:
+async def test_tenant_binding_mismatch_returns_403(app: Any) -> None:
     op_id = uuid4()
     # Token has TENANT, but request header has foreign tenant!
     token = make_token(operation_id=op_id, tenant_id=TENANT)
@@ -182,7 +183,7 @@ async def test_tenant_binding_mismatch_returns_403(app) -> None:
 
 
 @pytest.mark.asyncio
-async def test_operation_binding_mismatch_returns_403(app) -> None:
+async def test_operation_binding_mismatch_returns_403(app: Any) -> None:
     token_op_id = uuid4()
     header_op_id = uuid4()  # Mismatch!
     token = make_token(operation_id=token_op_id)
@@ -199,7 +200,7 @@ async def test_operation_binding_mismatch_returns_403(app) -> None:
 
 
 @pytest.mark.asyncio
-async def test_oversized_payload_returns_413(app) -> None:
+async def test_oversized_payload_returns_413(app: Any) -> None:
     op_id = uuid4()
     token = make_token(operation_id=op_id)
     huge_payload = {"op": str(op_id), "padding": "x" * 2000}  # Limit is 1000 bytes

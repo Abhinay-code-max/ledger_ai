@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from typing import Any
 from uuid import UUID, uuid4
 
 import pytest
@@ -36,7 +37,7 @@ TENANT_B = EntityTenantContext(
 
 @pytest.mark.asyncio
 async def test_tenant_data_is_completely_isolated() -> None:
-    shared_store = {
+    shared_store: dict[str, Any] = {
         "accounts": {},
         "periods": {},
         "proposals": {},

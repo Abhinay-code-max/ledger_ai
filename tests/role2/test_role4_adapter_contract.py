@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, date, datetime
+from typing import Any
 from uuid import UUID, uuid4
 
 import httpx
@@ -30,7 +31,7 @@ TENANT = EntityTenantContext(
 
 
 @pytest.fixture
-def app():
+def app() -> Any:
     settings = Role2Settings(
         service_token_secret=SECRET,  # type: ignore[arg-type]
         service_token_audience=AUDIENCE,
@@ -40,7 +41,7 @@ def app():
 
 
 @pytest.fixture
-def role2_adapter(app) -> Role2Adapter:
+def role2_adapter(app: Any) -> Role2Adapter:
     client = httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app),
         base_url="http://role2.test",
@@ -60,7 +61,7 @@ def role2_adapter(app) -> Role2Adapter:
 
 
 @pytest.mark.asyncio
-async def test_full_role4_adapter_lifecycle(app, role2_adapter: Role2Adapter) -> None:
+async def test_full_role4_adapter_lifecycle(app: Any, role2_adapter: Role2Adapter) -> None:
     # 1. Setup accounts and period via internal repo
     repo = app.state.get_repository(TENANT)
     await repo.save_account(

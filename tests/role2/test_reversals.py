@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from uuid import UUID, uuid4
 
@@ -104,7 +104,7 @@ async def test_successful_reversal_inverts_lines_and_nets_to_zero() -> None:
         accounts_map,
         journals,
         accounting_period_id=period_id,
-        as_of=date.today(),
+        as_of=datetime.now(UTC),
         currency="INR",
     )
 
