@@ -49,6 +49,7 @@ where = ["src"]
 [tool.setuptools.package-data]
 ledgerai_contracts = ["py.typed"]
 ledgerai_backend = ["py.typed"]
+ledgerai_role6 = ["py.typed"]
 
 [tool.pytest.ini_options]
 addopts = "-q"
@@ -75,7 +76,8 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 [tool.mypy]
 python_version = "3.11"
 strict = true
-packages = ["ledgerai_contracts", "ledgerai_backend"]
+packages = ["ledgerai_contracts", "ledgerai_backend", "ledgerai_role6"]
+
 
 [tool.uv]
 package = true

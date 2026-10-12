@@ -68,6 +68,30 @@ services:
         mc anonymous set none local/ledgerai-evidence &&
         mc version enable local/ledgerai-evidence
 
+  model-runtime:
+    image: python:3.12-slim
+    working_dir: /workspace
+    command: ["uvicorn", "ledgerai_role6.app:create_role6_app", "--factory", "--host", "0.0.0.0", "--port", "8006"]
+    environment:
+      LEDGERAI_ROLE6_ENVIRONMENT: "development"
+      LEDGERAI_ROLE6_ACTIVE_BACKEND: "deterministic"
+      LEDGERAI_ROLE6_SERVICE_AUDIENCE: "ledgerai-role6"
+      LEDGERAI_ROLE6_SERVICE_TOKEN_SECRET: "local-service-token-secret-32-chars-minimum"
+      LEDGERAI_ROLE6_ALLOW_OUTBOUND_NETWORK: "false"
+    ports:
+      - "127.0.0.1:8006:8006"
+    volumes:
+      - .:/workspace:ro
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8006/health/live')"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
 volumes:
   ledgerai-postgres:
   ledgerai-minio:
+
