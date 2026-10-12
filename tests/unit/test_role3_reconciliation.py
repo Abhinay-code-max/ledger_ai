@@ -148,7 +148,10 @@ def test_exact_match_is_deterministic_and_role4_compatible() -> None:
     assert first.proposal.status == "PROPOSED"
     assert first.proposal.score == Decimal("1.000")
     assert all(record.resource_version == "1" for record in first.proposal.records)
-    assert first.proposal.operation_id == operation.operation_id
+    assert first.proposal.correlation.request_id == operation.operation_id
+    internal = ReconciliationEngine().reconcile_internal(operation)
+    assert internal.proposal.operation_id == operation.operation_id
+    assert internal.proposal.candidate_scores
     ReconciliationResult.model_validate(first.model_dump(mode="json"))
 
 
@@ -176,20 +179,20 @@ def test_date_window_boundary_is_inclusive() -> None:
 def test_duplicate_invoice_and_bank_row_are_blocking() -> None:
     duplicate_invoice_fingerprint = "a" * 64
     duplicate_transaction_fingerprint = "b" * 64
-    result = ReconciliationEngine().reconcile(
-        request(
-            [
-                invoice("duplicate-invoice-a", fingerprint=duplicate_invoice_fingerprint),
-                invoice("duplicate-invoice-b", fingerprint=duplicate_invoice_fingerprint),
-            ],
-            [
-                transaction("duplicate-row-a", fingerprint=duplicate_transaction_fingerprint),
-                transaction("duplicate-row-b", fingerprint=duplicate_transaction_fingerprint),
-            ],
-        )
+    req = request(
+        [
+            invoice("duplicate-invoice-a", fingerprint=duplicate_invoice_fingerprint),
+            invoice("duplicate-invoice-b", fingerprint=duplicate_invoice_fingerprint),
+        ],
+        [
+            transaction("duplicate-row-a", fingerprint=duplicate_transaction_fingerprint),
+            transaction("duplicate-row-b", fingerprint=duplicate_transaction_fingerprint),
+        ],
     )
+    result = ReconciliationEngine().reconcile(req)
     assert {"DUPLICATE_DOCUMENT", "DUPLICATE_TRANSACTION"} <= exception_types(result)
-    assert all(item.blocks_posting for item in result.exceptions)
+    internal = ReconciliationEngine().reconcile_internal(req)
+    assert all(item.blocks_posting for item in internal.exceptions)
 
 
 def test_combined_payment_is_one_to_many() -> None:
@@ -288,28 +291,35 @@ def test_candidate_cross_product_is_rejected_before_matching() -> None:
 
 
 def test_nova_planted_fifty_rupee_mismatch() -> None:
-    result = ReconciliationEngine().reconcile(
-        request(
-            [invoice("nova", "1250.00", reference="NOVA-DEMO-PAY-001")],
-            [
-                transaction("nova-payment", "1250.00", reference="NOVA-DEMO-PAY-001"),
-                transaction(
-                    "nova-planted",
-                    "50.00",
-                    reference="NOVA-DEMO-ISSUE-001",
-                    party="SYNTHETIC REVIEW VENDOR",
-                    booking_date=date(2026, 9, 16),
-                ),
-            ],
-            operation="nova-operation",
-        )
+    req = request(
+        [invoice("nova", "1250.00", reference="NOVA-DEMO-PAY-001")],
+        [
+            transaction("nova-payment", "1250.00", reference="NOVA-DEMO-PAY-001"),
+            transaction(
+                "nova-planted",
+                "50.00",
+                reference="NOVA-DEMO-ISSUE-001",
+                party="SYNTHETIC REVIEW VENDOR",
+                booking_date=date(2026, 9, 16),
+            ),
+        ],
+        operation="nova-operation",
     )
+    result = ReconciliationEngine().reconcile(req)
     mismatch = [item for item in result.exceptions if item.exception_type == "AMOUNT_MISMATCH"]
     assert result.proposal.match_type == "ONE_TO_ONE"
     assert mismatch
     assert "BATCH_AMOUNT_MISMATCH" in mismatch[0].reason_codes
-    assert mismatch[0].blocks_posting is True
-    assert mismatch[0].blocks_close is True
+    assert "50.00" in mismatch[0].explanation
+    assert mismatch[0].severity == "HIGH"
+    assert mismatch[0].detector.algorithm_version == "reconciliation-deterministic/1.0.0"
+
+    internal = ReconciliationEngine().reconcile_internal(req)
+    internal_mismatch = [
+        item for item in internal.exceptions if item.exception_type == "AMOUNT_MISMATCH"
+    ]
+    assert internal_mismatch[0].blocks_posting is True
+    assert internal_mismatch[0].blocks_close is True
 
 
 def test_repeated_order_permutations_keep_same_candidate_ranking() -> None:
@@ -320,7 +330,13 @@ def test_repeated_order_permutations_keep_same_candidate_ranking() -> None:
         request(list(reversed(invoices)), list(reversed(transactions)))
     )
     assert forward.proposal.proposal_id == reverse.proposal.proposal_id
-    assert forward.proposal.candidate_scores == reverse.proposal.candidate_scores
+
+    internal_fwd = ReconciliationEngine().reconcile_internal(request(invoices, transactions))
+    internal_rev = ReconciliationEngine().reconcile_internal(
+        request(list(reversed(invoices)), list(reversed(transactions)))
+    )
+    assert internal_fwd.proposal.proposal_id == internal_rev.proposal.proposal_id
+    assert internal_fwd.proposal.candidate_scores == internal_rev.proposal.candidate_scores
 
 
 def test_date_outside_window_is_not_eligible() -> None:
