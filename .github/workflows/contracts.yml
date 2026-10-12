@@ -29,6 +29,7 @@ on:
     branches:
       - main
       - role4/backend-orchestration
+      - integration/nova-demo
     paths:
       - "src/ledgerai_contracts/**"
       - "src/ledgerai_backend/**"
@@ -126,3 +127,19 @@ jobs:
       - run: uv run --frozen python tools/generate_openapi.py --check
       - run: uv run --frozen pytest
       - run: uv run --frozen python -m compileall -q src tools tests
+      - name: Execute NOVA Phase 4 Demo (Run 1 and Run 2 reproducibility verification)
+        env:
+          LEDGERAI_DEMO_ENABLED: "true"
+          LEDGERAI_DEMO_RESET_CONFIRM: "RESET_NOVA_ONLY"
+          LEDGERAI_DEMO_MAKER_TOKEN: "synthetic-maker-token-for-nova"
+          LEDGERAI_DEMO_REVIEWER_TOKEN: "synthetic-reviewer-token-for-nova"
+          LEDGERAI_SERVICE_TOKEN_SECRET: "synthetic-service-secret-for-nova-0001"
+          LEDGERAI_STORAGE_ENDPOINT_URL: "http://127.0.0.1:9000"
+          LEDGERAI_STORAGE_ACCESS_KEY: "ledgerai-minio-ci"
+          LEDGERAI_STORAGE_SECRET_KEY: "ci-storage-only-change-me"
+          LEDGERAI_REDIS_URL: "redis://127.0.0.1:6379/0"
+        run: |
+          uv run --frozen ledgerai-demo > run1.json
+          uv run --frozen ledgerai-demo > run2.json
+          cmp run1.json run2.json
+          cmp run1.json demo/nova/expected/summary.json

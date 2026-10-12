@@ -33,9 +33,7 @@ async def authenticated_payload(request: Request, *, audience: str) -> dict[str,
             algorithms=["HS256"],
             audience=audience,
             issuer=os.environ.get("LEDGERAI_SERVICE_TOKEN_ISSUER", "ledgerai-backend"),
-            options={
-                "require": ["exp", "iat", "iss", "aud", "sub", "tenant_id", "operation_id"]
-            },
+            options={"require": ["exp", "iat", "iss", "aud", "sub", "tenant_id", "operation_id"]},
         )
     except jwt.InvalidTokenError as exc:
         raise HTTPException(401, "service authentication failed") from exc

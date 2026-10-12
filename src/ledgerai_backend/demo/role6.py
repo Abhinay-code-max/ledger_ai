@@ -37,4 +37,5 @@ def create_demo_role6_app() -> FastAPI:
 
     return app
 
+
 app = create_demo_role6_app()
