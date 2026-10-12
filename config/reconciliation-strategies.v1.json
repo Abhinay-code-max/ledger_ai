@@ -1,0 +1,23 @@
+{
+  "algorithm_version": "reconciliation-deterministic/1.0.0",
+  "ambiguity_delta": "0.05",
+  "amount_tolerance": "0.01",
+  "date_window_days": 7,
+  "maximum_candidate_edges": 10000,
+  "maximum_candidates_per_record": 100,
+  "maximum_group_combinations": 10000,
+  "maximum_group_size": 5,
+  "maximum_invoices": 500,
+  "maximum_transactions": 500,
+  "minimum_score": "0.70",
+  "rule_version": "reconciliation-rules/1.0.0",
+  "strategy_version": "reconciliation-rules/1.0.0",
+  "supported_currencies": ["AUD", "CAD", "EUR", "GBP", "INR", "JPY", "USD"],
+  "weights": {
+    "amount": "0.30",
+    "date": "0.15",
+    "evidence": "0.05",
+    "party": "0.10",
+    "reference": "0.40"
+  }
+}
