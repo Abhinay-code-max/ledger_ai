@@ -58,8 +58,18 @@ docker run --rm -p 8101:8101 \
   ledgerai-role1:latest
 ```
 
+## Adapter & Model Gateway Architecture
+- `LayoutOCRAdapter`: Provides layout-aware OCR tokenization and bounding box estimation with prompt-injection inspection.
+- `LocalModelGatewayAdapter`: Local model gateway adapter compatible with Agent 5 / frontend and local inference workflows.
+- `RemoteModelGatewayAdapter`: Remote gateway with configurable bounded timeouts and safe deterministic fallback to ensure fault isolation.
+- `DeterministicFixtureExtractor`: Direct fixture-backed test double mapping NOVA synthetic documents to exact golden data.
+
 ## Security & Operational Controls
 - **Adversarial Input Quarantining**: Document text containing prompt-injection attempts is flagged and quarantined; the resulting extraction is forced into `REVIEW_REQUIRED` disposition.
+- **Hostile Metadata Boundary**: Document version identifiers and headers enforce strict alphanumeric patterns (`^[A-Za-z0-9._-]+$`), rejecting XSS tags, path traversals, and malformed characters with HTTP 422.
 - **Zero Logging of Sensitive Content**: Extracted invoice text and PII are never logged in application traces.
 - **Strict Decimal Arithmetic**: Floating-point parsing is disabled. All amounts must balance (`subtotal + tax == total`), or an `ARITHMETIC_TOTAL_MISMATCH` issue is recorded.
-- **Idempotency**: Requests carrying the same `operation_id` within a tenant return the identical cached `DocumentExtraction` record without re-processing.
+- **Resilient Parsing & Unknown Values**: Unparseable dates or invalid currency codes never cause crashes or hallucinated values; unknown values remain explicitly null or flagged as validation issues.
+- **Idempotency & Replay**: Requests carrying the same `operation_id` within a tenant return the identical cached `DocumentExtraction` record without re-processing.
+- **Timeout & Failure Recovery**: Remote model gateway adapters enforce strict execution deadlines and safely fall back to the deterministic baseline without service disruption.
+

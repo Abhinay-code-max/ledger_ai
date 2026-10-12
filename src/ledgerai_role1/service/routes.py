@@ -31,7 +31,7 @@ class ExtractionRequestPayload(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     document_id: UUID
-    document_version: str = Field(min_length=1)
+    document_version: str = Field(min_length=1, pattern=r"^[A-Za-z0-9._-]+$")
     storage_reference: StorageReference | None = None
     media_type: str = Field(default="text/plain", pattern=r"^[\w.+-]+/[\w.+-]+$")
     document_content_base64: str | None = None
