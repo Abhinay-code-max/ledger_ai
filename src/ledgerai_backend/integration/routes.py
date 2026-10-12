@@ -26,7 +26,7 @@ from ledgerai_backend.integration.models import (
     WorkflowException,
 )
 from ledgerai_backend.integration.orchestration import WorkflowOrchestrator
-from ledgerai_backend.integration.policy import PolicyRuleSpec
+from ledgerai_backend.integration.policy import PolicyCondition, PolicyRuleSpec
 from ledgerai_backend.integration.repository import IntegrationRepository
 from ledgerai_backend.integration.schemas import (
     ApprovalActionRequest,
@@ -60,7 +60,7 @@ from ledgerai_contracts.v1.journals import (
 from ledgerai_contracts.v1.tenancy import EntityTenantContext
 
 router = APIRouter(responses=ERROR_RESPONSES)
-Scope = Annotated[RequestScope, Depends(authorized_scope)]
+Scope = Annotated[RequestScope, Depends(authorized_scope, scope="function")]
 IdempotencyKey = Annotated[
     str,
     Header(alias="Idempotency-Key", min_length=8, max_length=200, pattern=r"^[A-Za-z0-9._:-]+$"),
@@ -303,20 +303,18 @@ async def resolve_exception(
         resource_id=exception.id,
         resource_version=str(exception.version),
         outcome="SUCCEEDED",
-        metadata={"reason": body.reason},
+        metadata={"reason_provided": True},
         actor_id=actor_name,
-        correlation_id=UUID(scope.context.correlation_id),
-    )
-    repository.add_outbox(
-        event_type="exception.resolved.v1",
-        resource_type="exception",
-        resource_id=exception.id,
         correlation_id=UUID(scope.context.correlation_id),
     )
     return ExceptionResponse.model_validate(exception)
 
 
-@router.post("/documents/{document_id}/extractions", response_model=ExtractionResponse)
+@router.post(
+    "/documents/{document_id}/extractions",
+    response_model=ExtractionResponse,
+    status_code=201,
+)
 async def extract_document(
     document_id: UUID,
     request: Request,
@@ -354,6 +352,7 @@ async def extract_document(
     }
     contract = await role1.request_extraction(
         operation_id=version.id,
+        correlation_id=correlation_id,
         payload=payload,
         tenant_context=tenant_context,
     )
@@ -406,7 +405,7 @@ async def extract_document(
     return ExtractionResponse.model_validate(extraction_row)
 
 
-@router.post("/reconciliations", response_model=ReconciliationWorkflowResponse)
+@router.post("/reconciliations", response_model=ReconciliationWorkflowResponse, status_code=201)
 async def create_reconciliation(
     body: ReconciliationCreateRequest,
     request: Request,
@@ -442,6 +441,7 @@ async def create_reconciliation(
     }
     result = await role3.request_reconciliation(
         operation_id=operation_id,
+        correlation_id=correlation_id,
         payload=payload,
         tenant_context=tenant_context,
     )
@@ -540,9 +540,11 @@ async def create_reconciliation(
     if not rule_specs:
         rule_specs = [
             PolicyRuleSpec(
-                rule_id="human-review",
+                rule_id="HUMAN_REVIEW",
                 priority=100,
-                conditions=[],
+                conditions=[
+                    PolicyCondition(field="maker_checker_required", operator="eq", operand=True)
+                ],
                 outcome="REVIEW_REQUIRED",
                 reason_code="MAKER_CHECKER",
                 explanation="Synthetic demo requires review",
@@ -552,7 +554,7 @@ async def create_reconciliation(
         journal_row,
         policy_set_id=policy_set_id,
         policy_version="1.0",
-        inputs={},
+        inputs={"maker_checker_required": True},
         rules=rule_specs,
         maker_checker_required=True,
     )

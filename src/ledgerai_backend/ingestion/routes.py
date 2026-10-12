@@ -32,7 +32,7 @@ from ledgerai_backend.tenancy.permissions import PermissionCode, require_permiss
 from ledgerai_backend.workflow.reliability import transition_job
 
 router = APIRouter(responses=ERROR_RESPONSES)
-Scope = Annotated[RequestScope, Depends(authorized_scope)]
+Scope = Annotated[RequestScope, Depends(authorized_scope, scope="function")]
 IdempotencyKey = Annotated[
     str,
     Header(alias="Idempotency-Key", min_length=8, max_length=200, pattern=r"^[A-Za-z0-9._:-]+$"),

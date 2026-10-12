@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 from datetime import UTC, datetime
 from uuid import UUID, uuid5
 
@@ -244,8 +245,10 @@ def seed(settings: Settings, *, allow_production: bool = False) -> dict[str, int
                 INSERT INTO policy_rules
                   (id, tenant_id, organization_id, legal_entity_id, policy_set_id, rule_id,
                    priority, conditions, outcome, reason_code, explanation)
-                VALUES (:id, :tenant, :org, :entity, :set_id, 'human-review',
-                        100, '[]'::jsonb, 'REVIEW_REQUIRED', 'MAKER_CHECKER',
+                VALUES (:id, :tenant, :org, :entity, :set_id, 'HUMAN_REVIEW',
+                        100,
+                        CAST(:conditions AS jsonb),
+                        'REVIEW_REQUIRED', 'MAKER_CHECKER',
                         'Synthetic demo requires review')
                 ON CONFLICT (id) DO NOTHING
             """),
@@ -255,6 +258,16 @@ def seed(settings: Settings, *, allow_production: bool = False) -> dict[str, int
                 "org": organization_id,
                 "entity": legal_entity_id,
                 "set_id": policy_set_id,
+                "conditions": json.dumps(
+                    [
+                        {
+                            "field": "maker_checker_required",
+                            "operator": "eq",
+                            "operand": True,
+                        }
+                    ],
+                    separators=(",", ":"),
+                ),
             },
         )
     engine.dispose()

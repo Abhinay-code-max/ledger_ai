@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any, cast
 from uuid import uuid4
@@ -36,6 +37,16 @@ def _configure_demo_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("LEDGERAI_DEMO_REVIEWER_TOKEN", "synthetic-reviewer-token-for-nova")
     monkeypatch.setenv("LEDGERAI_SERVICE_TOKEN_SECRET", "synthetic-service-secret-for-nova-0001")
     monkeypatch.setenv(
+        "LEDGERAI_STORAGE_ENDPOINT_URL", os.environ["LEDGERAI_TEST_STORAGE_ENDPOINT_URL"]
+    )
+    monkeypatch.setenv(
+        "LEDGERAI_STORAGE_ACCESS_KEY", os.environ["LEDGERAI_TEST_STORAGE_ACCESS_KEY"]
+    )
+    monkeypatch.setenv(
+        "LEDGERAI_STORAGE_SECRET_KEY", os.environ["LEDGERAI_TEST_STORAGE_SECRET_KEY"]
+    )
+    monkeypatch.setenv("LEDGERAI_REDIS_URL", os.environ["LEDGERAI_TEST_REDIS_URL"])
+    monkeypatch.setenv(
         "LEDGERAI_DATABASE_DSN",
         runtime_dsn().replace("postgresql://", "postgresql+psycopg://", 1),
     )
@@ -51,6 +62,19 @@ def test_production_reset_refusal() -> None:
         environment="production",
         database_dsn=SecretStr("postgresql+psycopg://runtime.invalid/db"),
         migration_dsn=SecretStr("postgresql+psycopg://migrator.invalid/db"),
+        jwt_issuer="https://identity.invalid/",
+        jwt_audience="ledgerai",
+        jwt_public_key=SecretStr("public-key"),
+        storage_endpoint_url="https://storage.invalid",
+        storage_access_key=SecretStr("access"),
+        storage_secret_key=SecretStr("secret"),
+        scanner_adapter="clamav",
+        redis_url=SecretStr("redis://redis.invalid/0"),
+        role1_base_url="https://role1.invalid",
+        role2_base_url="https://role2.invalid",
+        role3_base_url="https://role3.invalid",
+        role6_base_url="https://role6.invalid",
+        service_token_secret=SecretStr("x" * 32),
     )
     with pytest.raises(DemoResetError, match="prohibited"):
         _require_safe_reset(settings, confirmed=True, tenant_id=NOVA_TENANT_ID)
@@ -58,6 +82,7 @@ def test_production_reset_refusal() -> None:
 
 def test_tenant_specific_reset(monkeypatch: pytest.MonkeyPatch) -> None:
     """Verify that reset safely targets only the designated NOVA tenant."""
+    _configure_demo_env(monkeypatch)
     settings = Settings(
         environment="test",
         migration_dsn=SecretStr(admin_dsn().replace("postgresql://", "postgresql+psycopg://", 1)),
@@ -104,6 +129,7 @@ def test_missing_service_and_downstream_timeout(monkeypatch: pytest.MonkeyPatch)
 def test_unknown_posting_outcome_and_recovery(monkeypatch: pytest.MonkeyPatch) -> None:
     """Verify that unknown posting outcome does not advance period and can be recovered."""
     _configure_demo_env(monkeypatch)
+    monkeypatch.setenv("LEDGERAI_DEMO_UNKNOWN_POSTING", "true")
     summary = cast(dict[str, Any], run())
     assert summary["posting"]["state"] == "CONFIRMED"
     assert summary["accounting_period"]["state"] == "CLOSED"

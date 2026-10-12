@@ -24,7 +24,7 @@ def normalize(value: Any) -> Any:
 
 
 def compare(left: Any, right: Any) -> bool:
-    return normalize(left) == normalize(right)
+    return bool(normalize(left) == normalize(right))
 
 
 def main() -> None:

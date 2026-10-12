@@ -367,7 +367,7 @@ class IngestionService:
                 resource_id=document.id,
                 resource_version="1",
                 outcome="SUCCEEDED",
-                metadata={"filename": document.original_filename},
+                metadata={"source": "document_intake"},
                 actor_id=str(self.context.principal_id),
                 correlation_id=UUID(self.context.correlation_id),
             )
@@ -395,7 +395,7 @@ class IngestionService:
                 resource_id=version.id,
                 resource_version=str(version.version_number),
                 outcome="SUCCEEDED",
-                metadata={"sha256": actual_hash},
+                metadata={"integrity_verified": True},
                 actor_id=str(self.context.principal_id),
                 correlation_id=UUID(self.context.correlation_id),
             )
@@ -420,6 +420,8 @@ class IngestionService:
             await self.repository.complete_idempotency(
                 claim, resource_type="document", resource_id=document.id
             )
+        await self.repository.session.flush()
+        await self.repository.session.refresh(document)
         return document
 
     async def import_csv(
@@ -503,6 +505,9 @@ class IngestionService:
         await self.repository.session.flush()
         created_txs = self.repository.store_import_rows(import_row, parsed)
         if created_txs:
+            # SQLAlchemy column defaults are materialized at flush time. The immutable audit
+            # reference must never be written before the transaction UUID exists.
+            await self.repository.session.flush()
             await record_audit_event(
                 self.repository.session,
                 tenant_id=self.repository.tenant_id,

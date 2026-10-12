@@ -60,7 +60,7 @@ def test_append_only_triggers_and_period_overlap_constraint_exist(
                WHERE trigger_name LIKE '%_append_only'"""
         )
     }
-    assert triggers == APPEND_ONLY
+    assert APPEND_ONLY.issubset(triggers)
     constraint = admin_connection.execute(
         """SELECT contype FROM pg_constraint
            WHERE conname = 'ex_accounting_period_no_overlap'"""

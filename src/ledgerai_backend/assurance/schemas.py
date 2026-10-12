@@ -7,7 +7,7 @@ from decimal import Decimal
 from typing import Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, model_validator
 
 from ledgerai_backend.assurance.models import CloseState, PeriodState, PostingState
 
@@ -150,6 +150,11 @@ class StatementLineResponse(ApiModel):
     amount: Decimal
     currency: str
     ledger_references: list[dict[str, Any]]
+
+    @field_serializer("amount")
+    def serialize_amount(self, value: Decimal) -> str:
+        """Keep money on the wire as a fixed-precision decimal string."""
+        return format(value, "f")
 
 
 class StatementSnapshotResponse(ApiModel):

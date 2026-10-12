@@ -1,6 +1,9 @@
 services:
   postgres:
-    image: postgres:17-alpine
+    build:
+      context: .
+      dockerfile: tools/postgres.Dockerfile
+    image: ledgerai-postgres:17-local
     environment:
       POSTGRES_DB: ledgerai
       POSTGRES_USER: ledgerai_migrator
@@ -10,7 +13,6 @@ services:
       - "127.0.0.1:5432:5432"
     volumes:
       - ledgerai-postgres:/var/lib/postgresql/data
-      - ./tools/postgres-init.sh:/docker-entrypoint-initdb.d/10-ledgerai-roles.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ledgerai_migrator -d ledgerai"]
       interval: 2s

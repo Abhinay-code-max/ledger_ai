@@ -1,0 +1,74 @@
+{
+  "manifest_version": "1.0.0",
+  "scenario": "nova-phase4-v1",
+  "validated_baseline": "18dce7558f6bd7136d53d0517d32542ae025f50b",
+  "integration_branch": "integration/backend-e2e",
+  "generated_at": "2026-10-12T10:30:00+05:30",
+  "release_status": "BLOCKED_PENDING_ROLE3_AND_ROLE6",
+  "roles": {
+    "role1": {
+      "branch": "role1/document-intelligence",
+      "source_commit": "287ae54bb4f941141823d369f054d7bbeba1f8e3",
+      "integrated_tip": "427da3d",
+      "contract_version": "1.0",
+      "status": "INTEGRATED",
+      "focused_tests": "28 passed",
+      "migration": null,
+      "openapi": null
+    },
+    "role2": {
+      "branch": "role2/accounting-core",
+      "source_commit": "afee6df4cca0bec95e07f721313f9e02c94dee96",
+      "integrated_tip": "d1b97ba",
+      "contract_version": "1.0",
+      "status": "INTEGRATED",
+      "focused_tests": "23 passed",
+      "migration": "20261011_05",
+      "openapi": "shared/openapi/role2_v1.json"
+    },
+    "role3": {
+      "branch": "role3/reconciliation",
+      "source_commit": "c8d778ed204fefd1cd45126a32aefd094b041480",
+      "integrated_tip": null,
+      "contract_version": "1.0",
+      "status": "REJECTED_BREAKING_V1_CONTRACT",
+      "focused_tests": "26 passed",
+      "defect_packet": "docs/integration/role3-defect-packet.md",
+      "openapi": "shared/openapi/role3-v1.json"
+    },
+    "role4": {
+      "branch": "integration/backend-e2e",
+      "source_commit": "18dce7558f6bd7136d53d0517d32542ae025f50b",
+      "integrated_tip": "d1b97ba823dc3f8508838e546ad7ad1442e7116a",
+      "contract_version": "1.0",
+      "status": "IN_PROGRESS",
+      "focused_tests": "373 passed after Role 1 and Role 2 integration",
+      "migration": "20261008_04",
+      "openapi": "shared/openapi/v1.json"
+    },
+    "role6": {
+      "branch": "role6/local-model-runtime",
+      "source_commit": null,
+      "integrated_tip": null,
+      "contract_version": null,
+      "status": "PENDING_REMOTE_REVISION",
+      "focused_tests": null,
+      "migration": null,
+      "openapi": null
+    }
+  },
+  "local_protocol_stubs": {
+    "role1": "src/ledgerai_backend/demo/role1.py",
+    "role2": "src/ledgerai_backend/demo/role2.py",
+    "role3": "src/ledgerai_backend/demo/role3.py",
+    "role6": "src/ledgerai_backend/demo/role6.py"
+  },
+  "compatibility_guarantees": {
+    "canonical_contract_major": 1,
+    "money_representation": "fixed-precision decimal string plus ISO currency",
+    "direct_database_workflow_advancement": false,
+    "tenant_context_bound_at_service_boundary": true,
+    "maker_checker_enforced": true,
+    "unknown_posting_outcome_recovered_by_status_lookup": true
+  }
+}

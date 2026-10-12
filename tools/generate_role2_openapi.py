@@ -10,8 +10,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from ledgerai_role2.api.app import create_role2_app
-from ledgerai_role2.config import Role2Settings
+from ledgerai_role2.api.app import create_role2_app  # noqa: E402
+from ledgerai_role2.config import Role2Settings  # noqa: E402
 
 OUTPUT = ROOT / "shared" / "openapi" / "role2_v1.json"
 
@@ -32,7 +32,9 @@ def main() -> None:
     rendered = rendered_openapi()
     if args.check:
         if not OUTPUT.exists() or OUTPUT.read_text(encoding="utf-8") != rendered:
-            raise SystemExit("Role 2 OpenAPI artifact is stale; run tools/generate_role2_openapi.py")
+            raise SystemExit(
+                "Role 2 OpenAPI artifact is stale; run tools/generate_role2_openapi.py"
+            )
         print("Checked deterministic Role 2 OpenAPI artifact.")
         return
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)

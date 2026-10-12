@@ -18,7 +18,7 @@ from ledgerai_backend.tenancy.schemas import (
 )
 
 router = APIRouter(responses=ERROR_RESPONSES)
-Scope = Annotated[RequestScope, Depends(authorized_scope)]
+Scope = Annotated[RequestScope, Depends(authorized_scope, scope="function")]
 
 
 def _repository(scope: RequestScope) -> TenancyRepository:

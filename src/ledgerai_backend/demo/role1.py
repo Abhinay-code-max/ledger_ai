@@ -71,6 +71,14 @@ def create_demo_role1_app() -> FastAPI:
                 "provenance": prov,
             },
             {
+                "field_name": "invoice_date",
+                "is_critical": True,
+                "state": "EXTRACTED",
+                "value": "2026-09-15",
+                "confidence": "0.99",
+                "provenance": prov,
+            },
+            {
                 "field_name": "total",
                 "is_critical": True,
                 "state": "EXTRACTED",

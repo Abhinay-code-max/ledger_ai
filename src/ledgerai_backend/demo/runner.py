@@ -11,6 +11,7 @@ import sys
 import threading
 import time
 from contextlib import ExitStack, suppress
+from decimal import Decimal
 from pathlib import Path
 from typing import Any, Literal, cast
 from urllib.parse import urlparse
@@ -515,8 +516,14 @@ def execute_demo(api_url: str, settings: Settings) -> dict[str, object]:
                 ),
                 201,
             )
-            actual_lines = {item["line_id"]: item["amount"] for item in snapshot["lines"]}
-            if actual_lines != expected_statements[statement_type]["lines"]:
+            actual_lines = {
+                item["line_id"]: Decimal(str(item["amount"])) for item in snapshot["lines"]
+            }
+            expected_lines = {
+                key: Decimal(str(value))
+                for key, value in expected_statements[statement_type]["lines"].items()
+            }
+            if actual_lines != expected_lines:
                 raise DemoFailure(f"{statement_type} does not match the synthetic Role 2 fixture")
             if snapshot["currency"] != "INR" or snapshot["role2_version"] != "1.0.0":
                 raise DemoFailure(f"{statement_type} metadata is not contract-bound")

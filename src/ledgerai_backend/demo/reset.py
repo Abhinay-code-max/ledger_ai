@@ -21,6 +21,15 @@ NOVA_ENTITY_ID = stable_id("nova:legal-entity")
 
 # Children precede parents. Identity and authorization rows are intentionally absent.
 TENANT_TABLES = (
+    "role2_statement_lines",
+    "role2_statement_snapshots",
+    "role2_journal_lines",
+    "role2_posted_journals",
+    "role2_period_close_operations",
+    "role2_posting_operations",
+    "role2_proposal_registry",
+    "role2_accounts",
+    "role2_accounting_periods",
     "financial_statement_lines",
     "financial_statement_snapshots",
     "posting_confirmations",
