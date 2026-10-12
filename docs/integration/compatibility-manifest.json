@@ -28,12 +28,12 @@
     },
     "role3": {
       "branch": "role3/reconciliation",
-      "source_commit": "c8d778ed204fefd1cd45126a32aefd094b041480",
-      "integrated_tip": null,
+      "source_commit": "6a416f1d19a9cf5085b18a70e85c436e3ed1dd3c",
+      "integrated_tip": "9ab80f4",
       "contract_version": "1.0",
-      "status": "REJECTED_BREAKING_V1_CONTRACT",
-      "focused_tests": "26 passed",
-      "defect_packet": "docs/integration/role3-defect-packet.md",
+      "status": "INTEGRATED",
+      "focused_tests": "36 passed",
+      "defect_packet": "docs/integration/role3-defect-packet.md (RESOLVED)",
       "openapi": "shared/openapi/role3-v1.json"
     },
     "role4": {

@@ -1,8 +1,10 @@
 # Role 3 integration defect packet
 
-Status: blocking `integration/backend-e2e`
+Status: RESOLVED (verified and integrated on `integration/backend-e2e`)
 
-Source revision: `c8d778ed204fefd1cd45126a32aefd094b041480`
+Historical rejected revision: `c8d778ed204fefd1cd45126a32aefd094b041480`
+Repaired and integrated revision: `6a416f1d19a9cf5085b18a70e85c436e3ed1dd3c`
+Resolution commit: `f5d0ac7` (fix(role3): preserve canonical v1 wire compatibility)
 
 ## Failure
 
