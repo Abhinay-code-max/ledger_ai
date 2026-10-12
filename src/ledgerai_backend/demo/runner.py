@@ -104,6 +104,7 @@ class LiveServer:
     def __exit__(self, *_: object) -> None:
         self.server.should_exit = True
         self.thread.join(timeout=10)
+        time.sleep(0.15)
 
 
 def _required(name: str, *, minimum: int = 1) -> str:
@@ -221,16 +222,17 @@ def _stage(number: int, message: str) -> None:
     print(f"[{number:02d}/12] {message}", flush=True)
 
 
-def _check_ready(url: str, *, path: str = "/health/ready") -> None:
-    deadline = time.monotonic() + 10
+def _check_ready(url: str, *, path: str = "/health/ready", timeout: float | None = None) -> None:
+    timeout_seconds = timeout or float(os.environ.get("LEDGERAI_DEMO_READINESS_TIMEOUT", "5"))
+    deadline = time.monotonic() + timeout_seconds
     while time.monotonic() < deadline:
         try:
-            response = httpx.get(f"{url}{path}", timeout=2)
+            response = httpx.get(f"{url}{path}", timeout=min(2.0, timeout_seconds))
             if response.status_code == 200:
                 return
         except httpx.HTTPError:
             pass
-        time.sleep(0.2)
+        time.sleep(0.1)
     raise DemoFailure("dependency readiness timed out")
 
 
@@ -616,13 +618,17 @@ def run(*, embedded_services: bool = True) -> dict[str, object]:
     settings = _settings(role1_url, role2_url, role3_url, role6_url)
     if not embedded_services:
         return execute_demo(api_url, settings)
-    apps = (
-        (create_demo_role1_app(), role1_url),
-        (create_demo_role2_app(), role2_url),
-        (create_demo_role3_app(), role3_url),
-        (create_demo_role6_app(), role6_url),
-        (create_app(settings, identity_provider=_identity()), api_url),
-    )
+    apps: list[tuple[Any, str]] = []
+    if "LEDGERAI_DEMO_ROLE1_URL" not in os.environ:
+        apps.append((create_demo_role1_app(), role1_url))
+    if "LEDGERAI_DEMO_ROLE2_URL" not in os.environ:
+        apps.append((create_demo_role2_app(), role2_url))
+    if "LEDGERAI_DEMO_ROLE3_URL" not in os.environ:
+        apps.append((create_demo_role3_app(), role3_url))
+    if "LEDGERAI_DEMO_ROLE6_URL" not in os.environ:
+        apps.append((create_demo_role6_app(), role6_url))
+    if "LEDGERAI_DEMO_API_URL" not in os.environ:
+        apps.append((create_app(settings, identity_provider=_identity()), api_url))
     with ExitStack() as stack:
         for app, url in apps:
             parsed = urlparse(url)

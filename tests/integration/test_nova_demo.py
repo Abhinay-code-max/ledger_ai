@@ -31,6 +31,7 @@ pytestmark = pytest.mark.postgres
 
 
 def _configure_demo_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("LEDGERAI_ENVIRONMENT", "test")
     monkeypatch.setenv("LEDGERAI_DEMO_ENABLED", "true")
     monkeypatch.setenv("LEDGERAI_DEMO_RESET_CONFIRM", "RESET_NOVA_ONLY")
     monkeypatch.setenv("LEDGERAI_DEMO_MAKER_TOKEN", "synthetic-maker-token-for-nova")

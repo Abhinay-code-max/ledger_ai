@@ -446,8 +446,12 @@ TOTAL AMOUNT: {cfg["currency"]} {cfg["total"]}
                 sha256_hash=doc_hash,
                 media_type="text/plain",
                 byte_size=len(doc_bytes),
-                document_path=str(doc_file.relative_to(output_dir.parent.parent)),
-                ground_truth_path=str(gt_file.relative_to(output_dir.parent.parent)),
+                document_path=str(doc_file.relative_to(output_dir.parent.parent)).replace(
+                    "\\", "/"
+                ),
+                ground_truth_path=str(gt_file.relative_to(output_dir.parent.parent)).replace(
+                    "\\", "/"
+                ),
             )
         )
 

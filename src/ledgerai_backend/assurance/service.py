@@ -977,8 +977,11 @@ class AssuranceService:
         )
 
     def _adapter_kwargs(self, operation_id: UUID, payload: dict[str, object]) -> dict[str, object]:
+        full_payload = dict(payload)
+        if "tenant_context" not in full_payload:
+            full_payload["tenant_context"] = self.tenant_context.model_dump(mode="json")
         return {
-            "payload": payload,
+            "payload": full_payload,
             "tenant_context": self.tenant_context,
             "operation_id": operation_id,
             "correlation_id": self.correlation_id,

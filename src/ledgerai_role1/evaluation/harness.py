@@ -69,8 +69,8 @@ class EvaluationHarness:
         tracemalloc.start()
 
         for sample in samples:
-            doc_file = base_dir / sample.document_path
-            gt_file = base_dir / sample.ground_truth_path
+            doc_file = base_dir / Path(str(sample.document_path).replace("\\", "/"))
+            gt_file = base_dir / Path(str(sample.ground_truth_path).replace("\\", "/"))
 
             if not doc_file.exists() or not gt_file.exists():
                 raise FileNotFoundError(f"Missing sample file: {doc_file} or {gt_file}")

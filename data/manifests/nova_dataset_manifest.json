@@ -14,8 +14,8 @@
       "sha256_hash": "4db0b3cbbf89780b9e0a43285fa74dc8328231140559cc4a34adc37a944ddab0",
       "media_type": "text/plain",
       "byte_size": 765,
-      "document_path": "data\\manifests\\synthetic_samples\\train\\NOVA-TR-INV-001.txt",
-      "ground_truth_path": "data\\manifests\\synthetic_samples\\train\\NOVA-TR-INV-001.ground_truth.json"
+      "document_path": "data/manifests/synthetic_samples/train/NOVA-TR-INV-001.txt",
+      "ground_truth_path": "data/manifests/synthetic_samples/train/NOVA-TR-INV-001.ground_truth.json"
     },
     {
       "sample_id": "NOVA-TR-CINV-002",
@@ -26,8 +26,8 @@
       "sha256_hash": "c06a2d67e9176326ea29d613d9133ab185a08be17b5740c5f7563669273f2b45",
       "media_type": "text/plain",
       "byte_size": 786,
-      "document_path": "data\\manifests\\synthetic_samples\\train\\NOVA-TR-CINV-002.txt",
-      "ground_truth_path": "data\\manifests\\synthetic_samples\\train\\NOVA-TR-CINV-002.ground_truth.json"
+      "document_path": "data/manifests/synthetic_samples/train/NOVA-TR-CINV-002.txt",
+      "ground_truth_path": "data/manifests/synthetic_samples/train/NOVA-TR-CINV-002.ground_truth.json"
     },
     {
       "sample_id": "NOVA-TR-REC-003",
@@ -38,8 +38,8 @@
       "sha256_hash": "96cfd80d3d253c496019491bfb0a674a5f13c30ed1aad26cd82abc4e2b7ab4a9",
       "media_type": "text/plain",
       "byte_size": 596,
-      "document_path": "data\\manifests\\synthetic_samples\\train\\NOVA-TR-REC-003.txt",
-      "ground_truth_path": "data\\manifests\\synthetic_samples\\train\\NOVA-TR-REC-003.ground_truth.json"
+      "document_path": "data/manifests/synthetic_samples/train/NOVA-TR-REC-003.txt",
+      "ground_truth_path": "data/manifests/synthetic_samples/train/NOVA-TR-REC-003.ground_truth.json"
     },
     {
       "sample_id": "NOVA-TR-BST-004",
@@ -50,8 +50,8 @@
       "sha256_hash": "0eac268be92e13ad6ba15ce23cddec5edc5ffd6f007f590474785c70f82116c9",
       "media_type": "text/plain",
       "byte_size": 625,
-      "document_path": "data\\manifests\\synthetic_samples\\train\\NOVA-TR-BST-004.txt",
-      "ground_truth_path": "data\\manifests\\synthetic_samples\\train\\NOVA-TR-BST-004.ground_truth.json"
+      "document_path": "data/manifests/synthetic_samples/train/NOVA-TR-BST-004.txt",
+      "ground_truth_path": "data/manifests/synthetic_samples/train/NOVA-TR-BST-004.ground_truth.json"
     },
     {
       "sample_id": "NOVA-TR-PO-005",
@@ -62,8 +62,8 @@
       "sha256_hash": "66d2098bbdc54ce076c7b2a6258d0b92764fe07f584b769665f8940560f589da",
       "media_type": "text/plain",
       "byte_size": 735,
-      "document_path": "data\\manifests\\synthetic_samples\\train\\NOVA-TR-PO-005.txt",
-      "ground_truth_path": "data\\manifests\\synthetic_samples\\train\\NOVA-TR-PO-005.ground_truth.json"
+      "document_path": "data/manifests/synthetic_samples/train/NOVA-TR-PO-005.txt",
+      "ground_truth_path": "data/manifests/synthetic_samples/train/NOVA-TR-PO-005.ground_truth.json"
     },
     {
       "sample_id": "NOVA-VAL-INV-001",
@@ -74,8 +74,8 @@
       "sha256_hash": "0a0afc2f3fd3c55a0b869cd648868da376ca83548565aeacef9f732889a4d68b",
       "media_type": "text/plain",
       "byte_size": 769,
-      "document_path": "data\\manifests\\synthetic_samples\\val\\NOVA-VAL-INV-001.txt",
-      "ground_truth_path": "data\\manifests\\synthetic_samples\\val\\NOVA-VAL-INV-001.ground_truth.json"
+      "document_path": "data/manifests/synthetic_samples/val/NOVA-VAL-INV-001.txt",
+      "ground_truth_path": "data/manifests/synthetic_samples/val/NOVA-VAL-INV-001.ground_truth.json"
     },
     {
       "sample_id": "NOVA-VAL-REC-002",
@@ -86,8 +86,8 @@
       "sha256_hash": "2656bb94c23485fffc637a921f144bb611088f2d573879b99c8bb6d5266a7dc9",
       "media_type": "text/plain",
       "byte_size": 501,
-      "document_path": "data\\manifests\\synthetic_samples\\val\\NOVA-VAL-REC-002.txt",
-      "ground_truth_path": "data\\manifests\\synthetic_samples\\val\\NOVA-VAL-REC-002.ground_truth.json"
+      "document_path": "data/manifests/synthetic_samples/val/NOVA-VAL-REC-002.txt",
+      "ground_truth_path": "data/manifests/synthetic_samples/val/NOVA-VAL-REC-002.ground_truth.json"
     },
     {
       "sample_id": "NOVA-TEST-INV-001",
@@ -98,8 +98,8 @@
       "sha256_hash": "8b16f320df021a356c529fa8505b8a509387e81949cb217206c94feb758911fb",
       "media_type": "text/plain",
       "byte_size": 774,
-      "document_path": "data\\manifests\\synthetic_samples\\test\\NOVA-TEST-INV-001.txt",
-      "ground_truth_path": "data\\manifests\\synthetic_samples\\test\\NOVA-TEST-INV-001.ground_truth.json"
+      "document_path": "data/manifests/synthetic_samples/test/NOVA-TEST-INV-001.txt",
+      "ground_truth_path": "data/manifests/synthetic_samples/test/NOVA-TEST-INV-001.ground_truth.json"
     },
     {
       "sample_id": "NOVA-TEST-CINV-002",
@@ -110,8 +110,8 @@
       "sha256_hash": "2fe24b0f89e4ec680894e9a2fb3cc7871df7cbdf4649a47584321b6647a8e33b",
       "media_type": "text/plain",
       "byte_size": 770,
-      "document_path": "data\\manifests\\synthetic_samples\\test\\NOVA-TEST-CINV-002.txt",
-      "ground_truth_path": "data\\manifests\\synthetic_samples\\test\\NOVA-TEST-CINV-002.ground_truth.json"
+      "document_path": "data/manifests/synthetic_samples/test/NOVA-TEST-CINV-002.txt",
+      "ground_truth_path": "data/manifests/synthetic_samples/test/NOVA-TEST-CINV-002.ground_truth.json"
     },
     {
       "sample_id": "NOVA-TEST-REC-003",
@@ -122,8 +122,8 @@
       "sha256_hash": "bd364c4457b34787c3cb2de3c3c17b0a3cafd7bbc420d421b41d506267de24cf",
       "media_type": "text/plain",
       "byte_size": 610,
-      "document_path": "data\\manifests\\synthetic_samples\\test\\NOVA-TEST-REC-003.txt",
-      "ground_truth_path": "data\\manifests\\synthetic_samples\\test\\NOVA-TEST-REC-003.ground_truth.json"
+      "document_path": "data/manifests/synthetic_samples/test/NOVA-TEST-REC-003.txt",
+      "ground_truth_path": "data/manifests/synthetic_samples/test/NOVA-TEST-REC-003.ground_truth.json"
     },
     {
       "sample_id": "NOVA-TEST-BST-004",
@@ -134,8 +134,8 @@
       "sha256_hash": "0f7f2ebd4df44e63ee529e553f9b6b6d13fb20b95deb0e4f88aba711fb7b80dc",
       "media_type": "text/plain",
       "byte_size": 633,
-      "document_path": "data\\manifests\\synthetic_samples\\test\\NOVA-TEST-BST-004.txt",
-      "ground_truth_path": "data\\manifests\\synthetic_samples\\test\\NOVA-TEST-BST-004.ground_truth.json"
+      "document_path": "data/manifests/synthetic_samples/test/NOVA-TEST-BST-004.txt",
+      "ground_truth_path": "data/manifests/synthetic_samples/test/NOVA-TEST-BST-004.ground_truth.json"
     },
     {
       "sample_id": "NOVA-TEST-PO-005",
@@ -146,8 +146,8 @@
       "sha256_hash": "09e8972ed90f0260d1cc35c3595072f987db88b4701ea41011d4fec0ccc16215",
       "media_type": "text/plain",
       "byte_size": 745,
-      "document_path": "data\\manifests\\synthetic_samples\\test\\NOVA-TEST-PO-005.txt",
-      "ground_truth_path": "data\\manifests\\synthetic_samples\\test\\NOVA-TEST-PO-005.ground_truth.json"
+      "document_path": "data/manifests/synthetic_samples/test/NOVA-TEST-PO-005.txt",
+      "ground_truth_path": "data/manifests/synthetic_samples/test/NOVA-TEST-PO-005.ground_truth.json"
     }
   ]
 }
