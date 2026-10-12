@@ -6,43 +6,7 @@
   "occurred_at": "2026-01-15T05:00:00Z",
   "payload": {
     "proposal": {
-      "algorithm_version": "reconciliation-deterministic/1.0.0",
-      "candidate_scores": [
-        {
-          "components": [
-            {
-              "code": "REFERENCE_EXACT",
-              "explanation": "Synthetic normalized references agree.",
-              "value": "1.0",
-              "weight": "0.40"
-            }
-          ],
-          "conflicts": [],
-          "eligible": true,
-          "records": [
-            {
-              "resource_id": "00000000-0000-4000-8000-000000000012",
-              "resource_type": "bank_transaction",
-              "resource_version": "1"
-            },
-            {
-              "resource_id": "00000000-0000-4000-8000-000000000011",
-              "resource_type": "document_extraction",
-              "resource_version": "1"
-            }
-          ],
-          "score": "0.97"
-        }
-      ],
       "confidence": "0.97",
-      "confidence_components": [
-        {
-          "code": "REFERENCE_EXACT",
-          "explanation": "Synthetic normalized references agree.",
-          "value": "1.0",
-          "weight": "0.40"
-        }
-      ],
       "conflicts": [],
       "correlation": {
         "causation_id": null,
@@ -51,7 +15,6 @@
       },
       "created_at": "2026-01-15T05:00:00Z",
       "match_type": "ONE_TO_ONE",
-      "operation_id": "00000000-0000-4000-8000-000000000026",
       "producer": {
         "algorithm_version": "match-fixture-v1",
         "model_name": null,
@@ -100,7 +63,6 @@
       "schema_version": "1.0",
       "score": "0.97",
       "status": "PROPOSED",
-      "strategy_version": "reconciliation-rules/1.0.0",
       "tenant_context": {
         "legal_entity_id": "00000000-0000-4000-8000-000000000003",
         "organization_id": "00000000-0000-4000-8000-000000000002",

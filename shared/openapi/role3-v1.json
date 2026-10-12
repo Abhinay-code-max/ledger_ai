@@ -250,88 +250,6 @@
         "title": "BoundingBox",
         "type": "object"
       },
-      "CandidateScore": {
-        "additionalProperties": false,
-        "properties": {
-          "components": {
-            "items": {
-              "$ref": "#/components/schemas/ConfidenceComponent"
-            },
-            "maxItems": 10,
-            "minItems": 1,
-            "title": "Components",
-            "type": "array"
-          },
-          "conflicts": {
-            "items": {
-              "$ref": "#/components/schemas/MatchConflict"
-            },
-            "maxItems": 20,
-            "title": "Conflicts",
-            "type": "array"
-          },
-          "eligible": {
-            "title": "Eligible",
-            "type": "boolean"
-          },
-          "records": {
-            "items": {
-              "$ref": "#/components/schemas/VersionedResourceReference"
-            },
-            "maxItems": 6,
-            "minItems": 2,
-            "title": "Records",
-            "type": "array"
-          },
-          "score": {
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Score",
-            "type": "string"
-          }
-        },
-        "required": [
-          "records",
-          "score",
-          "eligible",
-          "components"
-        ],
-        "title": "CandidateScore",
-        "type": "object"
-      },
-      "ConfidenceComponent": {
-        "additionalProperties": false,
-        "properties": {
-          "code": {
-            "pattern": "^[A-Z][A-Z0-9_]+$",
-            "title": "Code",
-            "type": "string"
-          },
-          "explanation": {
-            "maxLength": 500,
-            "minLength": 1,
-            "title": "Explanation",
-            "type": "string"
-          },
-          "value": {
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Value",
-            "type": "string"
-          },
-          "weight": {
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Weight",
-            "type": "string"
-          }
-        },
-        "required": [
-          "code",
-          "value",
-          "weight",
-          "explanation"
-        ],
-        "title": "ConfidenceComponent",
-        "type": "object"
-      },
       "CorrelationMetadata": {
         "additionalProperties": false,
         "description": "Request starts an interaction; correlation spans it; causation identifies its parent.",
@@ -425,20 +343,6 @@
       "ExceptionRecord": {
         "additionalProperties": false,
         "properties": {
-          "algorithm_version": {
-            "maxLength": 128,
-            "minLength": 1,
-            "title": "Algorithm Version",
-            "type": "string"
-          },
-          "blocks_close": {
-            "title": "Blocks Close",
-            "type": "boolean"
-          },
-          "blocks_posting": {
-            "title": "Blocks Posting",
-            "type": "boolean"
-          },
           "correlation": {
             "$ref": "#/components/schemas/CorrelationMetadata"
           },
@@ -461,30 +365,22 @@
             "type": "string"
           },
           "explanation": {
-            "maxLength": 1000,
             "minLength": 1,
             "title": "Explanation",
             "type": "string"
           },
           "involved_resources": {
             "items": {
-              "$ref": "#/components/schemas/VersionedResourceReference"
+              "$ref": "#/components/schemas/ResourceReference"
             },
-            "maxItems": 20,
             "minItems": 1,
             "title": "Involved Resources",
             "type": "array"
-          },
-          "operation_id": {
-            "format": "uuid",
-            "title": "Operation Id",
-            "type": "string"
           },
           "reason_codes": {
             "items": {
               "type": "string"
             },
-            "maxItems": 20,
             "minItems": 1,
             "title": "Reason Codes",
             "type": "array"
@@ -503,7 +399,7 @@
           "resolution_reference": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/VersionedResourceReference"
+                "$ref": "#/components/schemas/ResourceReference"
               },
               {
                 "type": "null"
@@ -518,12 +414,6 @@
               "DISMISSED"
             ],
             "title": "Resolution Status",
-            "type": "string"
-          },
-          "rule_version": {
-            "maxLength": 128,
-            "minLength": 1,
-            "title": "Rule Version",
             "type": "string"
           },
           "schema_version": {
@@ -556,7 +446,6 @@
             "items": {
               "$ref": "#/components/schemas/ProvenanceReference-Output"
             },
-            "maxItems": 100,
             "title": "Supporting Evidence",
             "type": "array"
           },
@@ -575,15 +464,10 @@
           "tenant_context",
           "exception_type",
           "severity",
-          "operation_id",
           "involved_resources",
           "explanation",
           "reason_codes",
           "resolution_status",
-          "blocks_posting",
-          "blocks_close",
-          "algorithm_version",
-          "rule_version",
           "detector",
           "created_at",
           "updated_at",
@@ -735,39 +619,15 @@
       "MatchProposal": {
         "additionalProperties": false,
         "properties": {
-          "algorithm_version": {
-            "maxLength": 128,
-            "minLength": 1,
-            "title": "Algorithm Version",
-            "type": "string"
-          },
-          "candidate_scores": {
-            "items": {
-              "$ref": "#/components/schemas/CandidateScore"
-            },
-            "maxItems": 100,
-            "title": "Candidate Scores",
-            "type": "array"
-          },
           "confidence": {
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Confidence",
             "type": "string"
           },
-          "confidence_components": {
-            "items": {
-              "$ref": "#/components/schemas/ConfidenceComponent"
-            },
-            "maxItems": 10,
-            "minItems": 1,
-            "title": "Confidence Components",
-            "type": "array"
-          },
           "conflicts": {
             "items": {
               "$ref": "#/components/schemas/MatchConflict"
             },
-            "maxItems": 20,
             "title": "Conflicts",
             "type": "array"
           },
@@ -790,11 +650,6 @@
             "title": "Match Type",
             "type": "string"
           },
-          "operation_id": {
-            "format": "uuid",
-            "title": "Operation Id",
-            "type": "string"
-          },
           "producer": {
             "$ref": "#/components/schemas/ProducerMetadata"
           },
@@ -812,7 +667,6 @@
             "items": {
               "$ref": "#/components/schemas/ProvenanceReference-Output"
             },
-            "maxItems": 100,
             "title": "Provenance",
             "type": "array"
           },
@@ -820,16 +674,14 @@
             "items": {
               "$ref": "#/components/schemas/MatchReason"
             },
-            "maxItems": 20,
             "minItems": 1,
             "title": "Reasons",
             "type": "array"
           },
           "records": {
             "items": {
-              "$ref": "#/components/schemas/VersionedResourceReference"
+              "$ref": "#/components/schemas/ResourceReference"
             },
-            "maxItems": 6,
             "minItems": 1,
             "title": "Records",
             "type": "array"
@@ -862,12 +714,6 @@
             "title": "Status",
             "type": "string"
           },
-          "strategy_version": {
-            "maxLength": 128,
-            "minLength": 1,
-            "title": "Strategy Version",
-            "type": "string"
-          },
           "tenant_context": {
             "$ref": "#/components/schemas/EntityTenantContext"
           },
@@ -882,13 +728,9 @@
           "proposal_id",
           "proposal_version",
           "tenant_context",
-          "operation_id",
           "records",
           "match_type",
           "confidence",
-          "strategy_version",
-          "algorithm_version",
-          "confidence_components",
           "reasons",
           "producer",
           "status",
@@ -1420,6 +1262,39 @@
         "title": "ReconciliationResponse",
         "type": "object"
       },
+      "ResourceReference": {
+        "additionalProperties": false,
+        "properties": {
+          "resource_id": {
+            "format": "uuid",
+            "title": "Resource Id",
+            "type": "string"
+          },
+          "resource_type": {
+            "minLength": 1,
+            "title": "Resource Type",
+            "type": "string"
+          },
+          "resource_version": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resource Version"
+          }
+        },
+        "required": [
+          "resource_type",
+          "resource_id"
+        ],
+        "title": "ResourceReference",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "ctx": {
@@ -1479,36 +1354,6 @@
           "transaction"
         ],
         "title": "VersionedBankTransaction",
-        "type": "object"
-      },
-      "VersionedResourceReference": {
-        "additionalProperties": false,
-        "description": "Reference bound to an exact immutable resource version.",
-        "properties": {
-          "resource_id": {
-            "format": "uuid",
-            "title": "Resource Id",
-            "type": "string"
-          },
-          "resource_type": {
-            "minLength": 1,
-            "title": "Resource Type",
-            "type": "string"
-          },
-          "resource_version": {
-            "maxLength": 128,
-            "minLength": 1,
-            "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$",
-            "title": "Resource Version",
-            "type": "string"
-          }
-        },
-        "required": [
-          "resource_type",
-          "resource_id",
-          "resource_version"
-        ],
-        "title": "VersionedResourceReference",
         "type": "object"
       }
     }

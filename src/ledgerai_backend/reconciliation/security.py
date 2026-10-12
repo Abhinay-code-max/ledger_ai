@@ -20,7 +20,7 @@ class Role3Security:
     secret: str
     issuer: str = "ledgerai-backend"
     audience: str = "ledgerai-role3"
-    allowed_subjects: frozenset[str] = frozenset({"ledgerai-backend"})
+    allowed_subjects: frozenset[str] = frozenset({"ledgerai-backend", "service:backend", "backend"})
 
     def __post_init__(self) -> None:
         if len(self.secret.encode()) < 32:

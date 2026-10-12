@@ -240,7 +240,6 @@ MATCH = {
     "proposal_id": U["match"],
     "proposal_version": 1,
     "tenant_context": TENANT,
-    "operation_id": U["operation"],
     "records": [
         ref("bank_transaction", U["transaction"]),
         ref("document_extraction", U["extraction"]),
@@ -248,35 +247,6 @@ MATCH = {
     "match_type": "ONE_TO_ONE",
     "confidence": "0.97",
     "score": "0.97",
-    "strategy_version": "reconciliation-rules/1.0.0",
-    "algorithm_version": "reconciliation-deterministic/1.0.0",
-    "candidate_scores": [
-        {
-            "records": [
-                ref("bank_transaction", U["transaction"]),
-                ref("document_extraction", U["extraction"]),
-            ],
-            "score": "0.97",
-            "eligible": True,
-            "components": [
-                {
-                    "code": "REFERENCE_EXACT",
-                    "value": "1.0",
-                    "weight": "0.40",
-                    "explanation": "Synthetic normalized references agree.",
-                }
-            ],
-            "conflicts": [],
-        }
-    ],
-    "confidence_components": [
-        {
-            "code": "REFERENCE_EXACT",
-            "value": "1.0",
-            "weight": "0.40",
-            "explanation": "Synthetic normalized references agree.",
-        }
-    ],
     "reasons": [
         {
             "code": "AMOUNT_AND_REFERENCE_MATCH",
@@ -299,7 +269,6 @@ EXCEPTION = {
     "tenant_context": TENANT,
     "exception_type": "AMOUNT_MISMATCH",
     "severity": "HIGH",
-    "operation_id": U["operation"],
     "involved_resources": [
         ref("bank_transaction", U["transaction"]),
         ref("document_extraction", U["extraction"]),
@@ -311,10 +280,6 @@ EXCEPTION = {
     "required_action": "HUMAN_REVIEW",
     "resolution_status": "OPEN",
     "resolution_reference": None,
-    "blocks_posting": True,
-    "blocks_close": True,
-    "algorithm_version": "reconciliation-deterministic/1.0.0",
-    "rule_version": "reconciliation-rules/1.0.0",
     "detector": {**SERVICE, "rule_or_policy_version": "exception-rules-v1"},
     "created_at": TS,
     "updated_at": TS,

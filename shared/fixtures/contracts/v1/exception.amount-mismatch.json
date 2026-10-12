@@ -1,7 +1,4 @@
 {
-  "algorithm_version": "reconciliation-deterministic/1.0.0",
-  "blocks_close": true,
-  "blocks_posting": true,
   "correlation": {
     "causation_id": null,
     "correlation_id": "00000000-0000-4000-8000-000000000005",
@@ -33,14 +30,12 @@
       "resource_version": "1"
     }
   ],
-  "operation_id": "00000000-0000-4000-8000-000000000026",
   "reason_codes": [
     "AMOUNT_MISMATCH"
   ],
   "required_action": "HUMAN_REVIEW",
   "resolution_reference": null,
   "resolution_status": "OPEN",
-  "rule_version": "reconciliation-rules/1.0.0",
   "schema_version": "1.0",
   "severity": "HIGH",
   "suggested_action": "Review source evidence",

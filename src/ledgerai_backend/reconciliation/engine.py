@@ -17,19 +17,23 @@ from ledgerai_backend.reconciliation.contracts import (
     ReconciliationResponse,
     VersionedBankTransaction,
 )
+from ledgerai_backend.reconciliation.domain import (
+    CandidateScore,
+    ConfidenceComponent,
+    InternalExceptionRecord,
+    InternalMatchProposal,
+    InternalReconciliationResult,
+    to_canonical_response,
+)
 from ledgerai_contracts.v1.common import (
     CorrelationMetadata,
     ProducerMetadata,
     ProducerType,
     ProvenanceReference,
-    VersionedResourceReference,
+    ResourceReference,
 )
-from ledgerai_contracts.v1.exceptions import ExceptionRecord
 from ledgerai_contracts.v1.reconciliation import (
-    CandidateScore,
-    ConfidenceComponent,
     MatchConflict,
-    MatchProposal,
     MatchReason,
 )
 
@@ -74,13 +78,17 @@ class ReconciliationEngine:
         self.config = config or load_strategy()
 
     def reconcile(self, request: ReconciliationRequest) -> ReconciliationResponse:
+        internal = self.reconcile_internal(request)
+        return to_canonical_response(internal)
+
+    def reconcile_internal(self, request: ReconciliationRequest) -> InternalReconciliationResult:
         self._validate_bounds(request)
         correlation = CorrelationMetadata(
             request_id=request.operation_id,
             correlation_id=request.correlation_id,
             causation_id=request.causation_id,
         )
-        exceptions: list[ExceptionRecord] = []
+        exceptions: list[InternalExceptionRecord] = []
         duplicate_invoice_ids = self._duplicates(
             request.invoices,
             lambda invoice: invoice.content_fingerprint,
@@ -156,7 +164,7 @@ class ReconciliationEngine:
                 str(pair.transaction.transaction.transaction_id),
             ),
         )
-        selected_records: list[VersionedResourceReference]
+        selected_records: list[ResourceReference]
         match_type: str
         selected_score: Decimal
         selected_components: list[ConfidenceComponent]
@@ -342,7 +350,7 @@ class ReconciliationEngine:
                 for reference in selected_records
             ]
         )
-        proposal = MatchProposal(
+        proposal = InternalMatchProposal(
             schema_version="1.0",
             proposal_id=uuid5(_NAMESPACE, f"proposal|{proposal_key}"),
             proposal_version=1,
@@ -365,7 +373,7 @@ class ReconciliationEngine:
             correlation=correlation,
             provenance=self._proposal_provenance(selected_records, invoices, transactions),
         )
-        return ReconciliationResponse(
+        return InternalReconciliationResult(
             schema_version="1.0",
             tenant_context=request.tenant_context,
             proposal=proposal,
@@ -525,7 +533,7 @@ class ReconciliationEngine:
         self,
         invoices: Sequence[InvoiceFact],
         transactions: Sequence[VersionedBankTransaction],
-    ) -> tuple[str, list[VersionedResourceReference], list[ConfidenceComponent], Decimal] | None:
+    ) -> tuple[str, list[ResourceReference], list[ConfidenceComponent], Decimal] | None:
         checked = 0
         for item in sorted(transactions, key=lambda value: str(value.transaction.transaction_id)):
             transaction = item.transaction
@@ -587,8 +595,8 @@ class ReconciliationEngine:
         return None
 
     def _group_result(
-        self, match_type: str, records: list[VersionedResourceReference]
-    ) -> tuple[str, list[VersionedResourceReference], list[ConfidenceComponent], Decimal]:
+        self, match_type: str, records: list[ResourceReference]
+    ) -> tuple[str, list[ResourceReference], list[ConfidenceComponent], Decimal]:
         components = [
             ConfidenceComponent(
                 code="GROUP_AMOUNT_EXACT",
@@ -633,7 +641,7 @@ class ReconciliationEngine:
         request: ReconciliationRequest,
         pairs: Sequence[_ScoredPair],
         correlation: CorrelationMetadata,
-    ) -> list[ExceptionRecord]:
+    ) -> list[InternalExceptionRecord]:
         conflicts = [
             pair
             for pair in pairs
@@ -663,8 +671,8 @@ class ReconciliationEngine:
         invoices: Sequence[InvoiceFact],
         transactions: Sequence[VersionedBankTransaction],
         correlation: CorrelationMetadata,
-    ) -> list[ExceptionRecord]:
-        result: list[ExceptionRecord] = []
+    ) -> list[InternalExceptionRecord]:
+        result: list[InternalExceptionRecord] = []
         currencies = sorted(
             {invoice.amount.currency for invoice in invoices}
             | {item.transaction.money.currency for item in transactions}
@@ -692,6 +700,7 @@ class ReconciliationEngine:
                 for transaction in currency_transactions
                 for provenance in transaction.transaction.provenance
             )
+            difference = abs(invoice_total - transaction_total)
             result.append(
                 self._exception(
                     request,
@@ -699,8 +708,8 @@ class ReconciliationEngine:
                     "HIGH",
                     resources[:20],
                     (
-                        f"The {currency} invoice total and transaction total differ beyond "
-                        "the configured tolerance."
+                        f"The {currency} invoice total and transaction total differ by "
+                        f"{difference:.2f} {currency} beyond the configured tolerance."
                     ),
                     ["BATCH_AMOUNT_MISMATCH"],
                     evidence[:100],
@@ -718,8 +727,8 @@ class ReconciliationEngine:
         invoices: Sequence[InvoiceFact],
         transactions: Sequence[VersionedBankTransaction],
         correlation: CorrelationMetadata,
-    ) -> list[ExceptionRecord]:
-        result: list[ExceptionRecord] = []
+    ) -> list[InternalExceptionRecord]:
+        result: list[InternalExceptionRecord] = []
         for invoice_group in _chunks(list(invoices), 20):
             result.append(
                 self._exception(
@@ -766,7 +775,7 @@ class ReconciliationEngine:
         exception_type: str,
         values: Sequence[InvoiceFact | VersionedBankTransaction],
         correlation: CorrelationMetadata,
-    ) -> list[ExceptionRecord]:
+    ) -> list[InternalExceptionRecord]:
         if not values:
             return []
         by_fingerprint: dict[str, list[InvoiceFact | VersionedBankTransaction]] = defaultdict(list)
@@ -777,7 +786,7 @@ class ReconciliationEngine:
                 else value.transaction.content_fingerprint
             )
             by_fingerprint[fingerprint].append(value)
-        result: list[ExceptionRecord] = []
+        result: list[InternalExceptionRecord] = []
         for fingerprint in sorted(by_fingerprint):
             group = by_fingerprint[fingerprint]
             refs = [
@@ -817,7 +826,7 @@ class ReconciliationEngine:
         request: ReconciliationRequest,
         exception_type: str,
         severity: str,
-        resources: list[VersionedResourceReference],
+        resources: list[ResourceReference],
         explanation: str,
         reason_codes: list[str],
         evidence: list[ProvenanceReference],
@@ -825,13 +834,17 @@ class ReconciliationEngine:
         blocks_posting: bool,
         blocks_close: bool,
         correlation: CorrelationMetadata,
-    ) -> ExceptionRecord:
+    ) -> InternalExceptionRecord:
         ordered = sorted(
             {
                 f"{item.resource_type}|{item.resource_id}|{item.resource_version}": item
                 for item in resources
             }.values(),
-            key=lambda item: (item.resource_type, str(item.resource_id), item.resource_version),
+            key=lambda item: (
+                item.resource_type,
+                str(item.resource_id),
+                item.resource_version or "",
+            ),
         )
         key = "|".join(
             [str(request.tenant_context.tenant_id), str(request.operation_id), exception_type]
@@ -840,7 +853,7 @@ class ReconciliationEngine:
                 for item in ordered
             ]
         )
-        return ExceptionRecord(
+        return InternalExceptionRecord(
             schema_version="1.0",
             exception_id=uuid5(_NAMESPACE, f"exception|{key}"),
             tenant_context=request.tenant_context,
@@ -869,22 +882,22 @@ class ReconciliationEngine:
         self,
         invoices: Sequence[InvoiceFact],
         transactions: Sequence[VersionedBankTransaction],
-    ) -> list[VersionedResourceReference]:
+    ) -> list[ResourceReference]:
         records = [self._invoice_ref(invoice) for invoice in invoices]
         records.extend(self._transaction_ref(item) for item in transactions)
         return sorted(records, key=lambda item: (item.resource_type, str(item.resource_id)))[:6]
 
     @staticmethod
-    def _invoice_ref(invoice: InvoiceFact) -> VersionedResourceReference:
-        return VersionedResourceReference(
+    def _invoice_ref(invoice: InvoiceFact) -> ResourceReference:
+        return ResourceReference(
             resource_type="document_extraction",
             resource_id=invoice.extraction_id,
             resource_version=invoice.extraction_version,
         )
 
     @staticmethod
-    def _transaction_ref(item: VersionedBankTransaction) -> VersionedResourceReference:
-        return VersionedResourceReference(
+    def _transaction_ref(item: VersionedBankTransaction) -> ResourceReference:
+        return ResourceReference(
             resource_type="bank_transaction",
             resource_id=item.transaction.transaction_id,
             resource_version=item.transaction_version,
@@ -922,7 +935,7 @@ class ReconciliationEngine:
 
     def _proposal_provenance(
         self,
-        selected: Sequence[VersionedResourceReference],
+        selected: Sequence[ResourceReference],
         invoices: Sequence[InvoiceFact],
         transactions: Sequence[VersionedBankTransaction],
     ) -> list[ProvenanceReference]:
