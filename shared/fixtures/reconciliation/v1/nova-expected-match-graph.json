@@ -1,0 +1,31 @@
+{
+  "expected_exception_types": [
+    "AMOUNT_MISMATCH",
+    "UNMATCHED_TRANSACTION"
+  ],
+  "fixture_version": "reconciliation-labeled/1.0.0",
+  "match_type": "ONE_TO_ONE",
+  "planted_exception": {
+    "amount": "50.00",
+    "blocks_close": true,
+    "blocks_posting": true,
+    "currency": "INR",
+    "reason_code": "BATCH_AMOUNT_MISMATCH",
+    "severity": "HIGH",
+    "type": "AMOUNT_MISMATCH"
+  },
+  "proposal_id": "579871e4-68cf-5162-b170-a2686eb0bf87",
+  "records": [
+    {
+      "resource_id": "4d1a6df6-60de-5317-823d-0710d5381d56",
+      "resource_type": "document_extraction",
+      "resource_version": "1"
+    },
+    {
+      "resource_id": "685d18ae-3e85-5ce4-a07a-847e5596be21",
+      "resource_type": "bank_transaction",
+      "resource_version": "1"
+    }
+  ],
+  "status": "REVIEW_REQUIRED"
+}

@@ -1,0 +1,65 @@
+{
+  "fixture_version": "reconciliation-labeled/1.0.0",
+  "cases": [
+    {
+      "name": "exact",
+      "invoices": [{"label": "invoice", "amount": "100.00", "reference": "EXACT-001"}],
+      "transactions": [{"label": "payment", "amount": "100.00", "reference": "EXACT-001"}],
+      "expected_edges": [["invoice", "payment"]],
+      "expected_ambiguous": false,
+      "expected_exceptions": []
+    },
+    {
+      "name": "combined-payment",
+      "invoices": [
+        {"label": "invoice-a", "amount": "60.00", "reference": "COMBINED-001"},
+        {"label": "invoice-b", "amount": "40.00", "reference": "COMBINED-001"}
+      ],
+      "transactions": [{"label": "payment", "amount": "100.00", "reference": "COMBINED-001"}],
+      "expected_edges": [["invoice-a", "payment"], ["invoice-b", "payment"]],
+      "expected_ambiguous": false,
+      "expected_exceptions": []
+    },
+    {
+      "name": "split-payment",
+      "invoices": [{"label": "invoice", "amount": "100.00", "reference": "SPLIT-001"}],
+      "transactions": [
+        {"label": "payment-a", "amount": "60.00", "reference": "SPLIT-001"},
+        {"label": "payment-b", "amount": "40.00", "reference": "SPLIT-001"}
+      ],
+      "expected_edges": [["invoice", "payment-a"], ["invoice", "payment-b"]],
+      "expected_ambiguous": false,
+      "expected_exceptions": []
+    },
+    {
+      "name": "ambiguous",
+      "invoices": [
+        {"label": "invoice-a", "amount": "100.00", "reference": "AMB-001"},
+        {"label": "invoice-b", "amount": "100.00", "reference": "AMB-001"}
+      ],
+      "transactions": [{"label": "payment", "amount": "100.00", "reference": "AMB-001"}],
+      "expected_edges": [],
+      "expected_ambiguous": true,
+      "expected_exceptions": ["AMBIGUOUS_CANDIDATES"]
+    },
+    {
+      "name": "no-candidate",
+      "invoices": [{"label": "invoice", "amount": "100.00", "reference": "NONE-A", "date": "2026-01-01"}],
+      "transactions": [{"label": "payment", "amount": "20.00", "reference": "NONE-B", "date": "2026-09-15"}],
+      "expected_edges": [],
+      "expected_ambiguous": false,
+      "expected_exceptions": ["UNMATCHED_INVOICE", "UNMATCHED_TRANSACTION"]
+    },
+    {
+      "name": "nova-planted-mismatch",
+      "invoices": [{"label": "nova-invoice", "amount": "1250.00", "reference": "NOVA-DEMO-PAY-001"}],
+      "transactions": [
+        {"label": "nova-payment", "amount": "1250.00", "reference": "NOVA-DEMO-PAY-001"},
+        {"label": "nova-planted-50", "amount": "50.00", "reference": "NOVA-DEMO-ISSUE-001", "date": "2026-09-16"}
+      ],
+      "expected_edges": [["nova-invoice", "nova-payment"]],
+      "expected_ambiguous": false,
+      "expected_exceptions": ["AMOUNT_MISMATCH", "UNMATCHED_TRANSACTION"]
+    }
+  ]
+}
