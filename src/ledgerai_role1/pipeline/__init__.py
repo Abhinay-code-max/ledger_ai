@@ -1,5 +1,13 @@
 """Pipeline components for OCR, layout parsing, and extraction models."""
 
+from ledgerai_role1.pipeline.adapters import (
+    DeterministicFixtureExtractor,
+    LayoutOCRAdapter,
+    LocalModelGatewayAdapter,
+    ModelGatewayAdapter,
+    OCRAdapter,
+    RemoteModelGatewayAdapter,
+)
 from ledgerai_role1.pipeline.baseline_parser import DeterministicBaselineExtractor
 from ledgerai_role1.pipeline.layout_ocr import DocumentLayoutAnalyzer, OCRPageLayout, OCRToken
 from ledgerai_role1.pipeline.pretrained_baseline import (
@@ -17,10 +25,16 @@ __all__ = [
     "PRETRAINED_MODEL_REVISION",
     "PROMPT_TEMPLATE_VERSION",
     "DeterministicBaselineExtractor",
+    "DeterministicFixtureExtractor",
     "DocumentLayoutAnalyzer",
+    "LayoutOCRAdapter",
+    "LocalModelGatewayAdapter",
+    "ModelGatewayAdapter",
+    "OCRAdapter",
     "OCRPageLayout",
     "OCRToken",
     "PretrainedDocumentExtractor",
+    "RemoteModelGatewayAdapter",
     "compute_evidence_hash",
     "create_token_provenance",
 ]

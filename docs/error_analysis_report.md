@@ -9,7 +9,7 @@
 - **Line Item Extraction Accuracy**: 100.00% (Target: >=90.00%)
 - **Abstention / Unsupported Rate**: 20.00%
 - **Confidence Calibration Error (ECE)**: 0.0388
-- **Mean Processing Latency**: 0.0192s
+- **Mean Processing Latency**: 0.0194s
 - **Peak Memory Usage**: 0.22 MB
 
 ## 2. Field-Level Metrics

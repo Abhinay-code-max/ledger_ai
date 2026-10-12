@@ -307,3 +307,130 @@ def test_white_on_white_and_hidden_instructions_caught() -> None:
     pages = analyzer.analyze(doc_text.encode("utf-8"))
     assert pages[0].has_prompt_injection is True
     assert any("disregard" in w.lower() for w in pages[0].injection_warnings)
+
+
+def test_hostile_metadata_rejected(client: TestClient) -> None:
+    op_id = uuid4()
+    token = make_token(operation_id=op_id)
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "X-Tenant-ID": str(TENANT_ID),
+        "X-Organization-ID": str(ORG_ID),
+        "X-Legal-Entity-ID": str(LEGAL_ENTITY_ID),
+        "X-Operation-ID": str(op_id),
+        "X-Correlation-ID": str(uuid4()),
+    }
+    # Hostile document_version with script tag
+    resp = client.post(
+        "/v1/extractions",
+        headers=headers,
+        json={
+            "document_id": str(uuid4()),
+            "document_version": "<script>alert('xss')</script>",
+            "document_text": "TOTAL: USD 100.00\n",
+        },
+    )
+    assert resp.status_code == 422
+
+    # Hostile document_version with directory traversal
+    resp2 = client.post(
+        "/v1/extractions",
+        headers=headers,
+        json={
+            "document_id": str(uuid4()),
+            "document_version": "../../../etc/shadow",
+            "document_text": "TOTAL: USD 100.00\n",
+        },
+    )
+    assert resp2.status_code == 422
+
+
+def test_invalid_dates_currencies_decimals_handled_safely(client: TestClient) -> None:
+    op_id = uuid4()
+    token = make_token(operation_id=op_id)
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "X-Tenant-ID": str(TENANT_ID),
+        "X-Organization-ID": str(ORG_ID),
+        "X-Legal-Entity-ID": str(LEGAL_ENTITY_ID),
+        "X-Operation-ID": str(op_id),
+        "X-Correlation-ID": str(uuid4()),
+    }
+    # Unparseable dates, negative money, and invalid currency codes
+    doc_text = """SUPPLIER INVOICE
+INVOICE NUMBER: INV-INVALID-01
+ISSUE DATE: 2026-02-31
+DUE DATE: not-a-real-date
+CURRENCY: INVALID_CURRENCY_CODE
+SUBTOTAL: -500.00
+TAX: NaN
+TOTAL AMOUNT: -500.00
+"""
+    resp = client.post(
+        "/v1/extractions",
+        headers=headers,
+        json={
+            "document_id": str(uuid4()),
+            "document_version": "v1",
+            "document_text": doc_text,
+        },
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    # Contract schema remains strictly valid
+    assert data["schema_version"] == "1.0"
+    # Never invent missing or unparseable fields
+    # Review disposition flags review required due to invalid/missing critical fields
+    assert data["review_disposition"] == "REVIEW_REQUIRED"
+
+
+def test_timeout_and_safe_recovery() -> None:
+    from ledgerai_role1.pipeline.adapters import RemoteModelGatewayAdapter
+
+    # Remote gateway configured with fallback_local=True safely recovers on timeout
+    adapter_with_fallback = RemoteModelGatewayAdapter(
+        endpoint_url="https://remote-gateway.test/extract",
+        timeout_seconds=0.001,
+        fallback_local=True,
+    )
+    doc_text = b"SUPPLIER: Nova Partners\nTOTAL AMOUNT: USD 1080.00\n"
+    result = adapter_with_fallback.extract(doc_text)
+    assert result.total_amount == Decimal("1080.00")
+    assert result.currency == "USD"
+
+    # Remote gateway configured without fallback raises TimeoutError safely without crash
+    strict_remote = RemoteModelGatewayAdapter(
+        endpoint_url="https://remote-gateway.test/extract",
+        timeout_seconds=0.001,
+        fallback_local=False,
+    )
+    with pytest.raises(TimeoutError, match="Remote model gateway timed out"):
+        strict_remote.extract(doc_text)
+
+
+def test_adapters_compatible_with_agent5_and_fixtures() -> None:
+    from ledgerai_role1.pipeline.adapters import (
+        DeterministicFixtureExtractor,
+        LayoutOCRAdapter,
+        LocalModelGatewayAdapter,
+    )
+
+    doc_text = b"NOVA-TEST-INV-001\nSUPPLIER INVOICE\nTOTAL AMOUNT: USD 1080.00\n"
+
+    # Local model gateway adapter compatible with Agent 5
+    local_gateway = LocalModelGatewayAdapter()
+    meta = local_gateway.get_producer_metadata()
+    assert meta.model_name == "docintel-foundation-vlm"
+    extracted = local_gateway.extract(doc_text)
+    assert extracted.total_amount == Decimal("1080.00")
+
+    # Layout OCR adapter
+    ocr_adapter = LayoutOCRAdapter()
+    layouts = ocr_adapter.analyze(doc_text)
+    assert len(layouts) >= 1
+    assert len(layouts[0].tokens) > 0
+
+    # Deterministic fixture adapter
+    fixture_adapter = DeterministicFixtureExtractor()
+    fix_res = fixture_adapter.extract(b"NOVA-TEST-INV-001")
+    assert fix_res.total_amount is not None
