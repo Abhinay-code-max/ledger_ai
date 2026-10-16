@@ -8,6 +8,10 @@ on:
     paths:
       - "src/ledgerai_contracts/**"
       - "src/ledgerai_backend/**"
+      - "src/ledgerai_role1/**"
+      - "src/ledgerai_role2/**"
+      - "src/ledgerai_role6/**"
+      - "models/**"
       - "migrations/**"
       - "shared/schemas/**"
       - "shared/fixtures/**"
@@ -24,6 +28,7 @@ on:
       - "pyproject.toml"
       - "uv.lock"
       - "compose.yaml"
+      - "compose.nova.yaml"
       - ".github/workflows/contracts.yml"
   push:
     branches:
@@ -34,6 +39,10 @@ on:
     paths:
       - "src/ledgerai_contracts/**"
       - "src/ledgerai_backend/**"
+      - "src/ledgerai_role1/**"
+      - "src/ledgerai_role2/**"
+      - "src/ledgerai_role6/**"
+      - "models/**"
       - "migrations/**"
       - "shared/schemas/**"
       - "shared/fixtures/**"
@@ -50,6 +59,7 @@ on:
       - "pyproject.toml"
       - "uv.lock"
       - "compose.yaml"
+      - "compose.nova.yaml"
       - ".github/workflows/contracts.yml"
 
 jobs:
@@ -127,6 +137,8 @@ jobs:
       - run: uv run --frozen python tools/generate_contract_artifacts.py --check
       - run: uv run --frozen python tools/generate_openapi.py --check
       - run: uv run --frozen pytest
+      - run: docker compose -f compose.yaml config
+      - run: docker compose -f compose.nova.yaml config
       - run: uv run --frozen python -m compileall -q src tools tests
       - name: Execute NOVA Phase 4 Demo (Run 1 and Run 2 reproducibility verification)
         env:
@@ -144,3 +156,7 @@ jobs:
           uv run --frozen ledgerai-demo > run2.json
           cmp run1.json run2.json
           cmp run1.json demo/nova/expected/summary.json
+          sha1=$(sha256sum run1.json | cut -d ' ' -f 1)
+          sha2=$(sha256sum run2.json | cut -d ' ' -f 1)
+          test "$sha1" = "$sha2"
+
