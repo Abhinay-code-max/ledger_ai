@@ -13,11 +13,11 @@ class Role2Settings(BaseSettings):
     )
 
     service_name: str = "ledgerai-role2"
-    service_version: str = "2.0.0"
+    service_version: str = "1.0.0"
     environment: str = "production"
 
     service_token_secret: SecretStr = SecretStr("x" * 32)
-    service_token_audience: str = "role2"
+    service_token_audience: str = "ledgerai-role2"
     service_token_issuer: str = "ledgerai-backend"
     allowed_clock_skew_seconds: int = 5
 

@@ -29,12 +29,24 @@ from ledgerai_role2.database.models import (
 )
 from ledgerai_role2.domain.models import (
     Account,
+    AccountType,
     DomainJournal,
     DomainJournalLine,
     DomainStatement,
+    NormalBalance,
     PeriodStatus,
 )
 from ledgerai_role2.domain.state_machine import PostingState
+
+STANDARD_ACCOUNTS: dict[str, Account] = {
+    "1100": Account.create("1100", "Cash", AccountType.ASSET, "INR", NormalBalance.DEBIT),
+    "2100": Account.create(
+        "2100", "Trade payables", AccountType.LIABILITY, "INR", NormalBalance.CREDIT
+    ),
+    "6100": Account.create(
+        "6100", "Office expense", AccountType.EXPENSE, "INR", NormalBalance.DEBIT
+    ),
+}
 
 
 class Role2Repository:
@@ -76,11 +88,20 @@ class Role2Repository:
             *self._scope(Role2Account),
             Role2Account.account_code == account_code,
         )
-        return (await self.session.execute(stmt)).scalar_one_or_none()
+        acc = (await self.session.execute(stmt)).scalar_one_or_none()
+        if acc is None and account_code in STANDARD_ACCOUNTS:
+            acc = await self.save_account(STANDARD_ACCOUNTS[account_code])
+        return acc
 
     async def list_accounts(self) -> Sequence[Role2Account]:
         stmt = select(Role2Account).where(*self._scope(Role2Account))
-        return (await self.session.execute(stmt)).scalars().all()
+        accounts = list((await self.session.execute(stmt)).scalars().all())
+        if not accounts:
+            for acc in STANDARD_ACCOUNTS.values():
+                await self.save_account(acc)
+            stmt = select(Role2Account).where(*self._scope(Role2Account))
+            accounts = list((await self.session.execute(stmt)).scalars().all())
+        return accounts
 
     async def save_account(self, account: Account) -> Role2Account:
         existing = await self.get_account(account.account_code)
@@ -120,7 +141,31 @@ class Role2Repository:
         )
         if lock:
             stmt = stmt.with_for_update()
-        return (await self.session.execute(stmt)).scalar_one_or_none()
+        period = (await self.session.execute(stmt)).scalar_one_or_none()
+        if period is None:
+            try:
+                from sqlalchemy import text
+
+                res = await self.session.execute(
+                    text(
+                        "SELECT period_start, period_end, state FROM accounting_periods "
+                        "WHERE id = :pid AND tenant_id = :tid"
+                    ),
+                    {"pid": period_id, "tid": self.tenant_id},
+                )
+                row = res.fetchone()
+                if row is not None:
+                    p_start, p_end, p_state = row[0], row[1], row[2]
+                    st = PeriodStatus.CLOSED if str(p_state) == "CLOSED" else PeriodStatus.OPEN
+                    period = await self.save_period(
+                        period_id=period_id,
+                        period_start=p_start,
+                        period_end=p_end,
+                        state=st,
+                    )
+            except Exception:
+                pass
+        return period
 
     async def save_period(
         self,
@@ -153,7 +198,39 @@ class Role2Repository:
             Role2ProposalRecord.proposal_id == proposal_id,
             Role2ProposalRecord.proposal_version == version,
         )
-        return (await self.session.execute(stmt)).scalar_one_or_none()
+        prop = (await self.session.execute(stmt)).scalar_one_or_none()
+        if prop is None:
+            try:
+                from sqlalchemy import text
+
+                res = await self.session.execute(
+                    text(
+                        "SELECT proposed_journal_date, currency, explanation, contract_payload "
+                        "FROM journal_proposals "
+                        "WHERE id = :pid AND proposal_version = :ver AND tenant_id = :tid"
+                    ),
+                    {"pid": proposal_id, "ver": version, "tid": self.tenant_id},
+                )
+                row = res.fetchone()
+                if row is not None:
+                    p_date, p_curr, p_exp, p_payload = row[0], row[1], row[2], row[3]
+                    lines = []
+                    evidence = []
+                    if isinstance(p_payload, dict):
+                        lines = p_payload.get("lines", [])
+                        evidence = p_payload.get("source_evidence", [])
+                    prop = await self.save_proposal_record(
+                        proposal_id=proposal_id,
+                        proposal_version=version,
+                        proposed_journal_date=p_date,
+                        currency=p_curr,
+                        explanation=p_exp,
+                        lines_payload=lines,
+                        source_evidence=evidence,
+                    )
+            except Exception:
+                pass
+        return prop
 
     async def save_proposal_record(
         self,

@@ -72,6 +72,7 @@ def _authenticate_request(
     authorization: str | None,
     x_tenant_id: UUID | None,
     x_operation_id: UUID | None,
+    payload: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Verify service token and ensure tenant/operation binding."""
     if not authorization or not authorization.startswith("Bearer "):
@@ -92,7 +93,27 @@ def _authenticate_request(
             expected_operation_id=x_operation_id,
             clock_skew_seconds=settings.allowed_clock_skew_seconds,
         )
+        if payload is not None:
+            p_op = payload.get("operation_id")
+            if p_op and str(p_op) != str(claims.get("operation_id")):
+                raise HTTPException(
+                    status_code=403,
+                    detail={
+                        "code": "OPERATION_BINDING_MISMATCH",
+                        "message": "Operation binding mismatch.",
+                    },
+                )
+            p_tc = payload.get("tenant_context")
+            if isinstance(p_tc, dict):
+                p_tid = p_tc.get("tenant_id")
+                if p_tid and str(p_tid) != str(claims.get("tenant_id")):
+                    raise HTTPException(
+                        status_code=403,
+                        detail={"code": "TENANT_MISMATCH", "message": "Tenant mismatch."},
+                    )
         return claims
+    except HTTPException:
+        raise
     except ServiceAuthenticationError as exc:
         raise HTTPException(
             status_code=401,
@@ -131,7 +152,7 @@ async def request_posting_validation(
     x_correlation_id: Annotated[UUID, Header()],
     authorization: Annotated[str | None, Header()] = None,
 ) -> AccountingAcceptance:
-    _authenticate_request(request, authorization, x_tenant_id, x_operation_id)
+    _authenticate_request(request, authorization, x_tenant_id, x_operation_id, payload=payload)
     service = _get_service(request, x_tenant_id, x_organization_id, x_legal_entity_id)
 
     proposal_id = UUID(str(payload.get("proposal_id", x_operation_id)))
@@ -168,7 +189,7 @@ async def validate_posting(
     x_correlation_id: Annotated[UUID, Header()],
     authorization: Annotated[str | None, Header()] = None,
 ) -> AccountingValidationResult:
-    _authenticate_request(request, authorization, x_tenant_id, x_operation_id)
+    _authenticate_request(request, authorization, x_tenant_id, x_operation_id, payload=payload)
     service = _get_service(request, x_tenant_id, x_organization_id, x_legal_entity_id)
 
     proposal_raw = payload.get("proposal")
@@ -210,7 +231,7 @@ async def post_journal(
     x_correlation_id: Annotated[UUID, Header()],
     authorization: Annotated[str | None, Header()] = None,
 ) -> JournalPostingResult:
-    _authenticate_request(request, authorization, x_tenant_id, x_operation_id)
+    _authenticate_request(request, authorization, x_tenant_id, x_operation_id, payload=payload)
     service = _get_service(request, x_tenant_id, x_organization_id, x_legal_entity_id)
 
     proposal_raw = payload.get("proposal")
@@ -225,6 +246,14 @@ async def post_journal(
         if "accounting_period_id" in payload
         else proposal_id
     )
+
+    import os
+
+    if os.environ.get("LEDGERAI_DEMO_UNKNOWN_POSTING", "false").lower() == "true" and not getattr(
+        request.app.state, "_simulated_unknown_posting", False
+    ):
+        request.app.state._simulated_unknown_posting = True
+        raise HTTPException(504, "synthetic unknown outcome")
 
     try:
         return await service.post_journal(
@@ -252,7 +281,7 @@ async def get_posting_status(
     x_correlation_id: Annotated[UUID, Header()],
     authorization: Annotated[str | None, Header()] = None,
 ) -> PostingStatusResult:
-    _authenticate_request(request, authorization, x_tenant_id, x_operation_id)
+    _authenticate_request(request, authorization, x_tenant_id, x_operation_id, payload=payload)
     service = _get_service(request, x_tenant_id, x_organization_id, x_legal_entity_id)
     target_op_id = UUID(str(payload.get("operation_id", x_operation_id)))
     return await service.get_posting_status(operation_id=target_op_id)
@@ -269,7 +298,7 @@ async def validate_period_close(
     x_correlation_id: Annotated[UUID, Header()],
     authorization: Annotated[str | None, Header()] = None,
 ) -> PeriodCloseValidationResult:
-    _authenticate_request(request, authorization, x_tenant_id, x_operation_id)
+    _authenticate_request(request, authorization, x_tenant_id, x_operation_id, payload=payload)
     service = _get_service(request, x_tenant_id, x_organization_id, x_legal_entity_id)
     period_id = UUID(str(payload["accounting_period_id"]))
     return await service.validate_period_close(
@@ -289,7 +318,7 @@ async def close_period(
     x_correlation_id: Annotated[UUID, Header()],
     authorization: Annotated[str | None, Header()] = None,
 ) -> PeriodCloseResult:
-    _authenticate_request(request, authorization, x_tenant_id, x_operation_id)
+    _authenticate_request(request, authorization, x_tenant_id, x_operation_id, payload=payload)
     service = _get_service(request, x_tenant_id, x_organization_id, x_legal_entity_id)
     period_id = UUID(str(payload["accounting_period_id"]))
     try:
@@ -316,7 +345,7 @@ async def get_period_close_status(
     x_correlation_id: Annotated[UUID, Header()],
     authorization: Annotated[str | None, Header()] = None,
 ) -> PeriodCloseResult:
-    _authenticate_request(request, authorization, x_tenant_id, x_operation_id)
+    _authenticate_request(request, authorization, x_tenant_id, x_operation_id, payload=payload)
     service = _get_service(request, x_tenant_id, x_organization_id, x_legal_entity_id)
     target_op_id = UUID(str(payload.get("operation_id", x_operation_id)))
     return await service.get_period_close_status(operation_id=target_op_id)
@@ -333,7 +362,7 @@ async def get_financial_statement(
     x_correlation_id: Annotated[UUID, Header()],
     authorization: Annotated[str | None, Header()] = None,
 ) -> FinancialStatementSnapshot:
-    _authenticate_request(request, authorization, x_tenant_id, x_operation_id)
+    _authenticate_request(request, authorization, x_tenant_id, x_operation_id, payload=payload)
     service = _get_service(request, x_tenant_id, x_organization_id, x_legal_entity_id)
     period_id = UUID(str(payload["accounting_period_id"]))
     statement_type = str(payload["statement_type"])
@@ -350,12 +379,14 @@ async def get_financial_statement(
     else:
         as_of = datetime.now(UTC)
     currency = str(payload.get("currency", "INR"))
+    include_summary = bool(payload.get("include_summary", False))
     return await service.generate_statement(
         operation_id=x_operation_id,
         accounting_period_id=period_id,
         statement_type=statement_type,
         as_of=as_of,
         currency=currency,
+        include_summary=include_summary,
     )
 
 
@@ -447,4 +478,10 @@ async def create_period(
 
 @router.get("/health")
 async def health_check() -> dict[str, str]:
-    return {"status": "healthy", "service": "role2-financial-core", "version": "2.0.0"}
+    return {"status": "healthy", "service": "role2-financial-core", "version": "1.0.0"}
+
+
+@router.get("/health/ready")
+@router.get("/health/live")
+async def health_ready() -> dict[str, str]:
+    return {"status": "ready"}

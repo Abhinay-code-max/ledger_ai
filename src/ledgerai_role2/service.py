@@ -851,6 +851,7 @@ class Role2Service:
         as_of: datetime,
         currency: str = "INR",
         correlation: CorrelationMetadata | None = None,
+        include_summary: bool = True,
     ) -> FinancialStatementSnapshot:
         """Generate and store an immutable financial statement snapshot."""
         accounts_map = await self._load_accounts_map()
@@ -867,6 +868,7 @@ class Role2Service:
                 as_of=as_of,
                 currency=currency,
                 snapshot_id=snapshot_id,
+                include_summary=include_summary,
             )
         elif st_type == StatementType.PROFIT_AND_LOSS:
             domain_stmt, _ = calculate_profit_and_loss(
@@ -876,6 +878,7 @@ class Role2Service:
                 as_of=as_of,
                 currency=currency,
                 snapshot_id=snapshot_id,
+                include_summary=include_summary,
             )
         elif st_type == StatementType.BALANCE_SHEET:
             _, net_income = calculate_profit_and_loss(
@@ -884,6 +887,7 @@ class Role2Service:
                 accounting_period_id=accounting_period_id,
                 as_of=as_of,
                 currency=currency,
+                include_summary=include_summary,
             )
             domain_stmt = calculate_balance_sheet(
                 accounts_map,
@@ -893,6 +897,7 @@ class Role2Service:
                 as_of=as_of,
                 currency=currency,
                 snapshot_id=snapshot_id,
+                include_summary=include_summary,
             )
         else:
             raise ValueError(f"Unsupported statement type: {statement_type}")

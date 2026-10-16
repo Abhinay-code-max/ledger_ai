@@ -1,5 +1,11 @@
 %PDF-1.4
 % LedgerAI synthetic NOVA demo evidence. No real person or account data.
+INVOICE NUMBER: NOVA-DEMO-INV-001
+SUPPLIER: SYNTHETIC OFFICE SUPPLIES
+INVOICE DATE: 2026-09-15
+CURRENCY: INR
+TOTAL AMOUNT: INR 1250.00
+1. Office Supplies | Qty: 1 | Price: INR 1250.00 | Amount: INR 1250.00
 1 0 obj << /Type /Catalog >> endobj
 trailer << /Root 1 0 R >>
 %%EOF

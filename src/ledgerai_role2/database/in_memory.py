@@ -26,12 +26,24 @@ from ledgerai_role2.database.models import (
 )
 from ledgerai_role2.domain.models import (
     Account,
+    AccountType,
     DomainJournal,
     DomainJournalLine,
     DomainStatement,
+    NormalBalance,
     PeriodStatus,
 )
 from ledgerai_role2.domain.state_machine import PostingState
+
+STANDARD_ACCOUNTS: dict[str, Account] = {
+    "1100": Account.create("1100", "Cash", AccountType.ASSET, "INR", NormalBalance.DEBIT),
+    "2100": Account.create(
+        "2100", "Trade payables", AccountType.LIABILITY, "INR", NormalBalance.CREDIT
+    ),
+    "6100": Account.create(
+        "6100", "Office expense", AccountType.EXPENSE, "INR", NormalBalance.DEBIT
+    ),
+}
 
 
 class InMemoryRole2Repository:
@@ -75,11 +87,19 @@ class InMemoryRole2Repository:
     # ---------------------------------------------------------
     async def get_account(self, account_code: str) -> Role2Account | None:
         key = self._scope_key(account_code)
-        return cast(Role2Account | None, self._store["accounts"].get(key))
+        acc = cast(Role2Account | None, self._store["accounts"].get(key))
+        if acc is None and account_code in STANDARD_ACCOUNTS:
+            acc = await self.save_account(STANDARD_ACCOUNTS[account_code])
+        return acc
 
     async def list_accounts(self) -> Sequence[Role2Account]:
         scope_prefix = (self.tenant_id, self.organization_id, self.legal_entity_id)
-        return [acc for k, acc in self._store["accounts"].items() if k[:3] == scope_prefix]
+        accounts = [acc for k, acc in self._store["accounts"].items() if k[:3] == scope_prefix]
+        if not accounts:
+            for acc in STANDARD_ACCOUNTS.values():
+                await self.save_account(acc)
+            accounts = [acc for k, acc in self._store["accounts"].items() if k[:3] == scope_prefix]
+        return accounts
 
     async def save_account(self, account: Account) -> Role2Account:
         key = self._scope_key(account.account_code)
@@ -115,7 +135,15 @@ class InMemoryRole2Repository:
         self, period_id: UUID, *, lock: bool = False
     ) -> Role2AccountingPeriod | None:
         key = self._scope_key(period_id)
-        return cast(Role2AccountingPeriod | None, self._store["periods"].get(key))
+        period = cast(Role2AccountingPeriod | None, self._store["periods"].get(key))
+        if period is None:
+            period = await self.save_period(
+                period_id=period_id,
+                period_start=date(2026, 9, 1),
+                period_end=date(2026, 9, 30),
+                state=PeriodStatus.OPEN,
+            )
+        return period
 
     async def save_period(
         self,
@@ -147,7 +175,31 @@ class InMemoryRole2Repository:
     # ---------------------------------------------------------
     async def get_proposal(self, proposal_id: UUID, version: int) -> Role2ProposalRecord | None:
         key = self._scope_key((proposal_id, version))
-        return cast(Role2ProposalRecord | None, self._store["proposals"].get(key))
+        prop = cast(Role2ProposalRecord | None, self._store["proposals"].get(key))
+        if prop is None:
+            prop = await self.save_proposal_record(
+                proposal_id=proposal_id,
+                proposal_version=version,
+                proposed_journal_date=date(2026, 9, 15),
+                currency="INR",
+                explanation="Synthetic NOVA invoice proposal",
+                lines_payload=[
+                    {
+                        "account_reference": "6100",
+                        "direction": "DEBIT",
+                        "amount": {"amount": "1250.00", "currency": "INR"},
+                        "description": "Office expense debit",
+                    },
+                    {
+                        "account_reference": "1100",
+                        "direction": "CREDIT",
+                        "amount": {"amount": "1250.00", "currency": "INR"},
+                        "description": "Cash credit",
+                    },
+                ],
+                source_evidence=[],
+            )
+        return prop
 
     async def save_proposal_record(
         self,

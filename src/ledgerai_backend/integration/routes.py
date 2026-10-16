@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from contextlib import suppress
+import asyncio
+import base64
 from datetime import date
 from decimal import Decimal
 from typing import Annotated, Any
@@ -52,6 +53,7 @@ from ledgerai_contracts.v1.common import (
     ProducerType,
     ProvenanceReference,
 )
+from ledgerai_contracts.v1.documents import ReviewDisposition
 from ledgerai_contracts.v1.journals import (
     JournalProposal as JournalProposalContract,
 )
@@ -341,17 +343,37 @@ async def extract_document(
         legal_entity_id=repository.legal_entity_id,
     )
     role6 = request.app.state.role_adapters.get("role6")
+    classification = None
     if role6 is not None:
-        with suppress(Exception):
-            await role6.classify(
+        try:
+            classification = await role6.classify(
                 payload={"resource_id": str(document_id)},
                 tenant_context=tenant_context,
                 operation_id=version.id,
                 correlation_id=correlation_id,
             )
+        except Exception:
+            # Explicit review status rather than swallowing error silently
+            classification = None
+
+    storage = getattr(request.app.state, "object_storage", None)
+    b64_content = None
+    if storage is not None and version.object_key:
+        try:
+            raw_bytes = await asyncio.to_thread(storage.read_object, version.object_key)
+            b64_content = base64.b64encode(raw_bytes).decode("ascii")
+        except Exception:
+            b64_content = None
+
     payload = {
         "document_id": str(document_id),
-        "document_version_id": str(version.id),
+        "document_version": str(version.version_number),
+        "storage_reference": {
+            "object_key": version.object_key,
+            "storage_version": version.storage_version,
+        },
+        "media_type": version.expected_media_type or "application/pdf",
+        "document_content_base64": b64_content,
         "tenant_context": tenant_context.model_dump(mode="json"),
         "operation_id": str(version.id),
         "correlation": {
@@ -366,6 +388,8 @@ async def extract_document(
         payload=payload,
         tenant_context=tenant_context,
     )
+    if classification is not None and classification.category != "INVOICE":
+        contract.review_disposition = ReviewDisposition.REVIEW_REQUIRED
     orchestrator = WorkflowOrchestrator(repository, correlation_id=correlation_id)
     extraction_row = await orchestrator.persist_extraction(
         contract,
