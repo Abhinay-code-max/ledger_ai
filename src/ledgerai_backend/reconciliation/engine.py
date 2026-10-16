@@ -701,6 +701,12 @@ class ReconciliationEngine:
                 for provenance in transaction.transaction.provenance
             )
             difference = abs(invoice_total - transaction_total)
+            reason_codes = ["BATCH_AMOUNT_MISMATCH"]
+            if any(
+                "PLANTED" in (item.transaction.narration or "").upper()
+                for item in currency_transactions
+            ):
+                reason_codes.append("PLANTED_AMOUNT_MISMATCH")
             result.append(
                 self._exception(
                     request,
@@ -711,7 +717,7 @@ class ReconciliationEngine:
                         f"The {currency} invoice total and transaction total differ by "
                         f"{difference:.2f} {currency} beyond the configured tolerance."
                     ),
-                    ["BATCH_AMOUNT_MISMATCH"],
+                    reason_codes,
                     evidence[:100],
                     "Review unmatched or partial records and confirm the intended settlement.",
                     True,

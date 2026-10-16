@@ -196,7 +196,7 @@ class WorkflowOrchestrator:
 
     async def persist_reconciliation(
         self, result: ReconciliationResult, *, allowed_resource_ids: set[UUID]
-    ) -> MatchRow:
+    ) -> tuple[MatchRow, list[WorkflowException]]:
         if result.tenant_context != self.context or result.proposal.tenant_context != self.context:
             raise WorkflowContractError("reconciliation tenant context mismatch")
         unknown = {reference.resource_id for reference in result.proposal.records}.difference(
@@ -207,47 +207,71 @@ class WorkflowOrchestrator:
         if not result.proposal.producer.algorithm_version:
             raise WorkflowContractError("reconciliation algorithm version is required")
         proposal = result.proposal
-        row = MatchRow(
-            tenant_id=self.repository.tenant_id,
-            organization_id=self.repository.organization_id,
-            legal_entity_id=self.repository.legal_entity_id,
-            external_proposal_id=proposal.proposal_id,
-            proposal_version=proposal.proposal_version,
-            match_type=proposal.match_type,
-            confidence=proposal.confidence,
-            status=ProposalStatus(proposal.status),
-            producer_name=proposal.producer.name,
-            producer_version=proposal.producer.version,
-            algorithm_version=proposal.producer.algorithm_version,
-            contract_payload=proposal.model_dump(mode="json"),
-            correlation_id=self.correlation_id,
-        )
-        self.repository.session.add(row)
-        await self.repository.session.flush()
-        for reference in proposal.records:
-            self.repository.session.add(
-                MatchProposalItem(
-                    tenant_id=self.repository.tenant_id,
-                    organization_id=self.repository.organization_id,
-                    legal_entity_id=self.repository.legal_entity_id,
-                    match_proposal_id=row.id,
-                    resource_type=reference.resource_type,
-                    resource_id=reference.resource_id,
-                    resource_version=reference.resource_version,
-                )
+
+        existing_match = await self.repository.session.scalar(
+            select(MatchRow).where(
+                MatchRow.tenant_id == self.repository.tenant_id,
+                MatchRow.external_proposal_id == proposal.proposal_id,
+                MatchRow.proposal_version == proposal.proposal_version,
             )
-        self.repository.add_outbox(
-            event_type="reconciliation.proposed.v1",
-            resource_type="match_proposal",
-            resource_id=row.id,
-            correlation_id=self.correlation_id,
         )
-        reconciliation_outcomes.add(1, {"outcome": proposal.status})
+        if existing_match is not None:
+            row = existing_match
+        else:
+            row = MatchRow(
+                tenant_id=self.repository.tenant_id,
+                organization_id=self.repository.organization_id,
+                legal_entity_id=self.repository.legal_entity_id,
+                external_proposal_id=proposal.proposal_id,
+                proposal_version=proposal.proposal_version,
+                match_type=proposal.match_type,
+                confidence=proposal.confidence,
+                status=ProposalStatus(proposal.status),
+                producer_name=proposal.producer.name,
+                producer_version=proposal.producer.version,
+                algorithm_version=proposal.producer.algorithm_version,
+                contract_payload=proposal.model_dump(mode="json"),
+                correlation_id=self.correlation_id,
+            )
+            self.repository.session.add(row)
+            await self.repository.session.flush()
+            for reference in proposal.records:
+                self.repository.session.add(
+                    MatchProposalItem(
+                        tenant_id=self.repository.tenant_id,
+                        organization_id=self.repository.organization_id,
+                        legal_entity_id=self.repository.legal_entity_id,
+                        match_proposal_id=row.id,
+                        resource_type=reference.resource_type,
+                        resource_id=reference.resource_id,
+                        resource_version=reference.resource_version,
+                    )
+                )
+            self.repository.add_outbox(
+                event_type="reconciliation.proposed.v1",
+                resource_type="match_proposal",
+                resource_id=row.id,
+                correlation_id=self.correlation_id,
+            )
+            reconciliation_outcomes.add(1, {"outcome": proposal.status})
+
+        persisted_exceptions: list[WorkflowException] = []
         for exception in result.exceptions:
             if exception.tenant_context != self.context or any(
                 ref.resource_id not in allowed_resource_ids for ref in exception.involved_resources
             ):
                 raise WorkflowContractError("exception references an unknown or foreign resource")
+
+            existing_exc = await self.repository.session.scalar(
+                select(WorkflowException).where(
+                    WorkflowException.tenant_id == self.repository.tenant_id,
+                    WorkflowException.external_exception_id == exception.exception_id,
+                )
+            )
+            if existing_exc is not None:
+                persisted_exceptions.append(existing_exc)
+                continue
+
             exception_row = WorkflowException(
                 tenant_id=self.repository.tenant_id,
                 organization_id=self.repository.organization_id,
@@ -273,7 +297,8 @@ class WorkflowOrchestrator:
                 correlation_id=self.correlation_id,
             )
             exception_creations.add(1, {"severity": exception.severity})
-        return row
+            persisted_exceptions.append(exception_row)
+        return row, persisted_exceptions
 
     async def persist_journal(
         self, proposal: JournalProposal, *, maker_principal_id: UUID | None = None
@@ -283,6 +308,17 @@ class WorkflowOrchestrator:
         currencies = {line.amount.currency for line in proposal.lines}
         if currencies != {proposal.currency}:
             raise WorkflowContractError("journal line currency mismatch")
+
+        existing_journal = await self.repository.session.scalar(
+            select(JournalRow).where(
+                JournalRow.tenant_id == self.repository.tenant_id,
+                JournalRow.proposal_series_id == proposal.proposal_id,
+                JournalRow.proposal_version == proposal.proposal_version,
+            )
+        )
+        if existing_journal is not None:
+            return existing_journal
+
         row = JournalRow(
             tenant_id=self.repository.tenant_id,
             organization_id=self.repository.organization_id,
@@ -336,6 +372,18 @@ class WorkflowOrchestrator:
         rules: list[PolicyRuleSpec],
         maker_checker_required: bool = True,
     ) -> PolicyDecisionRow:
+        existing_decision = await self.repository.session.scalar(
+            select(PolicyDecisionRow).where(
+                PolicyDecisionRow.tenant_id == self.repository.tenant_id,
+                PolicyDecisionRow.subject_type == "journal_proposal",
+                PolicyDecisionRow.subject_id == proposal.id,
+                PolicyDecisionRow.subject_version == str(proposal.proposal_version),
+                PolicyDecisionRow.policy_set_id == policy_set_id,
+            )
+        )
+        if existing_decision is not None:
+            return existing_decision
+
         evaluation = evaluate_policy(inputs, rules)  # type: ignore[arg-type]
         decision = PolicyDecisionRow(
             tenant_id=self.repository.tenant_id,
@@ -366,25 +414,34 @@ class WorkflowOrchestrator:
             1, {"outcome": decision.outcome.value, "policy_version": policy_version}
         )
         if decision.outcome in {PolicyOutcome.REVIEW_REQUIRED, PolicyOutcome.ESCALATED}:
-            request = ApprovalRequest(
-                tenant_id=self.repository.tenant_id,
-                organization_id=self.repository.organization_id,
-                legal_entity_id=self.repository.legal_entity_id,
-                subject_type="journal_proposal",
-                subject_id=proposal.id,
-                subject_version=str(proposal.proposal_version),
-                policy_decision_id=decision.id,
-                maker_principal_id=proposal.created_by_principal_id,
-                maker_checker_required=maker_checker_required,
-                expires_at=datetime.now(UTC) + timedelta(days=7),
-                correlation_id=self.correlation_id,
+            existing_request = await self.repository.session.scalar(
+                select(ApprovalRequest).where(
+                    ApprovalRequest.tenant_id == self.repository.tenant_id,
+                    ApprovalRequest.subject_type == "journal_proposal",
+                    ApprovalRequest.subject_id == proposal.id,
+                    ApprovalRequest.subject_version == str(proposal.proposal_version),
+                )
             )
-            self.repository.session.add(request)
-            await self.repository.session.flush()
-            self.repository.add_outbox(
-                event_type="approval.requested.v1",
-                resource_type="approval_request",
-                resource_id=request.id,
-                correlation_id=self.correlation_id,
-            )
+            if existing_request is None:
+                request = ApprovalRequest(
+                    tenant_id=self.repository.tenant_id,
+                    organization_id=self.repository.organization_id,
+                    legal_entity_id=self.repository.legal_entity_id,
+                    subject_type="journal_proposal",
+                    subject_id=proposal.id,
+                    subject_version=str(proposal.proposal_version),
+                    policy_decision_id=decision.id,
+                    maker_principal_id=proposal.created_by_principal_id,
+                    maker_checker_required=maker_checker_required,
+                    expires_at=datetime.now(UTC) + timedelta(days=7),
+                    correlation_id=self.correlation_id,
+                )
+                self.repository.session.add(request)
+                await self.repository.session.flush()
+                self.repository.add_outbox(
+                    event_type="approval.requested.v1",
+                    resource_type="approval_request",
+                    resource_id=request.id,
+                    correlation_id=self.correlation_id,
+                )
         return decision

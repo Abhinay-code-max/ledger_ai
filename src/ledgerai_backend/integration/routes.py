@@ -15,6 +15,7 @@ from sqlalchemy import select
 from ledgerai_backend.api.dependencies import RequestScope, authorized_scope
 from ledgerai_backend.core.errors import ERROR_RESPONSES, ApiError
 from ledgerai_backend.database.seed import stable_id
+from ledgerai_backend.ingestion.models import BankTransaction
 from ledgerai_backend.ingestion.service import require_entity_context
 from ledgerai_backend.integration.models import (
     ApprovalActionType,
@@ -435,6 +436,88 @@ async def create_reconciliation(
         organization_id=repository.organization_id,
         legal_entity_id=repository.legal_entity_id,
     )
+    # Load the bank transactions for this reconciliation
+    tx_rows = list(
+        await repository.session.scalars(
+            select(BankTransaction).where(
+                *repository._scope(BankTransaction),
+                BankTransaction.id.in_(body.transaction_ids),
+            )
+        )
+    )
+    # Build facts for real reconciliation engine
+    fields = (
+        extraction_row.contract_payload.get("fields", []) if extraction_row.contract_payload else []
+    )
+    total_val = next((f["value"] for f in fields if f.get("field_name") == "total"), "0")
+    curr_val = next((f["value"] for f in fields if f.get("field_name") == "currency"), "INR")
+    ref_val = next((f["value"] for f in fields if f.get("field_name") == "invoice_number"), None)
+    sup_val = next((f["value"] for f in fields if f.get("field_name") == "supplier_name"), None)
+    date_str = next((f["value"] for f in fields if f.get("field_name") == "invoice_date"), None)
+    inv_date = date.fromisoformat(str(date_str)) if date_str else date(2026, 9, 15)
+
+    invoice_fact = {
+        "extraction_id": str(extraction_row.id),
+        "extraction_version": str(extraction_row.extraction_version),
+        "document_id": str(body.document_id),
+        "document_version": "1",
+        "tenant_context": tenant_context.model_dump(mode="json"),
+        "amount": {"amount": str(total_val), "currency": str(curr_val)},
+        "invoice_date": inv_date.isoformat(),
+        "expected_transaction_direction": "DEBIT",
+        "reference": str(ref_val) if ref_val else None,
+        "party_name": str(sup_val) if sup_val else None,
+        "evidence_complete": True,
+        "content_fingerprint": "a" * 64,
+        "provenance": [
+            {
+                "source_document_id": str(body.document_id),
+                "document_version": "1",
+                "source_field": "invoice",
+                "evidence_hash": "a" * 64,
+            }
+        ],
+    }
+    versioned_txs = [
+        {
+            "transaction_version": "1",
+            "transaction": {
+                "schema_version": "1.0",
+                "transaction_id": str(tx.id),
+                "tenant_context": tenant_context.model_dump(mode="json"),
+                "bank_account_id": str(tx.bank_account_id),
+                "import_batch_id": str(tx.import_id),
+                "source_row_number": tx.source_row_number,
+                "booking_date": tx.booking_date.isoformat(),
+                "value_date": tx.value_date.isoformat() if tx.value_date else None,
+                "money": {"amount": str(tx.amount), "currency": tx.currency},
+                "direction": tx.direction,
+                "narration": tx.narration or "",
+                "reference": tx.reference,
+                "counterparty": {"display_name": tx.counterparty_name}
+                if tx.counterparty_name
+                else None,
+                "external_source_id": tx.external_source_id,
+                "normalization_status": "NORMALIZED",
+                "provenance": [
+                    {
+                        "source_document_id": str(body.document_id),
+                        "document_version": "1",
+                        "source_field": "bank_transaction",
+                        "evidence_hash": "b" * 64,
+                    }
+                ],
+                "content_fingerprint": tx.source_fingerprint,
+                "correlation": {
+                    "request_id": str(correlation_id),
+                    "correlation_id": str(correlation_id),
+                    "causation_id": None,
+                },
+            },
+        }
+        for tx in tx_rows
+    ]
+
     operation_id = uuid4()
     payload = {
         "operation_id": str(operation_id),
@@ -448,6 +531,9 @@ async def create_reconciliation(
             "correlation_id": str(correlation_id),
             "causation_id": None,
         },
+        "strategy_version": "reconciliation-rules/1.0.0",
+        "invoices": [invoice_fact],
+        "transactions": versioned_txs,
     }
     result = await role3.request_reconciliation(
         operation_id=operation_id,
@@ -462,7 +548,9 @@ async def create_reconciliation(
         *body.transaction_ids,
     }
     orchestrator = WorkflowOrchestrator(repository, correlation_id=correlation_id)
-    match_row = await orchestrator.persist_reconciliation(result, allowed_resource_ids=allowed_ids)
+    match_row, exception_rows = await orchestrator.persist_reconciliation(
+        result, allowed_resource_ids=allowed_ids
+    )
 
     # Deterministic journal proposal for reconciled invoice
     journal_id = stable_id("nova:demo:journal")
@@ -607,17 +695,17 @@ async def create_reconciliation(
         actor_id=str(scope.context.principal_id),
         correlation_id=correlation_id,
     )
-    exception_row = await repository.get(
-        WorkflowException, stable_id("nova:demo:exception")
-    ) or await repository.session.scalar(
-        select(WorkflowException)
-        .where(
-            *repository._scope(WorkflowException),
-            WorkflowException.correlation_id == correlation_id,
+    exception_row = exception_rows[0] if exception_rows else None
+    if exception_row is None:
+        exception_row = await repository.session.scalar(
+            select(WorkflowException)
+            .where(
+                *repository._scope(WorkflowException),
+                WorkflowException.correlation_id == correlation_id,
+            )
+            .order_by(WorkflowException.id.desc())
+            .limit(1)
         )
-        .order_by(WorkflowException.id.desc())
-        .limit(1)
-    )
     if exception_row:
         await repository.record_audit(
             action="EXCEPTION_CREATED",
