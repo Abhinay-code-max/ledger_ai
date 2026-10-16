@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
+from typing import Any
 from uuid import UUID, uuid4
 
 import pytest
@@ -215,3 +216,123 @@ def test_role4_classify_adapter_compatibility() -> None:
     assert data["category"] == "INVOICE"
     assert "confidence" in data
     assert len(data["provenance"]) >= 1
+
+
+def test_inference_timeout() -> None:
+    from ledgerai_contracts.v1.model_runtime import ModelManifest, RuntimeExecutionMetadata
+    from ledgerai_role6.backend import InferenceBackendPort
+
+    class SlowBackend(InferenceBackendPort):
+        async def initialize(self, manifest: ModelManifest) -> None:
+            pass
+
+        def is_ready(self) -> bool:
+            return True
+
+        def get_device(self) -> str:
+            return "mock"
+
+        async def infer(
+            self, req: ModelInferenceRequest, manifest: ModelManifest, *, warmup: bool = False
+        ) -> tuple[Any, RuntimeExecutionMetadata]:
+            raise TimeoutError("Simulated execution timeout")
+
+    settings = Role6Settings(
+        environment="test",
+        service_token_secret=SECRET,
+        service_audience="ledgerai-role6",
+    )
+    app = create_role6_app(settings, backend=SlowBackend())
+    client = TestClient(app)
+
+    op_id = uuid4()
+    headers = make_headers(op_id)
+    payload = {
+        "schema_version": "1.0",
+        "tenant_context": {
+            "tenant_id": str(TENANT_ID),
+            "organization_id": str(ORG_ID),
+            "legal_entity_id": str(LEGAL_ENTITY_ID),
+        },
+        "operation_id": str(op_id),
+        "correlation_id": str(uuid4()),
+        "capability": "DOCUMENT_EXTRACTION",
+        "model_name": "docintel-foundation-vlm",
+        "input_data": {
+            "media_type": "text/plain",
+            "text_content": "Invoice timeout test",
+        },
+    }
+    resp = client.post("/v1/models/infer", headers=headers, json=payload)
+    assert resp.status_code == 504
+    assert "timed out" in resp.json()["detail"].lower()
+
+
+def test_invalid_backend_output() -> None:
+    from ledgerai_contracts.v1.model_runtime import ModelManifest, RuntimeExecutionMetadata
+    from ledgerai_role6.backend import BackendError, InferenceBackendPort
+
+    class CrashingBackend(InferenceBackendPort):
+        async def initialize(self, manifest: ModelManifest) -> None:
+            pass
+
+        def is_ready(self) -> bool:
+            return True
+
+        def get_device(self) -> str:
+            return "mock"
+
+        async def infer(
+            self, req: ModelInferenceRequest, manifest: ModelManifest, *, warmup: bool = False
+        ) -> tuple[Any, RuntimeExecutionMetadata]:
+            raise BackendError("Corrupted model output")
+
+    settings = Role6Settings(
+        environment="test",
+        service_token_secret=SECRET,
+        service_audience="ledgerai-role6",
+    )
+    app = create_role6_app(settings, backend=CrashingBackend())
+    client = TestClient(app)
+
+    op_id = uuid4()
+    headers = make_headers(op_id)
+    payload = {
+        "schema_version": "1.0",
+        "tenant_context": {
+            "tenant_id": str(TENANT_ID),
+            "organization_id": str(ORG_ID),
+            "legal_entity_id": str(LEGAL_ENTITY_ID),
+        },
+        "operation_id": str(op_id),
+        "correlation_id": str(uuid4()),
+        "capability": "DOCUMENT_EXTRACTION",
+        "model_name": "docintel-foundation-vlm",
+        "input_data": {
+            "media_type": "text/plain",
+            "text_content": "Invoice crashing backend test",
+        },
+    }
+    resp = client.post("/v1/models/infer", headers=headers, json=payload)
+    assert resp.status_code == 500
+    assert "Inference backend failed" in resp.json()["detail"]
+
+
+def test_queue_cancellation_releases_slot() -> None:
+    queue_mgr = RuntimeQueueManager(
+        max_concurrency=1, max_queue_depth=2, per_tenant_max_concurrency=2
+    )
+
+    async def run() -> None:
+        async with queue_mgr.acquire(TENANT_ID):
+            assert queue_mgr.active_concurrency == 1
+            task = asyncio.create_task(queue_mgr.acquire(TENANT_ID).__aenter__())
+            await asyncio.sleep(0.02)
+            assert queue_mgr.queue_depth == 1
+            task.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await task
+            assert queue_mgr.queue_depth == 0
+        assert queue_mgr.active_concurrency == 0
+
+    asyncio.run(run())

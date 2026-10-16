@@ -72,16 +72,22 @@ class RuntimeQueueManager:
 
             self._queue_depth += 1
 
+        acquired = False
         try:
             # Await semaphore for global active concurrency
             await self._semaphore.acquire()
+            acquired = True
             async with self._lock:
                 self._queue_depth -= 1
                 self._active_count += 1
                 self._tenant_active[tenant_id] += 1
             yield
         finally:
-            async with self._lock:
-                self._active_count = max(0, self._active_count - 1)
-                self._tenant_active[tenant_id] = max(0, self._tenant_active[tenant_id] - 1)
-            self._semaphore.release()
+            if acquired:
+                async with self._lock:
+                    self._active_count = max(0, self._active_count - 1)
+                    self._tenant_active[tenant_id] = max(0, self._tenant_active[tenant_id] - 1)
+                self._semaphore.release()
+            else:
+                async with self._lock:
+                    self._queue_depth = max(0, self._queue_depth - 1)

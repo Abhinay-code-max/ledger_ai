@@ -421,3 +421,57 @@ async def test_deterministic_repeatability_live(live_role6_server: str) -> None:
             responses.append(data["output"])
 
         assert responses[0] == responses[1]
+
+
+@pytest.mark.asyncio
+async def test_role1_http_service_calls_role6_http_service(
+    live_role6_server: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Verify live HTTP chain: Caller -> Role 1 HTTP server -> Role 6 HTTP server."""
+    from ledgerai_backend.demo.role1 import create_demo_role1_app
+
+    monkeypatch.setenv("LEDGERAI_DEMO_ROLE6_URL", live_role6_server)
+    monkeypatch.setenv("LEDGERAI_SERVICE_TOKEN_SECRET", SECRET_KEY)
+    monkeypatch.setenv("LEDGERAI_ROLE6_SERVICE_TOKEN_SECRET", SECRET_KEY)
+    role1_app = create_demo_role1_app()
+    server1 = LiveServer(role1_app, "127.0.0.1", 8109)
+    with server1:
+        role1_url = "http://127.0.0.1:8109"
+        op_id = uuid4()
+        corr_id = uuid4()
+        token = make_token(
+            issuer="ledgerai-backend",
+            subject="ledgerai-backend",
+            audience="ledgerai-role1",
+            operation_id=op_id,
+        )
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "X-Tenant-ID": str(TENANT_ID),
+            "X-Organization-ID": str(ORG_ID),
+            "X-Legal-Entity-ID": str(LEGAL_ENTITY_ID),
+            "X-Operation-ID": str(op_id),
+            "X-Correlation-ID": str(corr_id),
+        }
+        payload = {
+            "document_id": str(uuid4()),
+            "document_version_id": "1",
+            "tenant_context": {
+                "tenant_id": str(TENANT_ID),
+                "organization_id": str(ORG_ID),
+                "legal_entity_id": str(LEGAL_ENTITY_ID),
+            },
+            "operation_id": str(op_id),
+            "correlation": {
+                "request_id": str(op_id),
+                "correlation_id": str(corr_id),
+                "causation_id": None,
+            },
+        }
+        async with httpx.AsyncClient(base_url=role1_url) as client:
+            resp = await client.post("/v1/extractions", json=payload, headers=headers)
+            assert resp.status_code == 200
+            data = resp.json()
+            assert data["status"] == "COMPLETED"
+            assert data["classification"] == "INVOICE"
+            assert len(data["fields"]) >= 5

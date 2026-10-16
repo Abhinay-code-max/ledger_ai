@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 from datetime import date
 from decimal import Decimal
 from typing import Annotated, Any
@@ -339,6 +340,15 @@ async def extract_document(
         organization_id=repository.organization_id,
         legal_entity_id=repository.legal_entity_id,
     )
+    role6 = request.app.state.role_adapters.get("role6")
+    if role6 is not None:
+        with suppress(Exception):
+            await role6.classify(
+                payload={"resource_id": str(document_id)},
+                tenant_context=tenant_context,
+                operation_id=version.id,
+                correlation_id=correlation_id,
+            )
     payload = {
         "document_id": str(document_id),
         "document_version_id": str(version.id),
