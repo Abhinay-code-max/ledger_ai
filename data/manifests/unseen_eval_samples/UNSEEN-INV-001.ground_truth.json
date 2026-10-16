@@ -1,0 +1,32 @@
+{
+  "document_type": "SUPPLIER_INVOICE",
+  "document_number": "CS-INV-2026-8812",
+  "supplier_name": "CloudScale Infrastructure AG",
+  "customer_name": "Nova Global Enterprises Inc.",
+  "issue_date": "2026-02-15",
+  "due_date": "2026-03-15",
+  "subtotal": "340.00",
+  "tax_amount": "27.20",
+  "total_amount": "367.20",
+  "currency": "USD",
+  "bank_account_reference": "CH9300000000000008812",
+  "line_items": [
+    {
+      "line_number": 1,
+      "description": "High-Performance Compute Node v4 (160 hrs)",
+      "quantity": "160",
+      "unit_price": "1.50",
+      "line_amount": "240.00",
+      "currency": "USD"
+    },
+    {
+      "line_number": 2,
+      "description": "Enterprise Object Storage (5TB-month)",
+      "quantity": "5",
+      "unit_price": "20.00",
+      "line_amount": "100.00",
+      "currency": "USD"
+    }
+  ],
+  "validation_issues": []
+}

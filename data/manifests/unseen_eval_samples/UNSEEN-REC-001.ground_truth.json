@@ -1,0 +1,24 @@
+{
+  "document_type": "RECEIPT",
+  "document_number": null,
+  "supplier_name": "Taj Mahal Palace Dining",
+  "customer_name": null,
+  "issue_date": "2026-03-12",
+  "due_date": null,
+  "subtotal": "4200.00",
+  "tax_amount": "210.00",
+  "total_amount": "4410.00",
+  "currency": "INR",
+  "bank_account_reference": null,
+  "line_items": [
+    {
+      "line_number": 1,
+      "description": "Executive Buffet Dinner",
+      "quantity": "2",
+      "unit_price": "2100.00",
+      "line_amount": "4200.00",
+      "currency": "INR"
+    }
+  ],
+  "validation_issues": []
+}

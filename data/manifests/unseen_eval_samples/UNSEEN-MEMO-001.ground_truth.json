@@ -1,0 +1,15 @@
+{
+  "document_type": "UNKNOWN",
+  "document_number": null,
+  "supplier_name": null,
+  "customer_name": null,
+  "issue_date": null,
+  "due_date": null,
+  "subtotal": null,
+  "tax_amount": null,
+  "total_amount": null,
+  "currency": "USD",
+  "bank_account_reference": null,
+  "line_items": [],
+  "validation_issues": []
+}

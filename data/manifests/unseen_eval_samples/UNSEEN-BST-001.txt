@@ -1,0 +1,13 @@
+BANK STATEMENT
+BANK: Barclays Corporate Banking
+CUSTOMER: Nova Treasury Operations
+DOCUMENT NUMBER: STMT-BARC-202602
+STATEMENT DATE: 2026-02-28
+CURRENCY: GBP
+BANK ACCOUNT: GB29BARC20000012345678
+
+LINE ITEMS:
+1. Inward Customer Payment Wire | Qty: 1 | Price: GBP 45200.50 | Amount: GBP 45200.50
+2. Direct Debit Vendor Settlement | Qty: 1 | Price: GBP 100000.00 | Amount: GBP 100000.00
+
+CLOSING BALANCE: GBP 145200.50

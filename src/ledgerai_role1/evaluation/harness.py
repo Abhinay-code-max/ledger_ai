@@ -18,13 +18,17 @@ from ledgerai_role1.evaluation.metrics import (
 from ledgerai_role1.evaluation.targets import ACCEPTANCE_TARGETS
 from ledgerai_role1.governance.manifest import DatasetManifest
 from ledgerai_role1.ontology.schema import CanonicalDocumentData
+from ledgerai_role1.pipeline.adapters import ModelGatewayAdapter
 from ledgerai_role1.pipeline.pretrained_baseline import PretrainedDocumentExtractor
 
 
 class EvaluationHarness:
     """Runs deterministic evaluation across split samples and compiles audit metrics."""
 
-    def __init__(self, extractor: PretrainedDocumentExtractor | None = None) -> None:
+    def __init__(
+        self,
+        extractor: ModelGatewayAdapter | PretrainedDocumentExtractor | None = None,
+    ) -> None:
         self.extractor = extractor or PretrainedDocumentExtractor()
 
     def evaluate_manifest(

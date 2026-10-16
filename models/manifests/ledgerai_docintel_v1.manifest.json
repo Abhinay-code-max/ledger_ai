@@ -3,10 +3,11 @@
   "model_id": "docintel-foundation-vlm",
   "model_name": "docintel-foundation-vlm",
   "backend_type": "DETERMINISTIC",
-  "immutable_revision": "18dce7558f6bd7136d53d0517d32542ae025f50b",
+  "immutable_revision": "895c3a49bc3fa70a340399125c650a463535e71c",
   "artifact_hashes": {
-    "model.onnx": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "tokenizer.json": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+    "config.json": "422adefa19e62dd175961cec85bc0400344fe5bf9b22bd1182e05aaae78556e0",
+    "tokenizer.json": "cb63a0a23eef3d5b01063a9880a1925a65aaf4d1591d519910ee3527852950a0",
+    "model.safetensors.index.json": "260ab9fa1418d6d6ab79daa1d9da2c47264f3b72edb4630fc799077ac67d27c6"
   },
   "preprocessing_version": "v1.0.0",
   "supported_capabilities": [

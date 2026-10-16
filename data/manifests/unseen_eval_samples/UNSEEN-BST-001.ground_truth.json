@@ -1,0 +1,32 @@
+{
+  "document_type": "BANK_STATEMENT",
+  "document_number": "STMT-BARC-202602",
+  "supplier_name": "Barclays Corporate Banking",
+  "customer_name": "Nova Treasury Operations",
+  "issue_date": "2026-02-28",
+  "due_date": null,
+  "subtotal": null,
+  "tax_amount": null,
+  "total_amount": "145200.50",
+  "currency": "GBP",
+  "bank_account_reference": "GB29BARC20000012345678",
+  "line_items": [
+    {
+      "line_number": 1,
+      "description": "Inward Customer Payment Wire",
+      "quantity": "1",
+      "unit_price": "45200.50",
+      "line_amount": "45200.50",
+      "currency": "GBP"
+    },
+    {
+      "line_number": 2,
+      "description": "Direct Debit Vendor Settlement",
+      "quantity": "1",
+      "unit_price": "100000.00",
+      "line_amount": "100000.00",
+      "currency": "GBP"
+    }
+  ],
+  "validation_issues": []
+}

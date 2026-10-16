@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Protocol
+from typing import Literal, Protocol
+from uuid import UUID
 
 from ledgerai_contracts.v1.common import ProducerMetadata, ProducerType
+from ledgerai_contracts.v1.tenancy import EntityTenantContext
 from ledgerai_role1.ontology.schema import CanonicalDocumentData
 from ledgerai_role1.pipeline.baseline_parser import DeterministicBaselineExtractor
 from ledgerai_role1.pipeline.layout_ocr import DocumentLayoutAnalyzer, OCRPageLayout
@@ -131,3 +133,324 @@ class DeterministicFixtureExtractor:
 
         # Fallback to deterministic regex extractor
         return self._fallback.extract(document_bytes, media_type=media_type)
+
+
+class Role6GatewayDocumentExtractor:
+    """Production Document Extractor adapter communicating with Role 6 Model Gateway over HTTP.
+
+    Supports:
+    - Serialized HTTP communication with signed service tokens
+    - Document classification and field extraction
+    - Strict missing-field preservation (omits absent fields without hallucination)
+    - Line item and validation issue propagation
+    - Local loopback and remote gateway routing
+    """
+
+    def __init__(
+        self,
+        *,
+        role6_url: str | None = None,
+        service_secret: str = "local-service-token-secret-32-chars-minimum",
+        model_name: str = "docintel-foundation-vlm",
+        tenant_context: EntityTenantContext | None = None,
+        timeout_seconds: float = 30.0,
+    ) -> None:
+        self.role6_url = role6_url
+        self.service_secret = service_secret
+        self.model_name = model_name
+        self.timeout_seconds = timeout_seconds
+        self.tenant_context = tenant_context or EntityTenantContext(
+            tenant_id=UUID("00000000-0000-0000-0000-000000000001"),
+            organization_id=UUID("00000000-0000-0000-0000-000000000002"),
+            legal_entity_id=UUID("00000000-0000-0000-0000-000000000003"),
+        )
+        self._last_execution_backend: str = "UNKNOWN"
+
+        if role6_url:
+            import httpx
+
+            self._client = httpx.Client(base_url=role6_url, timeout=timeout_seconds)
+        else:
+            from starlette.testclient import TestClient
+
+            from ledgerai_role6.app import create_role6_app
+            from ledgerai_role6.config import Role6Settings
+
+            settings = Role6Settings(
+                environment="test",
+                service_token_secret=service_secret,  # type: ignore[arg-type]
+                service_audience="ledgerai-role6",
+            )
+            app = create_role6_app(settings)
+            self._client = TestClient(app)
+
+    def get_producer_metadata(self) -> ProducerMetadata:
+        return ProducerMetadata(
+            producer_type=ProducerType.MODEL,
+            name="ledgerai-role6-docintel-gateway",
+            version="1.0.0",
+            model_name=self.model_name,
+            model_version="895c3a49bc3fa70a340399125c650a463535e71c",
+        )
+
+    def get_last_execution_backend(self) -> str:
+        return self._last_execution_backend
+
+    def extract(
+        self, document_bytes: bytes, *, media_type: str = "text/plain"
+    ) -> CanonicalDocumentData:
+        import time
+        from datetime import date
+        from decimal import Decimal
+        from uuid import uuid4
+
+        import jwt
+
+        from ledgerai_contracts.v1.common import ValidationIssue
+        from ledgerai_role1.ontology.fields import DocumentType
+        from ledgerai_role1.ontology.schema import AnnotatedLineItem
+
+        op_id = uuid4()
+        corr_id = uuid4()
+        now = int(time.time())
+
+        token = jwt.encode(
+            {
+                "iss": "ledgerai-role1",
+                "sub": "role1-document-intelligence",
+                "aud": "ledgerai-role6",
+                "iat": now,
+                "exp": now + 60,
+                "tenant_id": str(self.tenant_context.tenant_id),
+                "operation_id": str(op_id),
+            },
+            self.service_secret,
+            algorithm="HS256",
+        )
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "X-Tenant-ID": str(self.tenant_context.tenant_id),
+            "X-Organization-ID": str(self.tenant_context.organization_id),
+            "X-Legal-Entity-ID": str(self.tenant_context.legal_entity_id),
+            "X-Operation-ID": str(op_id),
+            "X-Correlation-ID": str(corr_id),
+        }
+
+        text_content = document_bytes.decode("utf-8", errors="replace")
+        payload = {
+            "schema_version": "1.0",
+            "tenant_context": {
+                "tenant_id": str(self.tenant_context.tenant_id),
+                "organization_id": str(self.tenant_context.organization_id),
+                "legal_entity_id": str(self.tenant_context.legal_entity_id),
+            },
+            "operation_id": str(op_id),
+            "correlation_id": str(corr_id),
+            "capability": "DOCUMENT_EXTRACTION",
+            "model_name": self.model_name,
+            "input_data": {
+                "media_type": media_type,
+                "text_content": text_content,
+                "page_count": 1,
+            },
+        }
+
+        resp = self._client.post("/v1/models/infer", headers=headers, json=payload)
+        if resp.status_code != 200:
+            raise RuntimeError(f"Role 6 gateway returned HTTP {resp.status_code}: {resp.text}")
+
+        data = resp.json()
+        metadata = data.get("metadata", {})
+        self._last_execution_backend = metadata.get("backend_type", "UNKNOWN")
+
+        output = data.get("output", {})
+        fields_list = output.get("fields", [])
+        field_map = {f["field_name"]: f for f in fields_list}
+
+        def get_fval(fn: str) -> object | None:
+            return field_map[fn]["value"] if fn in field_map else None
+
+        def get_fconf(fn: str) -> Decimal:
+            return Decimal(str(field_map[fn]["confidence"])) if fn in field_map else Decimal("0.95")
+
+        # Classification mapping
+        classification = output.get("classification")
+        doc_type = DocumentType.UNKNOWN
+        if classification and classification.get("category"):
+            cat = classification["category"]
+            try:
+                doc_type = DocumentType(cat)
+            except ValueError:
+                if "INVOICE" in cat:
+                    doc_type = DocumentType.SUPPLIER_INVOICE
+                elif "RECEIPT" in cat:
+                    doc_type = DocumentType.RECEIPT
+                elif "STATEMENT" in cat:
+                    doc_type = DocumentType.BANK_STATEMENT
+                elif "ORDER" in cat:
+                    doc_type = DocumentType.PURCHASE_ORDER
+
+        # Date parser
+        def parse_d(d_str: object) -> date | None:
+            if not d_str or not isinstance(d_str, str):
+                return None
+            try:
+                parts = d_str.split("-")
+                return date(int(parts[0]), int(parts[1]), int(parts[2]))
+            except Exception:
+                return None
+
+        # Decimal parser
+        def parse_dec(d_val: object) -> Decimal | None:
+            if d_val is None:
+                return None
+            try:
+                clean = (
+                    str(d_val)
+                    .replace("USD", "")
+                    .replace("EUR", "")
+                    .replace("INR", "")
+                    .replace("GBP", "")
+                    .strip()
+                )
+                return Decimal(clean)
+            except Exception:
+                return None
+
+        # Line items
+        raw_items_val = get_fval("line_items") or []
+        if isinstance(raw_items_val, str):
+            try:
+                raw_items = json.loads(raw_items_val)
+            except Exception:
+                raw_items = []
+        else:
+            raw_items = raw_items_val
+
+        parsed_items: list[AnnotatedLineItem] = []
+        if isinstance(raw_items, list):
+            for item in raw_items:
+                if isinstance(item, dict):
+                    curr_str = str(item.get("currency") or get_fval("currency") or "USD")
+                    parsed_items.append(
+                        AnnotatedLineItem(
+                            line_number=int(item.get("line_number", len(parsed_items) + 1)),
+                            description=str(item.get("description", "")),
+                            quantity=Decimal(str(item.get("quantity", "1"))),
+                            unit_price=Decimal(str(item.get("unit_price", "0.00"))),
+                            line_amount=Decimal(str(item.get("line_amount", "0.00"))),
+                            currency=curr_str,
+                        )
+                    )
+
+        # Validation issues
+        raw_issues_val = get_fval("validation_issues") or []
+        if isinstance(raw_issues_val, str):
+            try:
+                raw_issues = json.loads(raw_issues_val)
+            except Exception:
+                raw_issues = []
+        else:
+            raw_issues = raw_issues_val
+
+        parsed_issues: list[ValidationIssue] = []
+        if isinstance(raw_issues, list):
+            for iss in raw_issues:
+                if isinstance(iss, dict):
+                    sev_str = str(iss.get("severity", "WARNING")).upper()
+                    sev_lit: Literal["INFO", "WARNING", "ERROR"] = (
+                        "ERROR"
+                        if sev_str == "ERROR"
+                        else ("INFO" if sev_str == "INFO" else "WARNING")
+                    )
+                    parsed_issues.append(
+                        ValidationIssue(
+                            code=str(iss.get("code", "VALIDATION_ISSUE")),
+                            message=str(iss.get("message", "")),
+                            severity=sev_lit,
+                        )
+                    )
+
+        doc_num_val = get_fval("document_number") or get_fval("invoice_number")
+        doc_num = str(doc_num_val) if doc_num_val is not None else None
+        supp_name_val = get_fval("supplier_name")
+        supp_name = str(supp_name_val) if supp_name_val is not None else None
+        cust_name_val = get_fval("customer_name")
+        cust_name = str(cust_name_val) if cust_name_val is not None else None
+        bank_ref_val = get_fval("bank_account_reference")
+        bank_ref = str(bank_ref_val) if bank_ref_val is not None else None
+        curr_val = get_fval("currency")
+        curr = str(curr_val) if curr_val is not None else "USD"
+
+        confidences = {fn: get_fconf(fn) for fn in field_map}
+
+        return CanonicalDocumentData(
+            document_type=doc_type,
+            document_number=doc_num,
+            supplier_name=supp_name,
+            customer_name=cust_name,
+            issue_date=parse_d(get_fval("issue_date")),
+            due_date=parse_d(get_fval("due_date")),
+            subtotal=parse_dec(get_fval("subtotal")),
+            tax_amount=parse_dec(get_fval("tax_amount")),
+            total_amount=parse_dec(get_fval("total_amount")),
+            currency=curr,
+            bank_account_reference=bank_ref,
+            line_items=parsed_items,
+            confidences=confidences,
+            validation_issues=parsed_issues,
+        )
+
+    def classify(self, document_bytes: bytes, *, media_type: str = "text/plain") -> str:
+        """Classify document category using Role 6 classification capability."""
+        import time
+        from uuid import uuid4
+
+        import jwt
+
+        op_id = uuid4()
+        now = int(time.time())
+        token = jwt.encode(
+            {
+                "iss": "ledgerai-role1",
+                "sub": "role1-document-intelligence",
+                "aud": "ledgerai-role6",
+                "iat": now,
+                "exp": now + 60,
+                "tenant_id": str(self.tenant_context.tenant_id),
+                "operation_id": str(op_id),
+            },
+            self.service_secret,
+            algorithm="HS256",
+        )
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "X-Tenant-ID": str(self.tenant_context.tenant_id),
+            "X-Organization-ID": str(self.tenant_context.organization_id),
+            "X-Legal-Entity-ID": str(self.tenant_context.legal_entity_id),
+            "X-Operation-ID": str(op_id),
+            "X-Correlation-ID": str(uuid4()),
+        }
+        text_content = document_bytes.decode("utf-8", errors="replace")
+        payload = {
+            "schema_version": "1.0",
+            "tenant_context": {
+                "tenant_id": str(self.tenant_context.tenant_id),
+                "organization_id": str(self.tenant_context.organization_id),
+                "legal_entity_id": str(self.tenant_context.legal_entity_id),
+            },
+            "operation_id": str(op_id),
+            "correlation_id": str(uuid4()),
+            "input_data": {
+                "media_type": media_type,
+                "text_content": text_content,
+                "page_count": 1,
+            },
+        }
+        resp = self._client.post("/v1/classifications", headers=headers, json=payload)
+        if resp.status_code != 200:
+            raise RuntimeError(
+                f"Role 6 classification returned HTTP {resp.status_code}: {resp.text}"
+            )
+        data = resp.json()
+        return str(data.get("category", "UNKNOWN"))

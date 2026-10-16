@@ -1,0 +1,24 @@
+{
+  "document_type": "RECEIPT",
+  "document_number": "TICK-89312",
+  "supplier_name": "BricoDepot Supplies",
+  "customer_name": null,
+  "issue_date": "2026-02-28",
+  "due_date": null,
+  "subtotal": null,
+  "tax_amount": null,
+  "total_amount": "85.50",
+  "currency": "EUR",
+  "bank_account_reference": null,
+  "line_items": [
+    {
+      "line_number": 1,
+      "description": "Industrial Cat6 Ethernet Cable 100m",
+      "quantity": "1",
+      "unit_price": "85.50",
+      "line_amount": "85.50",
+      "currency": "EUR"
+    }
+  ],
+  "validation_issues": []
+}

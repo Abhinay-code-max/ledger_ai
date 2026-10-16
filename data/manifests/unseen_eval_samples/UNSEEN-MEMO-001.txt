@@ -1,0 +1,8 @@
+MEMORANDUM
+FROM: Facility Operations
+TO: All Staff
+DATE: 2026-02-10
+SUBJECT: Scheduled Office Maintenance
+
+Please be advised that air conditioning maintenance will occur this weekend.
+No electrical or IT network disruptions are expected.

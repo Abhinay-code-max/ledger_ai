@@ -1,0 +1,129 @@
+{
+  "dataset_name": "NOVA-Unseen-Document-Intelligence-Evaluation",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "redaction_policy": "Zero PII synthetic realistic unseen financial dataset",
+  "provenance_statement": "Created for Role 1 document intelligence unseen evaluation and baseline verification",
+  "samples": [
+    {
+      "sample_id": "UNSEEN-INV-001",
+      "document_type": "SUPPLIER_INVOICE",
+      "split": "test",
+      "template_id": "TPL-SWISS-SAAS-01",
+      "supplier_id": "SUPP-CLOUDSCALE-01",
+      "sha256_hash": "f188eb32f3b46b4de99bcec6c988bbb37d6871ede2671fa6ee917ba8896ce9c0",
+      "media_type": "text/plain",
+      "byte_size": 483,
+      "document_path": "data/manifests/unseen_eval_samples/UNSEEN-INV-001.txt",
+      "ground_truth_path": "data/manifests/unseen_eval_samples/UNSEEN-INV-001.ground_truth.json"
+    },
+    {
+      "sample_id": "UNSEEN-INV-002",
+      "document_type": "SUPPLIER_INVOICE",
+      "split": "test",
+      "template_id": "TPL-DANISH-CONSULT-02",
+      "supplier_id": "SUPP-NORDIC-02",
+      "sha256_hash": "dcbb1cd1ae5ab10313443954dd395ea80ffb0d00e5d1799ae5a706b9e923f75c",
+      "media_type": "text/plain",
+      "byte_size": 339,
+      "document_path": "data/manifests/unseen_eval_samples/UNSEEN-INV-002.txt",
+      "ground_truth_path": "data/manifests/unseen_eval_samples/UNSEEN-INV-002.ground_truth.json"
+    },
+    {
+      "sample_id": "UNSEEN-REC-001",
+      "document_type": "RECEIPT",
+      "split": "test",
+      "template_id": "TPL-INDIAN-DINING-03",
+      "supplier_id": "SUPP-TAJ-03",
+      "sha256_hash": "12a8be1e0f5e7c4ebc80694bea512e552bb1745b79be3127dde6fe77e58b934e",
+      "media_type": "text/plain",
+      "byte_size": 230,
+      "document_path": "data/manifests/unseen_eval_samples/UNSEEN-REC-001.txt",
+      "ground_truth_path": "data/manifests/unseen_eval_samples/UNSEEN-REC-001.ground_truth.json"
+    },
+    {
+      "sample_id": "UNSEEN-REC-002",
+      "document_type": "RECEIPT",
+      "split": "test",
+      "template_id": "TPL-FRENCH-HARDWARE-04",
+      "supplier_id": "SUPP-BRICO-04",
+      "sha256_hash": "59ac6430d4657a9ad3e44ab09e2fe63be93d0291eda2cf927f357d9b02baf3eb",
+      "media_type": "text/plain",
+      "byte_size": 216,
+      "document_path": "data/manifests/unseen_eval_samples/UNSEEN-REC-002.txt",
+      "ground_truth_path": "data/manifests/unseen_eval_samples/UNSEEN-REC-002.ground_truth.json"
+    },
+    {
+      "sample_id": "UNSEEN-PO-001",
+      "document_type": "PURCHASE_ORDER",
+      "split": "test",
+      "template_id": "TPL-BRITISH-PO-05",
+      "supplier_id": "SUPP-PRECISION-05",
+      "sha256_hash": "0506dcc9013e47a65b5cda2e0a47379470268ed70ffdd01cddf160f630105850",
+      "media_type": "text/plain",
+      "byte_size": 330,
+      "document_path": "data/manifests/unseen_eval_samples/UNSEEN-PO-001.txt",
+      "ground_truth_path": "data/manifests/unseen_eval_samples/UNSEEN-PO-001.ground_truth.json"
+    },
+    {
+      "sample_id": "UNSEEN-BST-001",
+      "document_type": "BANK_STATEMENT",
+      "split": "test",
+      "template_id": "TPL-UK-BANKSTMT-06",
+      "supplier_id": "SUPP-BARCLAYS-06",
+      "sha256_hash": "2b19f5f5db7ea580d6a03922c528e45534a580f9a01ce107c2bdaf79df56500a",
+      "media_type": "text/plain",
+      "byte_size": 416,
+      "document_path": "data/manifests/unseen_eval_samples/UNSEEN-BST-001.txt",
+      "ground_truth_path": "data/manifests/unseen_eval_samples/UNSEEN-BST-001.ground_truth.json"
+    },
+    {
+      "sample_id": "UNSEEN-CINV-001",
+      "document_type": "CUSTOMER_INVOICE",
+      "split": "test",
+      "template_id": "TPL-GLOBAL-CLIENTINV-07",
+      "supplier_id": "SUPP-NOVASYS-07",
+      "sha256_hash": "86dc776ae496d79eaba9f9151b259350627d7b0cd9623594c0d614853f8b22dd",
+      "media_type": "text/plain",
+      "byte_size": 371,
+      "document_path": "data/manifests/unseen_eval_samples/UNSEEN-CINV-001.txt",
+      "ground_truth_path": "data/manifests/unseen_eval_samples/UNSEEN-CINV-001.ground_truth.json"
+    },
+    {
+      "sample_id": "UNSEEN-INV-003",
+      "document_type": "SUPPLIER_INVOICE",
+      "split": "test",
+      "template_id": "TPL-US-TELECOM-08",
+      "supplier_id": "SUPP-PACIFIC-08",
+      "sha256_hash": "88a8a1ea5585d07005301ddabd915565051c85641728ddeff0e20ced08fb15e4",
+      "media_type": "text/plain",
+      "byte_size": 307,
+      "document_path": "data/manifests/unseen_eval_samples/UNSEEN-INV-003.txt",
+      "ground_truth_path": "data/manifests/unseen_eval_samples/UNSEEN-INV-003.ground_truth.json"
+    },
+    {
+      "sample_id": "UNSEEN-MEMO-001",
+      "document_type": "UNKNOWN",
+      "split": "test",
+      "template_id": "TPL-INTERNAL-MEMO-09",
+      "supplier_id": "INTERNAL-FACILITY-09",
+      "sha256_hash": "320ce4446d49aa75c9325f739d10d53e6f62f5a6c3a67dd0e076dbf3c77bb721",
+      "media_type": "text/plain",
+      "byte_size": 238,
+      "document_path": "data/manifests/unseen_eval_samples/UNSEEN-MEMO-001.txt",
+      "ground_truth_path": "data/manifests/unseen_eval_samples/UNSEEN-MEMO-001.ground_truth.json"
+    },
+    {
+      "sample_id": "UNSEEN-HOSTILE-001",
+      "document_type": "SUPPLIER_INVOICE",
+      "split": "test",
+      "template_id": "TPL-DEFENSE-TECH-10",
+      "supplier_id": "SUPP-SECURESHIELD-10",
+      "sha256_hash": "a24b88b67f47d1ddafb205e0b7c81dfa5d9150dd8974c5aa559643692f35914a",
+      "media_type": "text/plain",
+      "byte_size": 427,
+      "document_path": "data/manifests/unseen_eval_samples/UNSEEN-HOSTILE-001.txt",
+      "ground_truth_path": "data/manifests/unseen_eval_samples/UNSEEN-HOSTILE-001.ground_truth.json"
+    }
+  ]
+}

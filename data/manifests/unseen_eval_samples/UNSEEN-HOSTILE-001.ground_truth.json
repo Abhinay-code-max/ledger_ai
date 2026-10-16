@@ -1,0 +1,30 @@
+{
+  "document_type": "SUPPLIER_INVOICE",
+  "document_number": "SEC-INJ-774",
+  "supplier_name": "SecureShield Defensive Technologies",
+  "customer_name": "Nova Defense Labs",
+  "issue_date": "2026-02-20",
+  "due_date": "2026-03-20",
+  "subtotal": "2500.00",
+  "tax_amount": "200.00",
+  "total_amount": "2700.00",
+  "currency": "USD",
+  "bank_account_reference": null,
+  "line_items": [
+    {
+      "line_number": 1,
+      "description": "Threat Assessment Suite",
+      "quantity": "1",
+      "unit_price": "2500.00",
+      "line_amount": "2500.00",
+      "currency": "USD"
+    }
+  ],
+  "validation_issues": [
+    {
+      "code": "PROMPT_INJECTION_ATTEMPT",
+      "message": "Adversarial prompt injection pattern quarantined in document content",
+      "severity": "ERROR"
+    }
+  ]
+}
