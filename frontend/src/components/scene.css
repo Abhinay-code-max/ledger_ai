@@ -1,0 +1,17 @@
+.intelligence-scene{position:relative;width:100%;height:100%;min-height:280px;isolation:isolate;touch-action:pan-y}
+.intelligence-scene canvas{display:block;outline:none;cursor:grab;touch-action:pan-y!important}
+.intelligence-scene canvas:active{cursor:grabbing}
+.intelligence-scene-description{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.intelligence-fallback{position:relative;width:100%;height:100%;min-height:280px;display:grid;place-items:center;perspective:700px;overflow:hidden;background:radial-gradient(ellipse at center,rgba(8,171,172,.12),transparent 57%)}
+.fallback-orbit{position:absolute;inset:15%;border:2px solid #658c9d;border-left-color:#61e5df;border-right-color:#1f687c;border-radius:50%;box-shadow:0 0 1px #a4d5d8,inset 0 0 12px #007f8310}
+.fallback-orbit-one{transform:rotateZ(-35deg) rotateY(36deg) rotateX(24deg)}
+.fallback-orbit-two{inset:20%;transform:rotateZ(32deg) rotateX(59deg);border-width:1px;border-color:#37c9c3 #3c657b}
+.fallback-orbit-three{inset:26%;transform:rotateZ(-18deg) rotateY(60deg);border-width:1px;border-color:#7ad5d7 #2e6377}
+.fallback-core{position:absolute;width:24%;aspect-ratio:1;border-radius:50%;border:1px solid #72eee280;box-shadow:0 0 65px #00ccc129,inset 0 0 36px #00b4ad33;background:radial-gradient(circle at 40% 40%,#78f8df,#078d8c 23%,#044a59 58%,#062c3a 85%);overflow:hidden}
+.fallback-core span{position:absolute;inset:0;border:1px solid #5cf5dd66;border-radius:50%}
+.fallback-core span:first-child{transform:scaleX(.5) rotate(-35deg)}
+.fallback-core span:nth-child(2){transform:scaleY(.5) rotate(35deg)}
+.fallback-core span:last-child{transform:rotate(-40deg) scaleX(.75)}
+.fallback-satellite{position:absolute;width:9%;height:6%;border:1px solid #386d80;border-radius:4px;background:repeating-linear-gradient(0deg,#0d3443 0 5px,#357381 6px,#0d3443 7px 10px);box-shadow:0 8px 25px #0003;transform:rotate(-12deg)}
+.satellite-one{top:33%;left:16%}.satellite-two{right:14%;bottom:31%;transform:rotate(15deg)}
+@media(max-width:600px){.intelligence-scene{min-height:240px}}
