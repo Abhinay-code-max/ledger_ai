@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import json
 from decimal import Decimal
 from time import monotonic
 from typing import Protocol
@@ -98,63 +99,315 @@ class DeterministicInferenceBackend:
             ModelCapability.DOCUMENT_EXTRACTION,
             ModelCapability.FIELD_EXTRACTION,
         }:
-            # Deterministic parsing based on input content
+            # Fallback values
             invoice_num = "INV-2026-001"
             total_amt = "100.00"
             supplier = "VendorCorp"
 
-            for line in text_content.splitlines():
-                upper = line.upper()
-                if "INVOICE" in upper and ":" in upper:
-                    invoice_num = line.split(":", 1)[1].strip()
-                elif "TOTAL" in upper and ":" in upper:
-                    total_amt = line.split(":", 1)[1].replace("USD", "").strip()
-                elif "SUPPLIER" in upper and ":" in upper:
-                    supplier = line.split(":", 1)[1].strip()
+            # Parse with DeterministicBaselineExtractor from ledgerai_role1 if available
+            canonical = None
+            try:
+                from ledgerai_role1.pipeline.baseline_parser import DeterministicBaselineExtractor
 
-            fields = [
-                ExtractedFieldPrediction(
-                    field_name="invoice_number",
-                    value=invoice_num,
-                    confidence=Decimal("0.98"),
-                    provenance=[
-                        ProvenanceEntry(
-                            source_field="invoice_number",
-                            page_number=1,
-                            evidence_hash=evidence_hash,
+                extractor = DeterministicBaselineExtractor()
+                canonical = extractor.extract(text_content.encode("utf-8"), media_type="text/plain")
+            except Exception:
+                canonical = None
+
+            if canonical is not None:
+                doc_num = canonical.document_number
+                total_val = (
+                    str(canonical.total_amount) if canonical.total_amount is not None else None
+                )
+                supp_val = canonical.supplier_name
+
+                fields = []
+                if doc_num:
+                    fields.append(
+                        ExtractedFieldPrediction(
+                            field_name="invoice_number",
+                            value=doc_num,
+                            confidence=Decimal("0.98"),
+                            provenance=[
+                                ProvenanceEntry(
+                                    source_field="invoice_number",
+                                    page_number=1,
+                                    evidence_hash=evidence_hash,
+                                )
+                            ],
                         )
-                    ],
-                ),
-                ExtractedFieldPrediction(
-                    field_name="total_amount",
-                    value=total_amt,
+                    )
+                    fields.append(
+                        ExtractedFieldPrediction(
+                            field_name="document_number",
+                            value=doc_num,
+                            confidence=Decimal("0.98"),
+                            provenance=[
+                                ProvenanceEntry(
+                                    source_field="document_number",
+                                    page_number=1,
+                                    evidence_hash=evidence_hash,
+                                )
+                            ],
+                        )
+                    )
+                if total_val is not None:
+                    fields.append(
+                        ExtractedFieldPrediction(
+                            field_name="total_amount",
+                            value=total_val,
+                            confidence=Decimal("0.99"),
+                            provenance=[
+                                ProvenanceEntry(
+                                    source_field="total_amount",
+                                    page_number=1,
+                                    evidence_hash=evidence_hash,
+                                )
+                            ],
+                        )
+                    )
+                if supp_val:
+                    fields.append(
+                        ExtractedFieldPrediction(
+                            field_name="supplier_name",
+                            value=supp_val,
+                            confidence=Decimal("0.95"),
+                            provenance=[
+                                ProvenanceEntry(
+                                    source_field="supplier_name",
+                                    page_number=1,
+                                    evidence_hash=evidence_hash,
+                                )
+                            ],
+                        )
+                    )
+                if canonical.customer_name:
+                    fields.append(
+                        ExtractedFieldPrediction(
+                            field_name="customer_name",
+                            value=canonical.customer_name,
+                            confidence=Decimal("0.95"),
+                            provenance=[
+                                ProvenanceEntry(
+                                    source_field="customer_name",
+                                    page_number=1,
+                                    evidence_hash=evidence_hash,
+                                )
+                            ],
+                        )
+                    )
+                if canonical.issue_date:
+                    fields.append(
+                        ExtractedFieldPrediction(
+                            field_name="issue_date",
+                            value=canonical.issue_date.isoformat(),
+                            confidence=Decimal("0.98"),
+                            provenance=[
+                                ProvenanceEntry(
+                                    source_field="issue_date",
+                                    page_number=1,
+                                    evidence_hash=evidence_hash,
+                                )
+                            ],
+                        )
+                    )
+                if canonical.due_date:
+                    fields.append(
+                        ExtractedFieldPrediction(
+                            field_name="due_date",
+                            value=canonical.due_date.isoformat(),
+                            confidence=Decimal("0.95"),
+                            provenance=[
+                                ProvenanceEntry(
+                                    source_field="due_date",
+                                    page_number=1,
+                                    evidence_hash=evidence_hash,
+                                )
+                            ],
+                        )
+                    )
+                if canonical.subtotal is not None:
+                    fields.append(
+                        ExtractedFieldPrediction(
+                            field_name="subtotal",
+                            value=str(canonical.subtotal),
+                            confidence=Decimal("0.98"),
+                            provenance=[
+                                ProvenanceEntry(
+                                    source_field="subtotal",
+                                    page_number=1,
+                                    evidence_hash=evidence_hash,
+                                )
+                            ],
+                        )
+                    )
+                if canonical.tax_amount is not None:
+                    fields.append(
+                        ExtractedFieldPrediction(
+                            field_name="tax_amount",
+                            value=str(canonical.tax_amount),
+                            confidence=Decimal("0.98"),
+                            provenance=[
+                                ProvenanceEntry(
+                                    source_field="tax_amount",
+                                    page_number=1,
+                                    evidence_hash=evidence_hash,
+                                )
+                            ],
+                        )
+                    )
+                if canonical.currency:
+                    fields.append(
+                        ExtractedFieldPrediction(
+                            field_name="currency",
+                            value=canonical.currency,
+                            confidence=Decimal("0.99"),
+                            provenance=[
+                                ProvenanceEntry(
+                                    source_field="currency",
+                                    page_number=1,
+                                    evidence_hash=evidence_hash,
+                                )
+                            ],
+                        )
+                    )
+                if canonical.bank_account_reference:
+                    fields.append(
+                        ExtractedFieldPrediction(
+                            field_name="bank_account_reference",
+                            value=canonical.bank_account_reference,
+                            confidence=Decimal("0.95"),
+                            provenance=[
+                                ProvenanceEntry(
+                                    source_field="bank_account_reference",
+                                    page_number=1,
+                                    evidence_hash=evidence_hash,
+                                )
+                            ],
+                        )
+                    )
+                if canonical.line_items:
+                    line_items_data = [
+                        {
+                            "line_number": li.line_number,
+                            "description": li.description,
+                            "quantity": str(li.quantity),
+                            "unit_price": str(li.unit_price),
+                            "line_amount": str(li.line_amount),
+                            "currency": li.currency,
+                        }
+                        for li in canonical.line_items
+                    ]
+                    fields.append(
+                        ExtractedFieldPrediction(
+                            field_name="line_items",
+                            value=json.dumps(line_items_data),
+                            confidence=Decimal("0.95"),
+                            provenance=[
+                                ProvenanceEntry(
+                                    source_field="line_items",
+                                    page_number=1,
+                                    evidence_hash=evidence_hash,
+                                )
+                            ],
+                        )
+                    )
+                if canonical.validation_issues:
+                    issues_data = [
+                        {"code": vi.code, "message": vi.message, "severity": vi.severity}
+                        for vi in canonical.validation_issues
+                    ]
+                    fields.append(
+                        ExtractedFieldPrediction(
+                            field_name="validation_issues",
+                            value=json.dumps(issues_data),
+                            confidence=Decimal("1.00"),
+                            provenance=[
+                                ProvenanceEntry(
+                                    source_field="validation_issues",
+                                    page_number=1,
+                                    evidence_hash=evidence_hash,
+                                )
+                            ],
+                        )
+                    )
+                cat = canonical.document_type.value
+                classification = ClassificationPrediction(
+                    category=cat,
                     confidence=Decimal("0.99"),
                     provenance=[
                         ProvenanceEntry(
-                            source_field="total_amount", page_number=1, evidence_hash=evidence_hash
+                            source_field="text", page_number=1, evidence_hash=evidence_hash
                         )
                     ],
-                ),
-                ExtractedFieldPrediction(
-                    field_name="supplier_name",
-                    value=supplier,
-                    confidence=Decimal("0.95"),
-                    provenance=[
-                        ProvenanceEntry(
-                            source_field="supplier_name", page_number=1, evidence_hash=evidence_hash
-                        )
-                    ],
-                ),
-            ]
-            raw_completion = f"Extracted {len(fields)} fields deterministically."
+                )
+                raw_completion = (
+                    f"Extracted {len(fields)} fields deterministically. Document type: {cat}."
+                )
+            else:
+                for line in text_content.splitlines():
+                    upper = line.upper()
+                    if "INVOICE" in upper and ":" in upper:
+                        invoice_num = line.split(":", 1)[1].strip()
+                    elif "TOTAL" in upper and ":" in upper:
+                        total_amt = line.split(":", 1)[1].replace("USD", "").strip()
+                    elif "SUPPLIER" in upper and ":" in upper:
+                        supplier = line.split(":", 1)[1].strip()
+
+                fields = [
+                    ExtractedFieldPrediction(
+                        field_name="invoice_number",
+                        value=invoice_num,
+                        confidence=Decimal("0.98"),
+                        provenance=[
+                            ProvenanceEntry(
+                                source_field="invoice_number",
+                                page_number=1,
+                                evidence_hash=evidence_hash,
+                            )
+                        ],
+                    ),
+                    ExtractedFieldPrediction(
+                        field_name="total_amount",
+                        value=total_amt,
+                        confidence=Decimal("0.99"),
+                        provenance=[
+                            ProvenanceEntry(
+                                source_field="total_amount",
+                                page_number=1,
+                                evidence_hash=evidence_hash,
+                            )
+                        ],
+                    ),
+                    ExtractedFieldPrediction(
+                        field_name="supplier_name",
+                        value=supplier,
+                        confidence=Decimal("0.95"),
+                        provenance=[
+                            ProvenanceEntry(
+                                source_field="supplier_name",
+                                page_number=1,
+                                evidence_hash=evidence_hash,
+                            )
+                        ],
+                    ),
+                ]
+                raw_completion = f"Extracted {len(fields)} fields deterministically."
 
         elif request.capability == ModelCapability.DOCUMENT_CLASSIFICATION:
-            upper = text_content.upper()
-            cat = (
-                "INVOICE"
-                if "INVOICE" in upper
-                else ("RECEIPT" if "RECEIPT" in upper else "DOCUMENT")
-            )
+            try:
+                from ledgerai_role1.pipeline.baseline_parser import DeterministicBaselineExtractor
+
+                extractor = DeterministicBaselineExtractor()
+                canonical = extractor.extract(text_content.encode("utf-8"), media_type="text/plain")
+                cat = canonical.document_type.value
+            except Exception:
+                upper = text_content.upper()
+                cat = (
+                    "INVOICE"
+                    if "INVOICE" in upper
+                    else ("RECEIPT" if "RECEIPT" in upper else "DOCUMENT")
+                )
             classification = ClassificationPrediction(
                 category=cat,
                 confidence=Decimal("0.99"),
