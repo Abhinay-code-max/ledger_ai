@@ -74,6 +74,14 @@ def create_reconciliation_app(
     configured_engine = engine or ReconciliationEngine()
     configured_store = store or TenantOperationStore()
 
+    @app.get("/health/live")
+    async def health_live() -> dict[str, str]:
+        return {"status": "live"}
+
+    @app.get("/health/ready")
+    async def health_ready() -> dict[str, str]:
+        return {"status": "ready"}
+
     @app.post("/v1/reconciliations", response_model=ReconciliationResponse)
     async def reconcile(
         payload: ReconciliationRequest,
@@ -107,3 +115,14 @@ def create_reconciliation_app(
             ) from exc
 
     return app
+
+
+def create_app() -> FastAPI:
+    """Factory to run the standalone Role 3 reconciliation service."""
+    import os
+
+    secret = os.environ.get(
+        "LEDGERAI_SERVICE_TOKEN_SECRET", "local-service-token-secret-32-chars-minimum"
+    )
+    security = Role3Security(secret=secret)
+    return create_reconciliation_app(security)

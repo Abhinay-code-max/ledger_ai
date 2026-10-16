@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from contextlib import suppress
 from datetime import date
 from decimal import Decimal
 from typing import Annotated, Any
@@ -16,6 +15,7 @@ from ledgerai_backend.api.dependencies import RequestScope, authorized_scope
 from ledgerai_backend.core.errors import ERROR_RESPONSES, ApiError
 from ledgerai_backend.database.seed import stable_id
 from ledgerai_backend.ingestion.service import require_entity_context
+from ledgerai_backend.integration.adapters import AdapterError
 from ledgerai_backend.integration.models import (
     ApprovalActionType,
     ApprovalRequest,
@@ -342,13 +342,20 @@ async def extract_document(
     )
     role6 = request.app.state.role_adapters.get("role6")
     if role6 is not None:
-        with suppress(Exception):
+        try:
             await role6.classify(
                 payload={"resource_id": str(document_id)},
                 tenant_context=tenant_context,
                 operation_id=version.id,
                 correlation_id=correlation_id,
             )
+        except AdapterError as exc:
+            raise ApiError(
+                502,
+                "DOWNSTREAM",
+                "ROLE6_CLASSIFICATION_FAILED",
+                f"Role 6 model classification service failed: {exc.code}",
+            ) from exc
     payload = {
         "document_id": str(document_id),
         "document_version_id": str(version.id),
