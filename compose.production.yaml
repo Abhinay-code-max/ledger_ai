@@ -1,4 +1,87 @@
 services:
+  postgres:
+    build:
+      context: .
+      dockerfile: tools/postgres.Dockerfile
+    image: ledgerai-postgres:17-local
+    environment:
+      POSTGRES_DB: ledgerai
+      POSTGRES_USER: ledgerai_migrator
+      POSTGRES_PASSWORD: local-migration-only
+      LEDGERAI_RUNTIME_PASSWORD: local-runtime-only
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - ledgerai-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ledgerai_migrator -d ledgerai"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:8-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  minio:
+    build:
+      context: .
+      dockerfile: tools/minio.Dockerfile
+      target: server
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ledgerai-minio-local
+      MINIO_ROOT_PASSWORD: local-storage-only-change-me
+      MINIO_KMS_SECRET_KEY: ledgerai-local-key:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
+      MINIO_KMS_AUTO_ENCRYPTION: "on"
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - ledgerai-minio:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  minio-init:
+    build:
+      context: .
+      dockerfile: tools/minio.Dockerfile
+      target: client
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        mc alias set local http://minio:9000 ledgerai-minio-local local-storage-only-change-me &&
+        mc mb --ignore-existing local/ledgerai-evidence &&
+        mc anonymous set none local/ledgerai-evidence &&
+        mc version enable local/ledgerai-evidence
+
+  migrate:
+    build:
+      context: .
+      dockerfile: tools/nova.Dockerfile
+    image: ledgerai-migrate:local
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      LEDGERAI_ENVIRONMENT: production
+      LEDGERAI_MIGRATION_DSN: postgresql+psycopg://ledgerai_migrator:local-migration-only@postgres:5432/ledgerai
+      LEDGERAI_DATABASE_DSN: postgresql+psycopg://ledgerai_runtime:local-runtime-only@postgres:5432/ledgerai
+    command: ["alembic", "upgrade", "head"]
+
   role1-service:
     build:
       context: .
@@ -21,9 +104,13 @@ services:
       context: .
       dockerfile: tools/nova.Dockerfile
     image: ledgerai-role2:local
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
       LEDGERAI_SERVICE_TOKEN_SECRET: ${LEDGERAI_SERVICE_TOKEN_SECRET:-local-service-token-secret-32-chars-minimum}
       LEDGERAI_ENVIRONMENT: production
+      LEDGERAI_ROLE2_RUNTIME_DSN: postgresql+psycopg://ledgerai_runtime:local-runtime-only@postgres:5432/ledgerai
     ports:
       - "127.0.0.1:8102:8102"
     command: ["uvicorn", "ledgerai_role2.api.app:create_role2_app", "--factory", "--host", "0.0.0.0", "--port", "8102"]
@@ -57,7 +144,8 @@ services:
     environment:
       LEDGERAI_ROLE6_ENVIRONMENT: production
       LEDGERAI_ROLE6_SERVICE_TOKEN_SECRET: ${LEDGERAI_SERVICE_TOKEN_SECRET:-local-service-token-secret-32-chars-minimum}
-      LEDGERAI_ROLE6_ACTIVE_BACKEND: deterministic
+      LEDGERAI_ROLE6_ACTIVE_BACKEND: ${LEDGERAI_ROLE6_ACTIVE_BACKEND:-deterministic}
+      LEDGERAI_ROLE6_MODEL_PATH: ${LEDGERAI_ROLE6_MODEL_PATH:-/workspace/models/weights.pt}
     ports:
       - "127.0.0.1:8006:8006"
     command: ["uvicorn", "ledgerai_role6.app:create_role6_app", "--factory", "--host", "0.0.0.0", "--port", "8006"]
@@ -66,3 +154,70 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+
+  role4-service:
+    build:
+      context: .
+      dockerfile: tools/nova.Dockerfile
+    image: ledgerai-role4:local
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+      role1-service:
+        condition: service_healthy
+      role2-service:
+        condition: service_healthy
+      role3-service:
+        condition: service_healthy
+      role6-service:
+        condition: service_healthy
+    environment:
+      LEDGERAI_ENVIRONMENT: production
+      LEDGERAI_DATABASE_DSN: postgresql+psycopg://ledgerai_runtime:local-runtime-only@postgres:5432/ledgerai
+      LEDGERAI_MIGRATION_DSN: postgresql+psycopg://ledgerai_migrator:local-migration-only@postgres:5432/ledgerai
+      LEDGERAI_REDIS_URL: redis://redis:6379/0
+      LEDGERAI_STORAGE_ENDPOINT_URL: http://minio:9000
+      LEDGERAI_STORAGE_ACCESS_KEY: ledgerai-minio-local
+      LEDGERAI_STORAGE_SECRET_KEY: local-storage-only-change-me
+      LEDGERAI_ROLE1_BASE_URL: http://role1-service:8101
+      LEDGERAI_ROLE2_BASE_URL: http://role2-service:8102
+      LEDGERAI_ROLE3_BASE_URL: http://role3-service:8103
+      LEDGERAI_ROLE6_BASE_URL: http://role6-service:8006
+      LEDGERAI_SERVICE_TOKEN_SECRET: ${LEDGERAI_SERVICE_TOKEN_SECRET:-local-service-token-secret-32-chars-minimum}
+      LEDGERAI_CORS_ORIGINS: '["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:80", "http://127.0.0.1:80", "http://frontend:80"]'
+    ports:
+      - "127.0.0.1:8100:8100"
+    command: ["uvicorn", "ledgerai_backend.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8100"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8100/health/live')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  frontend:
+    build:
+      context: .
+      dockerfile: tools/frontend.Dockerfile
+      args:
+        VITE_API_BASE_URL: http://127.0.0.1:8100
+    image: ledgerai-frontend:local
+    depends_on:
+      role4-service:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:5173:80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:80/"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  ledgerai-postgres:
+  ledgerai-minio:
