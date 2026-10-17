@@ -55,9 +55,15 @@ def create_role6_app(
                 cpu_fallback=True,
             )
         elif settings.active_backend == "real_vlm":
+            vlm_weights_dir = Path(settings.model_artifacts_dir) / "qwen2-vl-2b-instruct"
+            weights_path = (
+                vlm_weights_dir
+                if (vlm_weights_dir / "config.json").exists()
+                else Path(settings.model_artifacts_dir) / "model.safetensors"
+            )
             backend = RealDocumentUnderstandingBackend(
                 configured_model=manifest.model_name,
-                model_weights_path=Path(settings.model_artifacts_dir) / "model.safetensors",
+                model_weights_path=weights_path,
                 allow_deterministic_fallback=True,
                 wall_clock_timeout_seconds=settings.wall_clock_timeout_seconds,
             )
