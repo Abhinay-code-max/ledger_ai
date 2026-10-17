@@ -475,7 +475,10 @@ def execute_demo(api_url: str, settings: Settings) -> dict[str, object]:
                 200,
             )
         if posting["state"] != "CONFIRMED" or posting["confirmation"] is None:
-            raise DemoFailure("Role 2 posting was not confirmed")
+            raise DemoFailure(
+                f"Role 2 posting was not confirmed (state={posting.get('state')}, "
+                f"error={posting.get('last_error_code')})"
+            )
 
         _stage(8, "consuming and resuming the authenticated SSE progress stream")
         stream = client.api.get(

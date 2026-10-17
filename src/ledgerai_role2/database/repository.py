@@ -104,7 +104,11 @@ class Role2Repository:
         return accounts
 
     async def save_account(self, account: Account) -> Role2Account:
-        existing = await self.get_account(account.account_code)
+        stmt = select(Role2Account).where(
+            *self._scope(Role2Account),
+            Role2Account.account_code == account.account_code,
+        )
+        existing = (await self.session.execute(stmt)).scalar_one_or_none()
         if existing is not None:
             existing.account_name = account.account_name
             existing.account_type = account.account_type
@@ -157,12 +161,16 @@ class Role2Repository:
                 if row is not None:
                     p_start, p_end, p_state = row[0], row[1], row[2]
                     st = PeriodStatus.CLOSED if str(p_state) == "CLOSED" else PeriodStatus.OPEN
-                    period = await self.save_period(
-                        period_id=period_id,
+                    row_period = Role2AccountingPeriod(
+                        **self.scope_dict(),
+                        id=period_id,
                         period_start=p_start,
                         period_end=p_end,
                         state=st,
                     )
+                    self.session.add(row_period)
+                    await self.session.flush()
+                    period = row_period
             except Exception:
                 pass
         return period
@@ -175,7 +183,11 @@ class Role2Repository:
         period_end: date,
         state: PeriodStatus = PeriodStatus.OPEN,
     ) -> Role2AccountingPeriod:
-        existing = await self.get_period(period_id)
+        stmt = select(Role2AccountingPeriod).where(
+            *self._scope(Role2AccountingPeriod),
+            Role2AccountingPeriod.id == period_id,
+        )
+        existing = (await self.session.execute(stmt)).scalar_one_or_none()
         if existing is not None:
             return existing
         row = Role2AccountingPeriod(

@@ -367,6 +367,7 @@ class AssuranceService:
                 )
                 row.last_error_code = validation.issues[0].code if validation.issues else None
                 row.version += 1
+                await self.repository.session.flush()
                 await self._posting_progress(row, row.state.value, 100)
                 return
             row.state = PostingState.IN_PROGRESS
