@@ -3,17 +3,44 @@
   "private": true,
   "version": "2.0.0",
   "type": "module",
-  "scripts": { "dev": "vite --host 0.0.0.0", "build": "tsc -b && vite build", "preview": "vite preview --host 0.0.0.0" },
-  "dependencies": {
-    "@react-three/drei": "^10.7.7",
-    "@react-three/fiber": "^9.3.0",
-    "gsap": "^3.13.0",
-    "lucide-react": "^0.468.0",
-    "motion": "^12.23.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "react-router-dom": "^7.9.0",
-    "three": "^0.180.0"
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:component": "vitest run tests/component",
+    "test:a11y": "vitest run tests/a11y",
+    "test:security": "vitest run tests/security",
+    "test:reproducibility": "vitest run tests/reproducibility",
+    "test:e2e": "playwright test"
   },
-  "devDependencies": { "@types/react": "^19.1.0", "@types/react-dom": "^19.1.0", "@types/three": "^0.180.0", "@vitejs/plugin-react": "^5.0.0", "typescript": "~5.9.2", "vite": "^7.1.0" }
+  "dependencies": {
+    "@react-three/drei": "10.7.9",
+    "@react-three/fiber": "9.8.2",
+    "gsap": "3.15.0",
+    "lucide-react": "0.468.0",
+    "motion": "12.43.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-router-dom": "7.18.4",
+    "three": "0.180.0"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.64.1",
+    "@testing-library/jest-dom": "7.0.1",
+    "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.8",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@types/three": "0.180.0",
+    "@vitejs/plugin-react": "5.2.0",
+    "axe-core": "4.14.0",
+    "jsdom": "30.1.3",
+    "msw": "3.0.3",
+    "typescript": "5.9.3",
+    "vite": "7.3.7",
+    "vitest": "5.0.5"
+  }
 }
