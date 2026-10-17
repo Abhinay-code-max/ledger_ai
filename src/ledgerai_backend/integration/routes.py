@@ -19,6 +19,7 @@ from ledgerai_backend.core.errors import ERROR_RESPONSES, ApiError
 from ledgerai_backend.database.seed import stable_id
 from ledgerai_backend.ingestion.models import BankTransaction
 from ledgerai_backend.ingestion.service import require_entity_context
+from ledgerai_backend.integration.adapters import AdapterError
 from ledgerai_backend.integration.models import (
     ApprovalActionType,
     ApprovalRequest,
@@ -355,9 +356,13 @@ async def extract_document(
                 operation_id=version.id,
                 correlation_id=correlation_id,
             )
-        except Exception:
-            # Explicit review status rather than swallowing error silently
-            classification = None
+        except AdapterError as exc:
+            raise ApiError(
+                502,
+                "DOWNSTREAM",
+                "ROLE6_CLASSIFICATION_FAILED",
+                f"Role 6 model classification service failed: {exc.code}",
+            ) from exc
 
     storage = getattr(request.app.state, "object_storage", None)
     b64_content = None
@@ -369,7 +374,6 @@ async def extract_document(
             b64_content = base64.b64encode(raw_bytes).decode("ascii")
         except Exception:
             b64_content = None
-
     payload = {
         "document_id": str(document_id),
         "document_version": str(version.version_number),

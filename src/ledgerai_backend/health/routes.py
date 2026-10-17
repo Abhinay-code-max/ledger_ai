@@ -27,4 +27,20 @@ async def ready(request: Request) -> JSONResponse:
             await connection.execute(text("SELECT 1"))
     except Exception:
         return JSONResponse(status_code=503, content={"status": "unavailable"})
+
+    storage = getattr(request.app.state, "object_storage", None)
+    if storage is not None and hasattr(storage, "_client") and hasattr(storage, "_bucket"):
+        try:
+            storage._client.head_bucket(Bucket=storage._bucket)
+        except Exception:
+            return JSONResponse(status_code=503, content={"status": "unavailable"})
+
+    job_queue = getattr(request.app.state, "job_queue", None)
+    if job_queue is not None and hasattr(job_queue, "_app"):
+        try:
+            with job_queue._app.connection_for_read() as conn:
+                conn.connect()
+        except Exception:
+            return JSONResponse(status_code=503, content={"status": "unavailable"})
+
     return JSONResponse(content={"status": "ok"})

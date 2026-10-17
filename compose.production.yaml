@@ -1,0 +1,68 @@
+services:
+  role1-service:
+    build:
+      context: .
+      dockerfile: tools/nova.Dockerfile
+    image: ledgerai-role1:local
+    environment:
+      LEDGERAI_ROLE1_ENVIRONMENT: production
+      LEDGERAI_SERVICE_TOKEN_SECRET: ${LEDGERAI_SERVICE_TOKEN_SECRET:-local-service-token-secret-32-chars-minimum}
+    ports:
+      - "127.0.0.1:8101:8101"
+    command: ["uvicorn", "ledgerai_role1.service.app:create_app", "--factory", "--host", "0.0.0.0", "--port", "8101"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8101/health/ready')"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  role2-service:
+    build:
+      context: .
+      dockerfile: tools/nova.Dockerfile
+    image: ledgerai-role2:local
+    environment:
+      LEDGERAI_SERVICE_TOKEN_SECRET: ${LEDGERAI_SERVICE_TOKEN_SECRET:-local-service-token-secret-32-chars-minimum}
+      LEDGERAI_ENVIRONMENT: production
+    ports:
+      - "127.0.0.1:8102:8102"
+    command: ["uvicorn", "ledgerai_role2.api.app:create_role2_app", "--factory", "--host", "0.0.0.0", "--port", "8102"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8102/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  role3-service:
+    build:
+      context: .
+      dockerfile: tools/nova.Dockerfile
+    image: ledgerai-role3:local
+    environment:
+      LEDGERAI_SERVICE_TOKEN_SECRET: ${LEDGERAI_SERVICE_TOKEN_SECRET:-local-service-token-secret-32-chars-minimum}
+    ports:
+      - "127.0.0.1:8103:8103"
+    command: ["uvicorn", "ledgerai_backend.reconciliation.api:create_app", "--factory", "--host", "0.0.0.0", "--port", "8103"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8103/health/ready')"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  role6-service:
+    build:
+      context: .
+      dockerfile: tools/nova.Dockerfile
+    image: ledgerai-role6:local
+    environment:
+      LEDGERAI_ROLE6_ENVIRONMENT: production
+      LEDGERAI_ROLE6_SERVICE_TOKEN_SECRET: ${LEDGERAI_SERVICE_TOKEN_SECRET:-local-service-token-secret-32-chars-minimum}
+      LEDGERAI_ROLE6_ACTIVE_BACKEND: deterministic
+    ports:
+      - "127.0.0.1:8006:8006"
+    command: ["uvicorn", "ledgerai_role6.app:create_role6_app", "--factory", "--host", "0.0.0.0", "--port", "8006"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8006/health/ready')"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
