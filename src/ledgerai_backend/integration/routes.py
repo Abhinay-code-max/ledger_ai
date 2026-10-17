@@ -391,12 +391,20 @@ async def extract_document(
             "causation_id": None,
         },
     }
-    contract = await role1.request_extraction(
-        operation_id=version.id,
-        correlation_id=correlation_id,
-        payload=payload,
-        tenant_context=tenant_context,
-    )
+    try:
+        contract = await role1.request_extraction(
+            operation_id=version.id,
+            correlation_id=correlation_id,
+            payload=payload,
+            tenant_context=tenant_context,
+        )
+    except AdapterError as exc:
+        raise ApiError(
+            502,
+            "DOWNSTREAM",
+            "ROLE1_EXTRACTION_FAILED",
+            f"Role 1 extraction service failed: {exc.code}",
+        ) from exc
     if classification is not None and classification.category != "INVOICE":
         contract.review_disposition = ReviewDisposition.REVIEW_REQUIRED
     orchestrator = WorkflowOrchestrator(repository, correlation_id=correlation_id)
@@ -484,7 +492,12 @@ async def create_reconciliation(
     raw_fields = contract_payload.get("fields", [])
     fields: list[dict[str, Any]] = raw_fields if isinstance(raw_fields, list) else []
     total_val = next(
-        (f["value"] for f in fields if isinstance(f, dict) and f.get("field_name") == "total"), "0"
+        (
+            f["value"]
+            for f in fields
+            if isinstance(f, dict) and f.get("field_name") in ("total", "invoice_total")
+        ),
+        "0",
     )
     curr_val = next(
         (f["value"] for f in fields if isinstance(f, dict) and f.get("field_name") == "currency"),
@@ -494,7 +507,8 @@ async def create_reconciliation(
         (
             f["value"]
             for f in fields
-            if isinstance(f, dict) and f.get("field_name") == "invoice_number"
+            if isinstance(f, dict)
+            and f.get("field_name") in ("invoice_number", "reference", "document_number")
         ),
         None,
     )
@@ -502,19 +516,29 @@ async def create_reconciliation(
         (
             f["value"]
             for f in fields
-            if isinstance(f, dict) and f.get("field_name") == "supplier_name"
+            if isinstance(f, dict)
+            and f.get("field_name") in ("supplier_name", "party_name", "vendor_name")
         ),
         None,
     )
-    date_str = next(
+    date_val = next(
         (
             f["value"]
             for f in fields
-            if isinstance(f, dict) and f.get("field_name") == "invoice_date"
+            if isinstance(f, dict) and f.get("field_name") in ("invoice_date", "issue_date")
         ),
         None,
     )
-    inv_date = date.fromisoformat(str(date_str)) if date_str else date(2026, 9, 15)
+    inv_date = date.fromisoformat(str(date_val)) if date_val else date(2026, 9, 15)
+
+    amount_str = "0"
+    currency_str = str(curr_val or "INR")
+    if isinstance(total_val, dict):
+        amount_str = str(total_val.get("amount", "0"))
+        if total_val.get("currency"):
+            currency_str = str(total_val.get("currency"))
+    elif total_val is not None:
+        amount_str = str(total_val)
 
     invoice_fact = {
         "extraction_id": str(extraction_row.id),
@@ -522,7 +546,7 @@ async def create_reconciliation(
         "document_id": str(body.document_id),
         "document_version": "1",
         "tenant_context": tenant_context.model_dump(mode="json"),
-        "amount": {"amount": str(total_val), "currency": str(curr_val)},
+        "amount": {"amount": amount_str, "currency": currency_str},
         "invoice_date": inv_date.isoformat(),
         "expected_transaction_direction": "DEBIT",
         "reference": str(ref_val) if ref_val else None,
@@ -595,12 +619,20 @@ async def create_reconciliation(
         "invoices": [invoice_fact],
         "transactions": versioned_txs,
     }
-    result = await role3.request_reconciliation(
-        operation_id=operation_id,
-        correlation_id=correlation_id,
-        payload=payload,
-        tenant_context=tenant_context,
-    )
+    try:
+        result = await role3.request_reconciliation(
+            operation_id=operation_id,
+            correlation_id=correlation_id,
+            payload=payload,
+            tenant_context=tenant_context,
+        )
+    except AdapterError as exc:
+        raise ApiError(
+            502,
+            "DOWNSTREAM",
+            "ROLE3_RECONCILIATION_FAILED",
+            f"Role 3 reconciliation service failed: {exc.code}",
+        ) from exc
     allowed_ids = {
         body.document_id,
         body.document_version_id,
@@ -639,7 +671,7 @@ async def create_reconciliation(
 
     if extracted_total is None or extracted_total <= Decimal("0"):
         with suppress(Exception):
-            extracted_total = Decimal(str(total_val))
+            extracted_total = Decimal(str(amount_str))
     if extracted_total is None or extracted_total <= Decimal("0"):
         raise ApiError(
             422,
@@ -799,7 +831,11 @@ async def create_reconciliation(
         actor_id=str(scope.context.principal_id),
         correlation_id=correlation_id,
     )
-    exception_row = exception_rows[0] if exception_rows else None
+    mismatch_exc = next(
+        (e for e in exception_rows if e.exception_type == "AMOUNT_MISMATCH"),
+        None,
+    )
+    exception_row = mismatch_exc or (exception_rows[0] if exception_rows else None)
     if exception_row is None:
         exception_row = await repository.session.scalar(
             select(WorkflowException)
