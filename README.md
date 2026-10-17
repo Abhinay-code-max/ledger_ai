@@ -25,3 +25,20 @@ supported interpreters. Never commit `.env`; copy `.env.example` and replace onl
 See `docs/integration/cross-role-contracts-v1.md` for team usage and
 `docs/backend/phase1.md` and `docs/backend/phase2.md` for architecture, setup, configuration,
 migrations, RLS, ingestion, reliability, recovery, and independent review instructions.
+
+## ledgar.ai frontend
+
+The interactive React and TypeScript website is in `frontend/`. It includes the cinematic intro,
+procedural Three.js scenes, public workflow walkthrough, role-specific sign-in screens, and
+clearly labeled demonstration workspaces.
+
+```shell
+cd frontend
+npm ci
+npm run dev
+```
+
+Run `npm run build` in that directory for a production build. See `frontend/README.md` for
+frontend configuration and `frontend/VERIFICATION.md` for verification results and limits.
+The frontend's identity adapter is not yet connected to the existing backend; operational
+sample data is restricted to explicit demo routes. Original logo assets still need to be supplied.
