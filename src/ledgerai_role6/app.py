@@ -64,7 +64,7 @@ def create_role6_app(
             backend = RealDocumentUnderstandingBackend(
                 configured_model=manifest.model_name,
                 model_weights_path=weights_path,
-                allow_deterministic_fallback=True,
+                allow_deterministic_fallback=settings.environment != "production",
                 wall_clock_timeout_seconds=settings.wall_clock_timeout_seconds,
             )
         else:

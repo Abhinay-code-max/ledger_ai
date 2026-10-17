@@ -262,10 +262,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
+const defaultClient = new Role4ApiClient()
+
+const defaultAuthContextValue: AuthContextValue = {
+  token: null,
+  principal: null,
+  workspaceCode: 'nova',
+  organizations: [],
+  legalEntities: [],
+  selectedOrgId: null,
+  selectedLegalEntityId: null,
+  isLoading: false,
+  error: null,
+  sseStatus: 'DISCONNECTED',
+  latestProgressEvent: null,
+  client: defaultClient,
+  login: async () => {},
+  logout: () => {},
+  selectOrganization: () => {},
+  selectLegalEntity: () => {},
+  hasPermission: () => false,
+  hasRole: () => false,
+  clearError: () => {},
+}
+
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return context
+  return context || defaultAuthContextValue
 }

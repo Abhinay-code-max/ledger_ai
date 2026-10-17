@@ -155,10 +155,12 @@ export const ReviewQueueWorkflow: React.FC<ReviewQueueWorkflowProps> = ({
   }
 
   const switchToReviewer = async () => {
-    // Quick switch to synthetic reviewer identity for pilot demonstration
-    await login('synthetic-reviewer-token-for-nova', 'nova')
-    setMakerViolation(false)
-    setActionError(null)
+    const reviewerToken = window.prompt('Enter your Reviewer token:')
+    if (reviewerToken) {
+      await login(reviewerToken.trim(), 'nova')
+      setMakerViolation(false)
+      setActionError(null)
+    }
   }
 
   const refreshProposal = async () => {

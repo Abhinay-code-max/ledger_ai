@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
@@ -20,7 +20,6 @@ import {
   LayoutDashboard,
   Layers,
   LockKeyhole,
-  ReceiptText,
   Scale,
   ShieldCheck,
   Users,
@@ -178,6 +177,8 @@ export function RoleLogin() {
   const navigate = useNavigate()
   const { login } = useAuth()
 
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [token, setToken] = useState('')
   const [workspaceCode, setWorkspaceCode] = useState('nova')
   const [busy, setBusy] = useState(false)
@@ -190,34 +191,27 @@ export function RoleLogin() {
   async function submit(event: FormEvent) {
     event.preventDefault()
     setError('')
-    if (!token.trim()) {
-      setError('Please provide a valid bearer token or select a demo identity.')
+
+    // If a bearer token is provided, verify directly with Role 4
+    if (token.trim()) {
+      setBusy(true)
+      try {
+        await login(token.trim(), workspaceCode.trim() || 'nova')
+        navigate(`/dashboard/${role}`)
+      } catch (cause) {
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : 'Unable to verify session with Role 4 backend. Check network and credentials.',
+        )
+      } finally {
+        setBusy(false)
+      }
       return
     }
 
-    setBusy(true)
-    try {
-      await login(token.trim(), workspaceCode.trim() || 'nova')
-      navigate(`/dashboard/${role}`)
-    } catch (cause) {
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : 'Unable to verify session with Role 4 backend. Check network and credentials.',
-      )
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  function setSyntheticMaker() {
-    setToken('synthetic-maker-token-for-nova')
-    setWorkspaceCode('nova')
-  }
-
-  function setSyntheticReviewer() {
-    setToken('synthetic-reviewer-token-for-nova')
-    setWorkspaceCode('nova')
+    // Work email / password submitted without configured enterprise identity provider
+    setError('Secure sign-in is not connected for this workspace. Use your bearer token or explore the separate demo below.')
   }
 
   return (
@@ -255,37 +249,39 @@ export function RoleLogin() {
           </Link>
           <small className="ws-overline">CONNECTED TO ROLE 4 PUBLIC API</small>
           <h2>Sign in as {roleNames[role]}</h2>
-          <p>Provide your authenticated token or select an authorized identity.</p>
-
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-            <button
-              type="button"
-              onClick={setSyntheticMaker}
-              className="button secondary small"
-              style={{ flex: 1, fontSize: '10px' }}
-            >
-              Maker (nova-admin)
-            </button>
-            <button
-              type="button"
-              onClick={setSyntheticReviewer}
-              className="button secondary small"
-              style={{ flex: 1, fontSize: '10px' }}
-            >
-              Reviewer (nova-reviewer)
-            </button>
-          </div>
+          <p>Provide your authenticated token or enterprise credentials.</p>
 
           <form onSubmit={submit}>
-            <label htmlFor="ws-token">Bearer Access Token</label>
+            <label htmlFor="ws-email">Work email</label>
+            <input
+              id="ws-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="username"
+              placeholder="you@company.com"
+              required={!token}
+            />
+
+            <label htmlFor="ws-password">Password</label>
+            <input
+              id="ws-password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+              placeholder="Enter your password"
+              required={!token}
+            />
+
+            <label htmlFor="ws-token">Bearer Access Token (Role 4)</label>
             <input
               id="ws-token"
               type="text"
               value={token}
               onChange={(e) => setToken(e.target.value)}
               autoComplete="off"
-              placeholder="synthetic-maker-token-for-nova or JWT"
-              required
+              placeholder="Enter your Bearer token or JWT"
             />
 
             <label htmlFor="ws-code">Workspace Code</label>
@@ -295,11 +291,10 @@ export function RoleLogin() {
               value={workspaceCode}
               onChange={(e) => setWorkspaceCode(e.target.value)}
               placeholder="nova"
-              required
             />
 
             <div className="ws-form-help">
-              <LockKeyhole size={12} /> Backend authenticates tokens and resolves tenant permissions.
+              <LockKeyhole size={12} /> Your organization verifies your identity and role via Role 4.
             </div>
 
             {error && (
@@ -310,7 +305,7 @@ export function RoleLogin() {
             )}
 
             <button className="button primary ws-submit" disabled={busy} type="submit">
-              {busy ? 'Verifying access with Role 4…' : 'Sign in to workspace'}
+              {busy ? 'Verifying your access…' : 'Sign in to workspace'}
               <ArrowRight size={16} />
             </button>
           </form>
@@ -406,13 +401,13 @@ export function Dashboard({ demo = false }: { demo?: boolean }) {
         <TopPublicHeader />
         <main className="ws-auth-wall">
           <LockKeyhole size={43} />
-          <h1>Protected Role 4 Finance Workspace</h1>
+          <h1>Your workspace is protected.</h1>
           <p>
             An authenticated session with Role 4 backend is required to access live financial data.
           </p>
           <div style={{ display: 'flex', gap: '12px' }}>
             <Link to={`/login/${role}`} className="button primary">
-              Sign In to Workspace <ArrowRight size={16} />
+              Go to secure sign-in <ArrowRight size={16} />
             </Link>
             <Link to={`/demo/${role}`} className="button secondary">
               Explore Browser-Only Demo <ArrowRight size={14} />
@@ -549,29 +544,48 @@ export function Dashboard({ demo = false }: { demo?: boolean }) {
   }
 
   // --- BROWSER-ONLY ISOLATED DEMO VIEW ---
-  const tabs =
-    role === 'admin'
+  const [search, setSearch] = useState('')
+  const [selected, setSelected] = useState<RecordItem | null>(null)
+  const [toast, setToast] = useState<string>('')
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSelected(null)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  useEffect(() => {
+    if (!toast) return
+    const timeout = setTimeout(() => setToast(''), 4000)
+    return () => clearTimeout(timeout)
+  }, [toast])
+
+  const tabs = [
+    { name: 'Overview', icon: LayoutDashboard },
+    { name: 'AMD benchmarks', icon: Activity },
+    ...(role === 'admin'
       ? [
-          { name: 'Overview', icon: LayoutDashboard },
           { name: 'Users & roles', icon: Users },
-          { name: 'Processing', icon: Activity },
           { name: 'Audit trail', icon: ShieldCheck },
         ]
       : role === 'manager'
       ? [
-          { name: 'Overview', icon: LayoutDashboard },
           { name: 'Approvals', icon: FileCheck2 },
-          { name: 'Reconciliation', icon: ReceiptText },
           { name: 'Close tasks', icon: FolderCheck },
         ]
       : [
-          { name: 'Overview', icon: LayoutDashboard },
           { name: 'My documents', icon: FileText },
-          { name: 'Data review', icon: FileCheck2 },
           { name: 'My tasks', icon: FolderCheck },
-        ]
+        ]),
+  ]
 
-  const currentRecords = records
+  const filteredRecords = records.filter(
+    (r) =>
+      r.name.toLowerCase().includes(search.toLowerCase()) ||
+      r.company.toLowerCase().includes(search.toLowerCase()),
+  )
 
   return (
     <div className="ws-dashboard">
@@ -610,9 +624,7 @@ export function Dashboard({ demo = false }: { demo?: boolean }) {
             Demo Sandbox <ChevronRight size={12} />
             <span>{demoTab}</span>
           </div>
-          <span className="ws-demo-pill">
-            <span /> ISOLATED DEMO MODE
-          </span>
+          <span className="ws-demo-pill">DEMO WORKSPACE</span>
         </header>
 
         <main className="ws-dashboard-content">
@@ -627,35 +639,158 @@ export function Dashboard({ demo = false }: { demo?: boolean }) {
             </Link>
           </div>
 
-          <div className="ws-panel">
-            <div className="ws-panel-title">
-              <h3>Sample Documents</h3>
-            </div>
-            <div className="ws-table-overflow">
-              <table className="ws-record-table">
-                <thead>
-                  <tr>
-                    <th>DOCUMENT</th>
-                    <th>AMOUNT</th>
-                    <th>STATUS</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentRecords.map((r) => (
-                    <tr key={r.id}>
-                      <td>
-                        <strong>{r.name}</strong> ({r.company})
-                      </td>
-                      <td>{r.amount}</td>
-                      <td>
-                        <span className="ws-badge success">{r.status}</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+          <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <label htmlFor="ws-file-upload" className="button secondary">
+              Upload document
+            </label>
+            <input
+              id="ws-file-upload"
+              type="file"
+              aria-label="Upload document"
+              className="sr-only"
+              style={{ display: 'none' }}
+              onChange={() => {}}
+            />
           </div>
+
+          {demoTab === 'AMD benchmarks' ? (
+            <div className="ws-panel" style={{ padding: '24px' }}>
+              <h3>No verified measurements supplied</h3>
+              <p>A benchmark needs the hardware model, runtime, dataset, and batch configuration to be verifiable.</p>
+            </div>
+          ) : (
+            <div className="ws-panel">
+              <div className="ws-panel-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3>Sample Documents</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <label htmlFor="ws-search" style={{ fontSize: '12px' }}>Search documents</label>
+                  <input
+                    id="ws-search"
+                    aria-label="Search documents"
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search documents…"
+                    style={{ fontSize: '12px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #334155', background: '#0f172a', color: '#fff' }}
+                  />
+                </div>
+              </div>
+
+              {filteredRecords.length === 0 ? (
+                <div style={{ padding: '32px', textAlign: 'center' }}>
+                  <p style={{ marginBottom: '12px', color: '#94a3b8' }}>No matching documents</p>
+                  <button className="button secondary" onClick={() => setSearch('')}>
+                    Clear filters
+                  </button>
+                </div>
+              ) : (
+                <div className="ws-table-overflow">
+                  <table className="ws-record-table">
+                    <thead>
+                      <tr>
+                        <th>DOCUMENT</th>
+                        <th>AMOUNT</th>
+                        <th>STATUS</th>
+                        <th>ACTION</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredRecords.map((r) => (
+                        <tr key={r.id}>
+                          <td>
+                            <strong>{r.name}</strong> ({r.company})
+                          </td>
+                          <td>{r.amount}</td>
+                          <td>
+                            <span className="ws-badge success">{r.status}</span>
+                          </td>
+                          <td>
+                            <button
+                              type="button"
+                              aria-label={`Review ${r.name}`}
+                              onClick={() => setSelected(r)}
+                              className="button secondary small"
+                              style={{ fontSize: '11px', padding: '4px 8px' }}
+                            >
+                              Review
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {selected && (
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Document review"
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0,0,0,0.6)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 9999,
+              }}
+            >
+              <div style={{ background: '#1e293b', color: '#f8fafc', padding: '24px', borderRadius: '8px', maxWidth: '480px', width: '90%', border: '1px solid #334155' }}>
+                <h2 style={{ fontSize: '18px', marginBottom: '8px' }}>Document review: {selected.name}</h2>
+                <p style={{ color: '#94a3b8', fontSize: '13px', marginBottom: '20px' }}>
+                  Company: {selected.company} | Amount: {selected.amount}
+                </p>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    type="button"
+                    className="button primary"
+                    onClick={() => {
+                      setSelected(null)
+                      setToast('Demo approval recorded after your review')
+                    }}
+                  >
+                    Record demo approval
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Close document review"
+                    className="button secondary"
+                    onClick={() => setSelected(null)}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {toast && (
+            <div
+              role="status"
+              aria-live="polite"
+              style={{
+                position: 'fixed',
+                bottom: '24px',
+                right: '24px',
+                background: '#059669',
+                color: '#fff',
+                padding: '12px 20px',
+                borderRadius: '6px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                zIndex: 10000,
+                fontSize: '13px',
+              }}
+            >
+              {toast}
+            </div>
+          )}
         </main>
       </div>
     </div>

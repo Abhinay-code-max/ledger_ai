@@ -37,7 +37,9 @@ on:
       - integration/nova-demo
       - integration/backend-e2e
       - integration/real-services-release
+      - integration/full-stack-release
     paths:
+      - "frontend/**"
       - "src/ledgerai_contracts/**"
       - "src/ledgerai_backend/**"
       - "src/ledgerai_role1/**"
@@ -141,6 +143,14 @@ jobs:
       - run: uv run --frozen pytest
       - run: docker compose -f compose.yaml config
       - run: docker compose -f compose.nova.yaml config
+      - run: docker compose -f compose.production.yaml config
+      - name: Validate frontend suite
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+          npm test
+          npm audit
       - run: uv run --frozen python -m compileall -q src tools tests
       - name: Execute NOVA Phase 4 Demo (Run 1 and Run 2 reproducibility verification)
         env:
