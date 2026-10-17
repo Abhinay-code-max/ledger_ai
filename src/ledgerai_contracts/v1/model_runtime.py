@@ -41,6 +41,7 @@ class SupportedInputType(StrEnum):
 class ModelBackendType(StrEnum):
     DETERMINISTIC = "DETERMINISTIC"
     ONNX = "ONNX"
+    PYTORCH = "PYTORCH"
     VLLM = "VLLM"
     LLAMACPP = "LLAMACPP"
     MOCK = "MOCK"

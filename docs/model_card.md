@@ -14,7 +14,7 @@
   - `model-00001-of-00002.safetensors`: `994ac2b03f97de8bc647d0fe5eba2e4b632b3e28dc03574c29bdfc36cf47e1b9` (3,988,609,112 bytes)
   - `model-00002-of-00002.safetensors`: `92540d8353c8d226a589a3b179bdb33851c970ee2cc2ac7ba035f79425e7b833` (429,441,656 bytes)
 - **Local Runtime Backend**: `RealDocumentUnderstandingBackend`
-  - Direct Neural GPU Inference (`ModelBackendType.ONNX`, device: `cuda:0`) when weights and ML dependencies are present.
+  - Direct Neural GPU Inference (`ModelBackendType.PYTORCH`, device: `cuda:0`) when weights and ML dependencies are present.
   - Labeled `cpu-deterministic-fallback` when neural weights or ML dependencies are absent.
 - **Hardware Profile**: NVIDIA GeForce RTX 4060 Laptop GPU (8,188 MB VRAM, Ada Lovelace compute capability 8.9), 16 GB system RAM.
 - **Model Precision**: Native `torch.bfloat16` (no lossy 4-bit/8-bit quantization required; fits comfortably within 8 GB VRAM).
@@ -60,12 +60,18 @@ Comprehensive evaluation report published in `docs/neural_vlm_evaluation_report.
 
 ## 5. Model Readiness Classification & Training Decision
 - **Final Model Readiness Status**: `REAL_VLM_EVALUATED`
-- **Training Decision**: `ZERO_SHOT_BASELINE_VERIFIED_FINE_TUNING_DEFERRED`
+- **Training Decision**: `TRAINING_NOT_REQUIRED` for zero-shot baseline demonstration; `TRAINING_REQUIRED_BUT_BLOCKED` for production parameter-efficient tuning due to lack of a large-scale enterprise training corpus.
+- **Exploratory Scope**: The 18-document evaluation sample is strictly exploratory and establishes baseline zero-shot capability, not certified production accuracy.
+- **Posting Safety Invariant**:
+  1. Neural extraction cannot directly authorize financial posting.
+  2. Unknown, missing, low-confidence (<0.85), or conflicting fields require mandatory human review (`ReviewDisposition.REVIEW_REQUIRED`).
+  3. Deterministic arithmetic and schema validation remain strictly mandatory.
+  4. Model outputs with inconsistent totals or unbalanced line items are automatically quarantined.
 - **Decision Rationale**:
   1. `Qwen2-VL-2B-Instruct` achieves 100% total amount accuracy and 95.7% normalized field accuracy on held-out unseen documents in zero-shot mode.
   2. Missing fields are preserved without fabricating fictional amounts.
   3. PDF rendering (via `pypdfium2`) processes visual document pages directly without external OCR dependencies.
-  4. LoRA fine-tuning will only be justified for complex multi-page nested tables or exotic tax forms once enterprise-scale training datasets with automated PII masking are curated.
+  4. LoRA fine-tuning will only be justified for complex multi-page nested tables or exotic tax forms once enterprise-scale training datasets with automated PII masking are curated; fine-tuning is only authorized after such datasets are verified.
 - **Environment Isolation Strategy**:
   - Optional dedicated virtual environment (`.venv-ml`) hosts PyTorch CUDA 12.4, Transformers, and PDF rendering libraries.
   - Core repository runtime and `uv.lock` remain lightweight, fast, and deterministic for CI/CD builds.

@@ -726,7 +726,7 @@ def generate_report(
 ## 5. Role 6 Integration Contract & Boundaries
 - **Runtime Endpoint**: `POST /v1/models/infer`
 - **Audience**: `ledgerai-role6`
-- **Backend Type**: `ModelBackendType.ONNX` (neural VLM)
+- **Backend Type**: `ModelBackendType.PYTORCH` (neural VLM)
 - **Device Reported**: `cuda:0` (NVIDIA GeForce RTX 4060 Laptop GPU)
 - **Fallback**: Strictly labeled `cpu-deterministic-fallback` when neural weights are absent.
 """

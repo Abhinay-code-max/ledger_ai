@@ -1056,7 +1056,7 @@ class RealDocumentUnderstandingBackend:
 
         # Label backend type accurately in runtime metadata
         execution_backend = (
-            ModelBackendType.ONNX if self._weights_loaded else ModelBackendType.DETERMINISTIC
+            ModelBackendType.PYTORCH if self._weights_loaded else ModelBackendType.DETERMINISTIC
         )
 
         metadata = RuntimeExecutionMetadata(
