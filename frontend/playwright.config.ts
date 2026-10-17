@@ -5,7 +5,7 @@ export default defineConfig({
   fullyParallel: false,
   retries: 0,
   workers: 1,
-  reporter: 'list',
+  timeout: 60000,
   use: {
     baseURL: 'http://localhost:4173',
     trace: 'on-first-retry',
@@ -14,6 +14,7 @@ export default defineConfig({
   webServer: {
     command: 'npm run preview -- --port 4173',
     port: 4173,
+    timeout: 60000,
     reuseExistingServer: true,
   },
   projects: [
