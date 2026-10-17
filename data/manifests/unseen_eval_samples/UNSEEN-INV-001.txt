@@ -1,0 +1,16 @@
+SUPPLIER INVOICE
+SUPPLIER: CloudScale Infrastructure AG
+CUSTOMER: Nova Global Enterprises Inc.
+INVOICE NUMBER: CS-INV-2026-8812
+ISSUE DATE: 2026-02-15
+DUE DATE: 2026-03-15
+CURRENCY: USD
+BANK ACCOUNT: CH9300000000000008812
+
+LINE ITEMS:
+1. High-Performance Compute Node v4 (160 hrs) | Qty: 160 | Price: USD 1.50 | Amount: USD 240.00
+2. Enterprise Object Storage (5TB-month) | Qty: 5 | Price: USD 20.00 | Amount: USD 100.00
+
+SUBTOTAL: USD 340.00
+TAX: USD 27.20
+TOTAL AMOUNT: USD 367.20

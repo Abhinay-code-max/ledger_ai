@@ -1,0 +1,24 @@
+{
+  "document_type": "SUPPLIER_INVOICE",
+  "document_number": "NSP-2026-042",
+  "supplier_name": "Nordic Strategy Partners ApS",
+  "customer_name": null,
+  "issue_date": "2026-03-01",
+  "due_date": "2026-03-31",
+  "subtotal": "1250.00",
+  "tax_amount": "0.00",
+  "total_amount": "1250.00",
+  "currency": "EUR",
+  "bank_account_reference": "DK5000000000000042",
+  "line_items": [
+    {
+      "line_number": 1,
+      "description": "Management Advisory Services Q1",
+      "quantity": "1",
+      "unit_price": "1250.00",
+      "line_amount": "1250.00",
+      "currency": "EUR"
+    }
+  ],
+  "validation_issues": []
+}

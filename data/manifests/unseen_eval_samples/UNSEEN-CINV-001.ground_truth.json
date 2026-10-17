@@ -1,0 +1,24 @@
+{
+  "document_type": "CUSTOMER_INVOICE",
+  "document_number": "CINV-JP-2026-004",
+  "supplier_name": "Nova Systems International",
+  "customer_name": "Vertex Dynamics Corp",
+  "issue_date": "2026-02-01",
+  "due_date": "2026-03-01",
+  "subtotal": "8000.00",
+  "tax_amount": "800.00",
+  "total_amount": "8800.00",
+  "currency": "USD",
+  "bank_account_reference": "US12345678901234",
+  "line_items": [
+    {
+      "line_number": 1,
+      "description": "Enterprise Software License Q1",
+      "quantity": "1",
+      "unit_price": "8000.00",
+      "line_amount": "8000.00",
+      "currency": "USD"
+    }
+  ],
+  "validation_issues": []
+}

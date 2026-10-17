@@ -1,0 +1,24 @@
+{
+  "document_type": "PURCHASE_ORDER",
+  "document_number": "PO-UK-2026-091",
+  "supplier_name": "Precision Metalworks Ltd",
+  "customer_name": "Nova Manufacturing Division",
+  "issue_date": "2026-01-20",
+  "due_date": "2026-02-28",
+  "subtotal": "3200.00",
+  "tax_amount": "640.00",
+  "total_amount": "3840.00",
+  "currency": "GBP",
+  "bank_account_reference": null,
+  "line_items": [
+    {
+      "line_number": 1,
+      "description": "Precision Steel Casing Model A",
+      "quantity": "100",
+      "unit_price": "32.00",
+      "line_amount": "3200.00",
+      "currency": "GBP"
+    }
+  ],
+  "validation_issues": []
+}

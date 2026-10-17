@@ -11,9 +11,7 @@ from ledgerai_role1.pipeline.baseline_parser import DeterministicBaselineExtract
 from ledgerai_role1.pipeline.layout_ocr import DocumentLayoutAnalyzer
 
 PRETRAINED_MODEL_NAME: Final[str] = "docintel-foundation-vlm"
-PRETRAINED_MODEL_REVISION: Final[str] = (
-    "sha256:d8a9f0e123456789abcdef0123456789abcdef0123456789abcdef0123456789"
-)
+PRETRAINED_MODEL_REVISION: Final[str] = "895c3a49bc3fa70a340399125c650a463535e71c"
 PROMPT_TEMPLATE_VERSION: Final[str] = "nova-v1"
 PREPROCESSING_VERSION: Final[str] = "layout-sanitize-v1"
 

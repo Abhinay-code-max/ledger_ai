@@ -1,0 +1,10 @@
+RECEIPT
+MERCHANT: BricoDepot Supplies
+RECEIPT #: TICK-89312
+DATE: 2026-02-28
+CURRENCY: EUR
+
+LINE ITEMS:
+1. Industrial Cat6 Ethernet Cable 100m | Qty: 1 | Price: EUR 85.50 | Amount: EUR 85.50
+
+TOTAL AMOUNT: EUR 85.50

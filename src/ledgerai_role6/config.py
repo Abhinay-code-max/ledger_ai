@@ -40,7 +40,7 @@ class Role6Settings(BaseSettings):
     jwt_algorithms: list[str] = Field(default_factory=lambda: ["HS256"])
 
     # Model and Backend Configuration
-    active_backend: Literal["deterministic", "real_onnx", "mock"] = "deterministic"
+    active_backend: Literal["deterministic", "real_onnx", "real_vlm", "mock"] = "deterministic"
     model_manifest_path: str = Field(default="models/manifests/ledgerai_docintel_v1.manifest.json")
     model_artifacts_dir: str = Field(default="models/artifacts")
     allow_outbound_network: bool = False

@@ -1,0 +1,24 @@
+{
+  "document_type": "SUPPLIER_INVOICE",
+  "document_number": "PRC-9921",
+  "supplier_name": "Pacific Rim Connectivity LLC",
+  "customer_name": "Nova Branch Office",
+  "issue_date": "2026-03-05",
+  "due_date": null,
+  "subtotal": "450.00",
+  "tax_amount": "36.00",
+  "total_amount": "486.00",
+  "currency": "USD",
+  "bank_account_reference": null,
+  "line_items": [
+    {
+      "line_number": 1,
+      "description": "Dedicated Internet Access 1Gbps",
+      "quantity": "1",
+      "unit_price": "450.00",
+      "line_amount": "450.00",
+      "currency": "USD"
+    }
+  ],
+  "validation_issues": []
+}

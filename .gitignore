@@ -24,3 +24,8 @@ htmlcov/
 *.manifest
 *.sha256
 .env.test
+models/artifacts/
+*.safetensors
+*.bin
+*.pt
+*.onnx

@@ -18,6 +18,7 @@ from ledgerai_role6.backend import (
     ConfigurationDrivenRealBackend,
     DeterministicInferenceBackend,
     InferenceBackendPort,
+    RealDocumentUnderstandingBackend,
 )
 from ledgerai_role6.config import Role6Settings, get_role6_settings
 from ledgerai_role6.manifest import load_and_verify_manifest
@@ -52,6 +53,19 @@ def create_role6_app(
             backend = ConfigurationDrivenRealBackend(
                 configured_model=manifest.model_name,
                 cpu_fallback=True,
+            )
+        elif settings.active_backend == "real_vlm":
+            vlm_weights_dir = Path(settings.model_artifacts_dir) / "qwen2-vl-2b-instruct"
+            weights_path = (
+                vlm_weights_dir
+                if (vlm_weights_dir / "config.json").exists()
+                else Path(settings.model_artifacts_dir) / "model.safetensors"
+            )
+            backend = RealDocumentUnderstandingBackend(
+                configured_model=manifest.model_name,
+                model_weights_path=weights_path,
+                allow_deterministic_fallback=True,
+                wall_clock_timeout_seconds=settings.wall_clock_timeout_seconds,
             )
         else:
             backend = DeterministicInferenceBackend()
