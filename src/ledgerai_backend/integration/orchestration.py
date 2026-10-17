@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -385,6 +386,9 @@ class WorkflowOrchestrator:
             return existing_decision
 
         evaluation = evaluate_policy(inputs, rules)  # type: ignore[arg-type]
+        json_safe_inputs: dict[str, object] = {
+            k: str(v) if isinstance(v, (Decimal, UUID)) else v for k, v in inputs.items()
+        }
         decision = PolicyDecisionRow(
             tenant_id=self.repository.tenant_id,
             organization_id=self.repository.organization_id,
@@ -395,7 +399,7 @@ class WorkflowOrchestrator:
             policy_set_id=policy_set_id,
             policy_set_version=policy_version,
             outcome=PolicyOutcome(evaluation.outcome),
-            evaluated_inputs=inputs,
+            evaluated_inputs=json_safe_inputs,
             matched_rule_ids=list(evaluation.matched_rule_ids),
             reason_codes=list(evaluation.reason_codes),
             explanation=evaluation.explanation,

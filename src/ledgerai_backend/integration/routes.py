@@ -786,7 +786,9 @@ async def create_reconciliation(
         policy_version="1.0",
         inputs={
             "maker_checker_required": bool(requires_review),
-            "reconciliation_confidence": match_row.confidence,
+            "reconciliation_confidence": str(match_row.confidence)
+            if match_row.confidence is not None
+            else None,
             "currency": journal_row.currency,
         },
         rules=rule_specs,
