@@ -227,11 +227,20 @@ class Role2Repository:
                 row = res.fetchone()
                 if row is not None:
                     p_date, p_curr, p_exp, p_payload = row[0], row[1], row[2], row[3]
-                    lines = []
-                    evidence = []
+                    lines: list[dict[str, Any]] = []
+                    evidence: list[dict[str, Any]] = []
                     if isinstance(p_payload, dict):
-                        lines = p_payload.get("lines", [])
-                        evidence = p_payload.get("source_evidence", [])
+                        evidence = list(p_payload.get("source_evidence", []))
+                        raw_lines = p_payload.get("lines", [])
+                        lines = []
+                        for line_item in raw_lines:
+                            if isinstance(line_item, dict):
+                                l_copy = dict(line_item)
+                                if not l_copy.get("source_evidence"):
+                                    l_copy["source_evidence"] = evidence
+                                lines.append(l_copy)
+                            else:
+                                lines.append(line_item)
                     row_rec = Role2ProposalRecord(
                         **self.scope_dict(),
                         proposal_id=proposal_id,

@@ -189,15 +189,38 @@ class InMemoryRole2Repository:
                         "direction": "DEBIT",
                         "amount": {"amount": "1250.00", "currency": "INR"},
                         "description": "Office expense debit",
+                        "source_evidence": [
+                            {
+                                "source_document_id": str(proposal_id),
+                                "document_version": "1",
+                                "source_field": "invoice",
+                                "evidence_hash": "a" * 64,
+                            }
+                        ],
                     },
                     {
                         "account_reference": "1100",
                         "direction": "CREDIT",
                         "amount": {"amount": "1250.00", "currency": "INR"},
                         "description": "Cash credit",
+                        "source_evidence": [
+                            {
+                                "source_document_id": str(proposal_id),
+                                "document_version": "1",
+                                "source_field": "invoice",
+                                "evidence_hash": "a" * 64,
+                            }
+                        ],
                     },
                 ],
-                source_evidence=[],
+                source_evidence=[
+                    {
+                        "source_document_id": str(proposal_id),
+                        "document_version": "1",
+                        "source_field": "invoice",
+                        "evidence_hash": "a" * 64,
+                    }
+                ],
             )
         return prop
 
