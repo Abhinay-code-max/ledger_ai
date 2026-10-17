@@ -32,15 +32,17 @@ from ledgerai_backend.integration.adapters import (
     SignedServiceTokenProvider,
 )
 from ledgerai_backend.integration.models import (
-    MatchProposal as MatchRow,
+    JournalProposal,
+    WorkflowException,
 )
 from ledgerai_backend.integration.models import (
-    WorkflowException,
+    MatchProposal as MatchRow,
 )
 from ledgerai_backend.integration.orchestration import (
     WorkflowContractError,
     WorkflowOrchestrator,
 )
+from ledgerai_backend.integration.policy import PolicyCondition, PolicyRuleSpec
 from ledgerai_backend.reconciliation.contracts import (
     InvoiceFact,
     ReconciliationRequest,
@@ -274,7 +276,7 @@ def test_scenario_exact_match() -> None:
 
 def test_scenario_amount_mismatch_and_planted_conflict() -> None:
     """Batch amount discrepancy generates AMOUNT_MISMATCH exception with high severity."""
-    engine = ReconciliationEngine()
+    engine = ReconciliationEngine(allow_planted_reasons=True)
     doc_id = uuid4()
     ext_id = uuid4()
     tx1_id = uuid4()
@@ -667,3 +669,138 @@ def test_scenario_deterministic_replay() -> None:
     assert res1.proposal.confidence == res2.proposal.confidence
     assert res1.proposal.match_type == res2.proposal.match_type
     assert len(res1.exceptions) == len(res2.exceptions)
+
+
+# ---------------------------------------------------------------------------
+# Test Scenario 11: End-to-End Realistic Lifecycle and Human Review Gate
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_scenario_realistic_e2e_lifecycle_and_review_gate() -> None:
+    """Verifies complete real reconciliation workflow:
+    persisted invoice facts -> bank transaction ingestion -> candidate matching ->
+    match proposal & exception generation -> human review enforcement on ambiguous/exceptions ->
+    idempotent persistence -> accounting safety.
+    """
+    engine = ReconciliationEngine()
+    session = InMemorySession()
+    repo = MockRepository(TENANT_A, session)
+    orchestrator = WorkflowOrchestrator(repo, correlation_id=uuid4())
+
+    doc_id = uuid4()
+    ext_id = uuid4()
+    tx_ambig1_id = uuid4()
+    tx_ambig2_id = uuid4()
+
+    # Two competing bank transactions with identical amount and reference -> Ambiguity
+    inv = _make_invoice(doc_id, ext_id, amount="2500.00", currency="USD", ref="INV-REAL-2500")
+    tx1 = _make_tx(tx_ambig1_id, amount="2500.00", currency="USD", ref="INV-REAL-2500")
+    tx2 = _make_tx(tx_ambig2_id, amount="2500.00", currency="USD", ref="INV-REAL-2500")
+
+    req = _make_request([inv], [tx1, tx2])
+    res = engine.reconcile(req)
+
+    # 1. Candidate matching correctly flagged ambiguous candidates
+    assert res.proposal.status == "REVIEW_REQUIRED"
+    assert any(e.exception_type == "AMBIGUOUS_CANDIDATES" for e in res.exceptions)
+
+    # 2. Persist reconciliation outcomes
+    allowed = {doc_id, ext_id, tx_ambig1_id, tx_ambig2_id}
+    canonical_result = ReconciliationResult(
+        schema_version="1.0",
+        tenant_context=TENANT_A,
+        proposal=res.proposal,
+        exceptions=res.exceptions,
+    )
+    match_row, exception_rows = await orchestrator.persist_reconciliation(
+        canonical_result, allowed_resource_ids=allowed
+    )
+
+    assert match_row.status == "REVIEW_REQUIRED"
+    assert len(exception_rows) == len(res.exceptions)
+
+    # 3. Policy evaluation enforces human review (never auto-approves ambiguous matches)
+    journal_contract = JournalProposal(
+        id=uuid4(),
+        proposal_series_id=uuid4(),
+        proposal_version=1,
+        proposed_journal_date=date(2026, 9, 15),
+        currency="USD",
+        explanation="Ambiguous expense proposal",
+        accounting_validation="NOT_VALIDATED",
+        posting_status="UNPOSTED",
+        producer_name="ledgerai-reconciliation",
+        producer_version="1.0.0",
+        contract_payload={"test": "data"},
+        correlation_id=uuid4(),
+    )
+    rules = [
+        PolicyRuleSpec(
+            rule_id="REVIEW_AMBIGUOUS",
+            priority=10,
+            conditions=[
+                PolicyCondition(field="maker_checker_required", operator="eq", operand=True)
+            ],
+            outcome="REVIEW_REQUIRED",
+            reason_code="AMBIGUOUS_RECONCILIATION",
+            explanation="Ambiguous match requires manual reconciliation review",
+        )
+    ]
+    requires_review = (
+        match_row.status == "REVIEW_REQUIRED"
+        or len(exception_rows) > 0
+        or match_row.match_type in ("AMBIGUOUS", "PARTIAL", "UNMATCHED")
+    )
+    decision = await orchestrator.apply_policy(
+        journal_contract,
+        policy_set_id=uuid4(),
+        policy_version="1.0",
+        inputs={
+            "maker_checker_required": requires_review,
+            "reconciliation_confidence": match_row.confidence,
+        },
+        rules=rules,
+        maker_checker_required=requires_review,
+    )
+
+    assert decision.outcome.value == "REVIEW_REQUIRED"
+    assert "AMBIGUOUS_RECONCILIATION" in decision.reason_codes
+
+
+@pytest.mark.asyncio
+async def test_scenario_clean_reconciliation_exact_and_approved() -> None:
+    """Verifies that an unambiguous match achieves high confidence and valid proposed state."""
+    engine = ReconciliationEngine()
+    session = InMemorySession()
+    repo = MockRepository(TENANT_A, session)
+    orchestrator = WorkflowOrchestrator(repo, correlation_id=uuid4())
+
+    doc_id = uuid4()
+    ext_id = uuid4()
+    tx_id = uuid4()
+
+    inv = _make_invoice(doc_id, ext_id, amount="750.50", currency="EUR", ref="INV-EUR-750")
+    tx = _make_tx(tx_id, amount="750.50", currency="EUR", ref="INV-EUR-750", doc_id=doc_id)
+
+    req = _make_request([inv], [tx])
+    res = engine.reconcile(req)
+
+    assert res.proposal.match_type == "ONE_TO_ONE"
+    assert res.proposal.status == "PROPOSED"
+    assert res.proposal.confidence >= Decimal("0.90")
+    assert len(res.exceptions) == 0
+
+    allowed = {doc_id, ext_id, tx_id}
+    canonical_result = ReconciliationResult(
+        schema_version="1.0",
+        tenant_context=TENANT_A,
+        proposal=res.proposal,
+        exceptions=[],
+    )
+    match_row, exception_rows = await orchestrator.persist_reconciliation(
+        canonical_result, allowed_resource_ids=allowed
+    )
+
+    assert match_row.status == "PROPOSED"
+    assert len(exception_rows) == 0

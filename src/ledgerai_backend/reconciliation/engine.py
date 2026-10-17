@@ -74,8 +74,11 @@ def _chunks(values: Sequence[T], size: int) -> Iterable[Sequence[T]]:
 
 
 class ReconciliationEngine:
-    def __init__(self, config: StrategyConfig | None = None) -> None:
+    def __init__(
+        self, config: StrategyConfig | None = None, *, allow_planted_reasons: bool = False
+    ) -> None:
         self.config = config or load_strategy()
+        self.allow_planted_reasons = allow_planted_reasons
 
     def reconcile(self, request: ReconciliationRequest) -> ReconciliationResponse:
         internal = self.reconcile_internal(request)
@@ -702,7 +705,7 @@ class ReconciliationEngine:
             )
             difference = abs(invoice_total - transaction_total)
             reason_codes = ["BATCH_AMOUNT_MISMATCH"]
-            if any(
+            if self.allow_planted_reasons and any(
                 "PLANTED" in (item.transaction.narration or "").upper()
                 for item in currency_transactions
             ):

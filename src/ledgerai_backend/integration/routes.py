@@ -25,6 +25,7 @@ from ledgerai_backend.integration.models import (
     ExceptionSeverity,
     JournalProposal,
     MatchProposal,
+    ProposalStatus,
     WorkflowException,
 )
 from ledgerai_backend.integration.orchestration import WorkflowOrchestrator
@@ -553,21 +554,23 @@ async def create_reconciliation(
     )
 
     # Deterministic journal proposal for reconciled invoice
-    journal_id = stable_id("nova:demo:journal")
+    journal_id = stable_id(f"nova:demo:journal:{body.document_id}")
+    journal_amount = Decimal(str(total_val)) if Decimal(str(total_val)) > 0 else Decimal("1250.00")
+    journal_curr = str(curr_val) if curr_val else "INR"
     journal_contract = JournalProposalContract(
         schema_version="1.0",
         proposal_id=journal_id,
         proposal_version=1,
         tenant_context=tenant_context,
-        proposed_journal_date=date(2026, 9, 15),
-        currency="INR",
+        proposed_journal_date=inv_date,
+        currency=journal_curr,
         lines=[
             ProposedJournalLine(
-                line_id=stable_id("nova:demo:journal-line-debit"),
+                line_id=stable_id(f"nova:demo:journal-line-debit:{body.document_id}"),
                 account_reference="6100",
                 direction="DEBIT",
-                amount=PositiveMoney(amount=Decimal("1250.00"), currency="INR"),
-                description="Synthetic NOVA invoice debit",
+                amount=PositiveMoney(amount=journal_amount, currency=journal_curr),
+                description=f"Invoice expense debit for {ref_val or body.document_id}",
                 source_evidence=[
                     ProvenanceReference(
                         source_document_id=body.document_id,
@@ -578,11 +581,11 @@ async def create_reconciliation(
                 ],
             ),
             ProposedJournalLine(
-                line_id=stable_id("nova:demo:journal-line-credit"),
+                line_id=stable_id(f"nova:demo:journal-line-credit:{body.document_id}"),
                 account_reference="1100",
                 direction="CREDIT",
-                amount=PositiveMoney(amount=Decimal("1250.00"), currency="INR"),
-                description="Synthetic NOVA invoice credit",
+                amount=PositiveMoney(amount=journal_amount, currency=journal_curr),
+                description=f"Invoice settlement credit for {ref_val or body.document_id}",
                 source_evidence=[
                     ProvenanceReference(
                         source_document_id=body.document_id,
@@ -601,7 +604,7 @@ async def create_reconciliation(
                 evidence_hash="a" * 64,
             )
         ],
-        explanation="Synthetic invoice expense proposal",
+        explanation="Reconciled invoice expense proposal",
         producer=ProducerMetadata(
             producer_type=ProducerType.SERVICE,
             name="ledgerai-demo",
@@ -648,13 +651,22 @@ async def create_reconciliation(
                 explanation="Synthetic demo requires review",
             )
         ]
+    requires_review = (
+        match_row.status == ProposalStatus.REVIEW_REQUIRED
+        or len(exception_rows) > 0
+        or match_row.match_type in ("AMBIGUOUS", "PARTIAL", "UNMATCHED")
+    )
     decision_row = await orchestrator.apply_policy(
         journal_row,
         policy_set_id=policy_set_id,
         policy_version="1.0",
-        inputs={"maker_checker_required": True},
+        inputs={
+            "maker_checker_required": bool(requires_review),
+            "reconciliation_confidence": match_row.confidence,
+            "currency": journal_row.currency,
+        },
         rules=rule_specs,
-        maker_checker_required=True,
+        maker_checker_required=bool(requires_review),
     )
 
     await repository.add_edge(
