@@ -6,3 +6,5 @@ dist/
 .publish/
 *.tsbuildinfo
 qa/
+test-results/
+playwright-report/
