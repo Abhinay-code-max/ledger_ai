@@ -207,7 +207,8 @@ class Role2Repository:
                     text(
                         "SELECT proposed_journal_date, currency, explanation, contract_payload "
                         "FROM journal_proposals "
-                        "WHERE id = :pid AND proposal_version = :ver AND tenant_id = :tid"
+                        "WHERE (id = :pid OR proposal_series_id = :pid) "
+                        "AND proposal_version = :ver AND tenant_id = :tid"
                     ),
                     {"pid": proposal_id, "ver": version, "tid": self.tenant_id},
                 )
@@ -219,7 +220,8 @@ class Role2Repository:
                     if isinstance(p_payload, dict):
                         lines = p_payload.get("lines", [])
                         evidence = p_payload.get("source_evidence", [])
-                    prop = await self.save_proposal_record(
+                    row_rec = Role2ProposalRecord(
+                        **self.scope_dict(),
                         proposal_id=proposal_id,
                         proposal_version=version,
                         proposed_journal_date=p_date,
@@ -227,7 +229,11 @@ class Role2Repository:
                         explanation=p_exp,
                         lines_payload=lines,
                         source_evidence=evidence,
+                        approval_decision=None,
                     )
+                    self.session.add(row_rec)
+                    await self.session.flush()
+                    prop = row_rec
             except Exception:
                 pass
         return prop
@@ -244,7 +250,12 @@ class Role2Repository:
         source_evidence: list[dict[str, Any]],
         approval_decision: dict[str, Any] | None = None,
     ) -> Role2ProposalRecord:
-        existing = await self.get_proposal(proposal_id, proposal_version)
+        stmt = select(Role2ProposalRecord).where(
+            *self._scope(Role2ProposalRecord),
+            Role2ProposalRecord.proposal_id == proposal_id,
+            Role2ProposalRecord.proposal_version == proposal_version,
+        )
+        existing = (await self.session.execute(stmt)).scalar_one_or_none()
         if existing is not None:
             return existing
         row = Role2ProposalRecord(
