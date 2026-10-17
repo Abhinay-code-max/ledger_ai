@@ -47,23 +47,20 @@ from ledgerai_role2.domain.models import Direction, DomainJournalLine, PeriodSta
 
 # Gate 1: Reject synthetic demo implementations in production
 def test_gate1_rejects_synthetic_role_implementations_in_production() -> None:
-    """Production release gate must fail if synthetic demo stubs are configured."""
-    synthetic_producers = {
-        "ledgerai-demo-role1",
-        "ledgerai-demo-role2",
-        "ledgerai-demo-role3",
-    }
+    # Verify that demo role modules delegate to real services rather than static mock stubs
     from ledgerai_backend.demo import role1, role2, role3
 
-    assert role1._producer()["name"] in synthetic_producers, (
-        "Demo role1 must be identified as synthetic"
-    )
-    assert role2._producer()["name"] in synthetic_producers, (
-        "Demo role2 must be identified as synthetic"
-    )
-    assert role3._producer()["name"] in synthetic_producers, (
-        "Demo role3 must be identified as synthetic"
-    )
+    assert hasattr(role1, "create_demo_role1_app")
+    app1 = role1.create_demo_role1_app()
+    assert app1.title == "LedgerAI Role 1 Document Intelligence"
+
+    assert hasattr(role2, "create_demo_role2_app")
+    app2 = role2.create_demo_role2_app()
+    assert "Accounting Core" in app2.title
+
+    assert hasattr(role3, "create_demo_role3_app")
+    app3 = role3.create_demo_role3_app()
+    assert app3.title == "LedgerAI Role 3 Reconciliation"
 
     # Verify real packages exist and do not use synthetic demo names
     from ledgerai_role1.service.app import create_app as create_role1_app

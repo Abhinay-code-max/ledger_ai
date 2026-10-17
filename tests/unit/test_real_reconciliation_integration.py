@@ -19,7 +19,7 @@ from __future__ import annotations
 import hashlib
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from typing import Any
+from typing import Any, cast
 from uuid import UUID, uuid4
 
 import pytest
@@ -311,6 +311,42 @@ def test_scenario_amount_mismatch_and_planted_conflict() -> None:
     assert "BATCH_AMOUNT_MISMATCH" in exc.reason_codes
 
 
+def test_scenario_planted_keyword_has_no_influence_in_production() -> None:
+    """Under production configuration (allow_planted_reasons=False), the word PLANTED in ordinary
+    narration text has zero influence and produces no PLANTED_AMOUNT_MISMATCH reason code."""
+    engine = ReconciliationEngine()  # Default allow_planted_reasons=False
+    assert not engine.allow_planted_reasons
+    doc_id = uuid4()
+    ext_id = uuid4()
+    tx1_id = uuid4()
+    tx2_id = uuid4()
+
+    inv = _make_invoice(doc_id, ext_id, amount="1250.00", currency="INR", ref="NOVA-001")
+    tx1 = _make_tx(
+        tx1_id, amount="1250.00", currency="INR", ref="NOVA-001", narration="PAYMENT", doc_id=doc_id
+    )
+    # Transaction contains "PLANTED" in ordinary commercial text
+    # (e.g., agricultural nursery settlement)
+    tx2 = _make_tx(
+        tx2_id,
+        amount="50.00",
+        currency="INR",
+        ref="ISSUE-001",
+        narration="PLANTED SEEDLINGS NURSERY INVOICE SETTLEMENT",
+        doc_id=doc_id,
+    )
+
+    req = _make_request([inv], [tx1, tx2])
+    res = engine.reconcile(req)
+
+    amount_exceptions = [e for e in res.exceptions if e.exception_type == "AMOUNT_MISMATCH"]
+    assert len(amount_exceptions) == 1
+    exc = amount_exceptions[0]
+    assert "BATCH_AMOUNT_MISMATCH" in exc.reason_codes
+    # In production, PLANTED_AMOUNT_MISMATCH must NOT be present
+    assert "PLANTED_AMOUNT_MISMATCH" not in exc.reason_codes
+
+
 def test_scenario_currency_mismatch() -> None:
     """Invoices and transactions in conflicting currencies cannot match and produce exception."""
     engine = ReconciliationEngine()
@@ -408,7 +444,7 @@ async def test_scenario_repeated_reconciliation_requests_idempotency() -> None:
     """Persisting the same reconciliation result twice produces identical rows."""
     session = InMemorySession()
     repo = MockRepository(TENANT_A, session)
-    orchestrator = WorkflowOrchestrator(repo, correlation_id=uuid4())
+    orchestrator = WorkflowOrchestrator(cast(Any, repo), correlation_id=uuid4())
 
     doc_id = uuid4()
     ext_id = uuid4()
@@ -436,13 +472,16 @@ async def test_scenario_repeated_reconciliation_requests_idempotency() -> None:
             match_type="ONE_TO_ONE",
             confidence=Decimal("0.99"),
             score=Decimal("0.99"),
-            reasons=[{"code": "EXACT_MATCH", "explanation": "Perfect match"}],
-            producer={
-                "producer_type": "SERVICE",
-                "name": "role3",
-                "version": "1.0",
-                "algorithm_version": "v1",
-            },
+            reasons=cast(Any, [{"code": "EXACT_MATCH", "explanation": "Perfect match"}]),
+            producer=cast(
+                Any,
+                {
+                    "producer_type": "SERVICE",
+                    "name": "role3",
+                    "version": "1.0",
+                    "algorithm_version": "v1",
+                },
+            ),
             status="PROPOSED",
             created_at=now,
             updated_at=now,
@@ -464,7 +503,7 @@ async def test_scenario_repeated_reconciliation_requests_idempotency() -> None:
                 ],
                 explanation="Variance",
                 reason_codes=["BATCH_AMOUNT_MISMATCH"],
-                detector={"producer_type": "SERVICE", "name": "role3", "version": "1.0"},
+                detector=cast(Any, {"producer_type": "SERVICE", "name": "role3", "version": "1.0"}),
                 resolution_status="OPEN",
                 created_at=now,
                 updated_at=now,
@@ -515,7 +554,7 @@ async def test_scenario_cross_tenant_isolation_rejection() -> None:
     # Orchestrator level rejection
     session = InMemorySession()
     repo = MockRepository(TENANT_A, session)
-    orchestrator = WorkflowOrchestrator(repo, correlation_id=uuid4())
+    orchestrator = WorkflowOrchestrator(cast(Any, repo), correlation_id=uuid4())
 
     now = datetime.now(UTC)
     foreign_result = ReconciliationResult(
@@ -533,13 +572,16 @@ async def test_scenario_cross_tenant_isolation_rejection() -> None:
             ],
             match_type="ONE_TO_ONE",
             confidence=Decimal("0.99"),
-            reasons=[{"code": "MATCH", "explanation": "match"}],
-            producer={
-                "producer_type": "SERVICE",
-                "name": "role3",
-                "version": "1.0",
-                "algorithm_version": "v1",
-            },
+            reasons=cast(Any, [{"code": "MATCH", "explanation": "match"}]),
+            producer=cast(
+                Any,
+                {
+                    "producer_type": "SERVICE",
+                    "name": "role3",
+                    "version": "1.0",
+                    "algorithm_version": "v1",
+                },
+            ),
             status="PROPOSED",
             created_at=now,
             updated_at=now,
@@ -564,7 +606,7 @@ async def test_scenario_database_rollback_on_failure() -> None:
     """When a persistence step fails, uncommitted rows are cleared and no corrupt records remain."""
     session = InMemorySession()
     repo = MockRepository(TENANT_A, session)
-    orchestrator = WorkflowOrchestrator(repo, correlation_id=uuid4())
+    orchestrator = WorkflowOrchestrator(cast(Any, repo), correlation_id=uuid4())
 
     tx_id = uuid4()
     now = datetime.now(UTC)
@@ -584,13 +626,16 @@ async def test_scenario_database_rollback_on_failure() -> None:
             ],
             match_type="ONE_TO_ONE",
             confidence=Decimal("0.99"),
-            reasons=[{"code": "MATCH", "explanation": "match"}],
-            producer={
-                "producer_type": "SERVICE",
-                "name": "role3",
-                "version": "1.0",
-                "algorithm_version": "v1",
-            },
+            reasons=cast(Any, [{"code": "MATCH", "explanation": "match"}]),
+            producer=cast(
+                Any,
+                {
+                    "producer_type": "SERVICE",
+                    "name": "role3",
+                    "version": "1.0",
+                    "algorithm_version": "v1",
+                },
+            ),
             status="PROPOSED",
             created_at=now,
             updated_at=now,
@@ -686,7 +731,7 @@ async def test_scenario_realistic_e2e_lifecycle_and_review_gate() -> None:
     engine = ReconciliationEngine()
     session = InMemorySession()
     repo = MockRepository(TENANT_A, session)
-    orchestrator = WorkflowOrchestrator(repo, correlation_id=uuid4())
+    orchestrator = WorkflowOrchestrator(cast(Any, repo), correlation_id=uuid4())
 
     doc_id = uuid4()
     ext_id = uuid4()
@@ -774,7 +819,7 @@ async def test_scenario_clean_reconciliation_exact_and_approved() -> None:
     engine = ReconciliationEngine()
     session = InMemorySession()
     repo = MockRepository(TENANT_A, session)
-    orchestrator = WorkflowOrchestrator(repo, correlation_id=uuid4())
+    orchestrator = WorkflowOrchestrator(cast(Any, repo), correlation_id=uuid4())
 
     doc_id = uuid4()
     ext_id = uuid4()
