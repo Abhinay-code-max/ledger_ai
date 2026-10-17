@@ -1,153 +1,672 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, ArrowUpRight, Bell, Check, CheckCircle2, ChevronDown, ChevronRight, Clock3, FileCheck2, FileText, FolderCheck, LayoutDashboard, LockKeyhole, LogOut, Plus, Search, Settings2, ShieldCheck, Sparkles, Users, X, Activity, AlertCircle, SlidersHorizontal, Eye, ReceiptText, CircleHelp } from 'lucide-react'
+import {
+  Activity,
+  AlertCircle,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUpRight,
+  BookOpen,
+  Check,
+  CheckCircle2,
+  ChevronRight,
+  Eye,
+  FileCheck2,
+  FileSpreadsheet,
+  FileText,
+  FolderCheck,
+  GitCompare,
+  LayoutDashboard,
+  Layers,
+  LockKeyhole,
+  ReceiptText,
+  Scale,
+  ShieldCheck,
+  Users,
+} from 'lucide-react'
 import Brand from '../components/Brand'
+import { WorkspaceHeader } from '../components/workspace/WorkspaceHeader'
+import { DocumentWorkflow } from '../components/workspace/DocumentWorkflow'
+import { BankCsvWorkflow } from '../components/workspace/BankCsvWorkflow'
+import { ReconciliationWorkflow } from '../components/workspace/ReconciliationWorkflow'
+import { ReviewQueueWorkflow } from '../components/workspace/ReviewQueueWorkflow'
+import { AccountingAndPostingWorkflow } from '../components/workspace/AccountingAndPostingWorkflow'
+import { FinancialStatementsWorkflow } from '../components/workspace/FinancialStatementsWorkflow'
+import { AuditAndProvenanceWorkflow } from '../components/workspace/AuditAndProvenanceWorkflow'
+import { useAuth } from '../context/AuthContext'
+import type {
+  AccountingPeriodResponse,
+  DocumentResponse,
+  DocumentVersionResponse,
+} from '../types/api'
 import './workspaces.css'
 
 type Role = 'admin' | 'manager' | 'employee'
-type SessionUser = { id: string; name: string; email: string; role: Role }
-type RecordItem = { id: string; name: string; company: string; amount: string; status: string; type: string; date: string; owner: string }
-const roleNames: Record<Role, string> = { admin: 'Admin', manager: 'Manager', employee: 'Employee' }
-const fullRoleNames: Record<Role, string> = { admin: 'Administrator', manager: 'Finance Manager', employee: 'Finance Employee' }
-const roleDetails = {
-  admin: { subtitle: 'THE BIG PICTURE', title: 'A clear view. Complete control.', description: 'Oversee your people, permissions, and financial operations from one central workspace.', icon: ShieldCheck, features: ['User & role management', 'Processing oversight', 'Audit trails & governance'] },
-  manager: { subtitle: 'THE FINANCIAL WORKFLOW', title: 'Keep every close moving.', description: 'Guide your team from incoming documents to reviewed records and a confident close.', icon: FolderCheck, features: ['Review & approval queues', 'Reconciliation oversight', 'Team tasks & closing workflows'] },
-  employee: { subtitle: 'THE EVERYDAY WORK', title: 'Less busywork. More progress.', description: 'Bring documents in, review extracted details, and move your assigned work forward.', icon: FileText, features: ['Document uploads', 'Extracted data review', 'Personal tasks & progress'] },
-}
-const validRole = (value: string | undefined): value is Role => value === 'admin' || value === 'manager' || value === 'employee'
-const apiBase = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
-function parseUser(data: unknown): SessionUser | null {
-  if (!data || typeof data !== 'object' || !('user' in data)) return null
-  const user = data.user
-  if (!user || typeof user !== 'object') return null
-  const u = user as Record<string, unknown>
-  if (typeof u.id !== 'string' || typeof u.name !== 'string' || typeof u.email !== 'string' || !validRole(typeof u.role === 'string' ? u.role : undefined)) return null
-  return { id: u.id, name: u.name, email: u.email, role: u.role as Role }
+type RecordItem = {
+  id: string
+  name: string
+  company: string
+  amount: string
+  status: string
+  type: string
+  date: string
+  owner: string
 }
 
-function WorkspaceHeader() {
-  return <header className="ws-header"><Link to="/" aria-label="ledgar.ai home"><Brand /></Link><Link to="/" className="ws-back"><ArrowLeft size={14} /> Back to website</Link></header>
+const roleNames: Record<Role, string> = {
+  admin: 'Admin',
+  manager: 'Manager',
+  employee: 'Employee',
+}
+
+const fullRoleNames: Record<Role, string> = {
+  admin: 'Administrator',
+  manager: 'Finance Manager',
+  employee: 'Finance Employee',
+}
+
+const roleDetails = {
+  admin: {
+    subtitle: 'THE BIG PICTURE',
+    title: 'A clear view. Complete control.',
+    description: 'Oversee your people, permissions, and financial operations from one central workspace.',
+    icon: ShieldCheck,
+    features: ['User & role management', 'Processing oversight', 'Audit trails & governance'],
+  },
+  manager: {
+    subtitle: 'THE FINANCIAL WORKFLOW',
+    title: 'Keep every close moving.',
+    description: 'Guide your team from incoming documents to reviewed records and a confident close.',
+    icon: FolderCheck,
+    features: ['Review & approval queues', 'Reconciliation oversight', 'Team tasks & closing workflows'],
+  },
+  employee: {
+    subtitle: 'THE EVERYDAY WORK',
+    title: 'Less busywork. More progress.',
+    description: 'Bring documents in, review extracted details, and move your assigned work forward.',
+    icon: FileText,
+    features: ['Document uploads', 'Extracted data review', 'Personal tasks & progress'],
+  },
+}
+
+const validRole = (value: string | undefined): value is Role =>
+  value === 'admin' || value === 'manager' || value === 'employee'
+
+function TopPublicHeader() {
+  return (
+    <header className="ws-header">
+      <Link to="/" aria-label="ledgar.ai home">
+        <Brand />
+      </Link>
+      <Link to="/" className="ws-back">
+        <ArrowLeft size={14} /> Back to website
+      </Link>
+    </header>
+  )
 }
 
 export function RoleSelection() {
-  return <div className="workspace-entry"><WorkspaceHeader /><main className="ws-selection"><div className="ws-entry-tag"><span /> A WORKSPACE FOR EVERY ROLE</div><h1>Choose your ledgar.ai<br /><span>workspace.</span></h1><p className="ws-entry-description">The right tools. The right access. One connected financial workflow. <br />Select your role to continue to your secure workspace.</p><div className="ws-role-grid">{(Object.keys(roleNames) as Role[]).map((role, index) => { const detail = roleDetails[role]; const Icon = detail.icon; return <article className={`ws-role-card ws-role-${role}`} key={role}><div className="ws-card-heading"><span>0{index + 1}</span><Icon size={35} strokeWidth={1.3} /></div><small>{detail.subtitle}</small><h2>{fullRoleNames[role]}</h2><p>{detail.description}</p><ul>{detail.features.map(feature => <li key={feature}><Check size={13} />{feature}</li>)}</ul><Link to={`/login/${role}`} className="ws-role-enter">Enter {roleNames[role]} workspace <ArrowUpRight size={18} /></Link><Link to={`/demo/${role}`} className="ws-demo-link">Explore {roleNames[role].toLowerCase()} demo <ArrowRight size={12} /></Link></article> })}</div><div className="ws-security-note"><LockKeyhole size={14} /><span>Secure access is verified by your organization. Role selection does not grant permissions.</span></div></main><footer className="ws-entry-footer"><span>© {new Date().getFullYear()} ledgar.ai</span><span>CLARITY AT EVERY LEVEL.</span><Link to="/">Financial intelligence, connected <ArrowUpRight size={12} /></Link></footer></div>
+  return (
+    <div className="workspace-entry">
+      <TopPublicHeader />
+      <main className="ws-selection">
+        <div className="ws-entry-tag">
+          <span /> A WORKSPACE FOR EVERY ROLE
+        </div>
+        <h1>
+          Choose your ledgar.ai
+          <br />
+          <span>workspace.</span>
+        </h1>
+        <p className="ws-entry-description">
+          The right tools. The right access. One connected financial workflow. <br />
+          Select your role to continue to your secure workspace.
+        </p>
+        <div className="ws-role-grid">
+          {(Object.keys(roleNames) as Role[]).map((role, index) => {
+            const detail = roleDetails[role]
+            const Icon = detail.icon
+            return (
+              <article className={`ws-role-card ws-role-${role}`} key={role}>
+                <div className="ws-card-heading">
+                  <span>0{index + 1}</span>
+                  <Icon size={35} strokeWidth={1.3} />
+                </div>
+                <small>{detail.subtitle}</small>
+                <h2>{fullRoleNames[role]}</h2>
+                <p>{detail.description}</p>
+                <ul>
+                  {detail.features.map((feature) => (
+                    <li key={feature}>
+                      <Check size={13} />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                <Link to={`/login/${role}`} className="ws-role-enter">
+                  Enter {roleNames[role]} workspace <ArrowUpRight size={18} />
+                </Link>
+                <Link to={`/demo/${role}`} className="ws-demo-link">
+                  Explore {roleNames[role].toLowerCase()} demo <ArrowRight size={12} />
+                </Link>
+              </article>
+            )
+          })}
+        </div>
+        <div className="ws-security-note">
+          <LockKeyhole size={14} />
+          <span>
+            Secure access is verified by your organization. Role selection does not grant permissions.
+          </span>
+        </div>
+      </main>
+      <footer className="ws-entry-footer">
+        <span>© {new Date().getFullYear()} ledgar.ai</span>
+        <span>CLARITY AT EVERY LEVEL.</span>
+        <Link to="/">
+          Financial intelligence, connected <ArrowUpRight size={12} />
+        </Link>
+      </footer>
+    </div>
+  )
 }
 
 export function RoleLogin() {
   const { role: rawRole } = useParams()
   const role: Role = validRole(rawRole) ? rawRole : 'employee'
   const navigate = useNavigate()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const { login } = useAuth()
+
+  const [token, setToken] = useState('')
+  const [workspaceCode, setWorkspaceCode] = useState('nova')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+
   if (!validRole(rawRole)) return <RoleSelection />
   const detail = roleDetails[role]
   const Icon = detail.icon
+
   async function submit(event: FormEvent) {
     event.preventDefault()
     setError('')
-    if (!apiBase) { setError('Secure sign-in is not connected for this workspace. Contact your administrator, or explore the separate demo below.'); return }
+    if (!token.trim()) {
+      setError('Please provide a valid bearer token or select a demo identity.')
+      return
+    }
+
     setBusy(true)
     try {
-      const response = await fetch(`${apiBase}/auth/login`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password, role }) })
-      if (!response.ok) throw new Error(response.status === 401 ? 'Your email or password was not recognized. Please try again.' : response.status === 403 ? 'Your account does not have access to this workspace.' : 'Sign-in is unavailable. Please contact your administrator or try again later.')
-      const user = parseUser(await response.json())
-      if (!user) throw new Error('The authentication service returned an invalid user identity. Please contact your administrator.')
-      if (user.role !== role) throw new Error(`Your account is assigned to the ${roleNames[user.role]} workspace. Please return to workspace selection and use your assigned role.`)
-      navigate(`/dashboard/${user.role}`)
-    } catch (cause) { setError(cause instanceof Error ? cause.message : 'Unable to reach your authentication service. Please check your connection and contact your administrator.') }
-    finally { setBusy(false) }
+      await login(token.trim(), workspaceCode.trim() || 'nova')
+      navigate(`/dashboard/${role}`)
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : 'Unable to verify session with Role 4 backend. Check network and credentials.',
+      )
+    } finally {
+      setBusy(false)
+    }
   }
-  return <div className="workspace-entry"><WorkspaceHeader /><main className="ws-login-layout"><section className="ws-login-story"><div className="ws-entry-tag"><span /> {roleNames[role].toUpperCase()} WORKSPACE</div><div className="ws-login-emblem"><Icon size={68} strokeWidth={1} /><i /><i /><i /></div><h1>{detail.title}</h1><p>{detail.description}</p><div className="ws-login-benefits">{detail.features.map(feature => <span key={feature}><CheckCircle2 size={15} />{feature}</span>)}</div><div className="ws-login-coordinate">LEDGAR.AI <span>HUMAN JUDGMENT. CONNECTED INTELLIGENCE.</span></div></section><section className="ws-login-form"><Link to="/login" className="ws-back"><ArrowLeft size={13} /> Change workspace</Link><small className="ws-overline">WELCOME BACK</small><h2>Sign in as {roleNames[role]}</h2><p>Continue to your organization’s secure workspace.</p><form onSubmit={submit}><label htmlFor="ws-email">Work email</label><input id="ws-email" type="email" value={email} onChange={event => setEmail(event.target.value)} autoComplete="username" placeholder="you@company.com" required /><label htmlFor="ws-password">Password</label><input id="ws-password" type="password" value={password} onChange={event => setPassword(event.target.value)} autoComplete="current-password" placeholder="Enter your password" required /><div className="ws-form-help"><LockKeyhole size={12} /> Your organization verifies your identity and role.</div>{error && <div className="ws-form-error" role="alert"><AlertCircle size={17} /><span>{error}</span></div>}<button className="button primary ws-submit" disabled={busy} type="submit">{busy ? 'Verifying your access…' : 'Sign in to workspace'}<ArrowRight size={16} /></button></form><div className="ws-demo-divider"><span /> CURIOUS ABOUT LEDGAR.AI? <span /></div><Link to={`/demo/${role}`} className="ws-preview-button"><Eye size={15} /> Explore the {roleNames[role].toLowerCase()} demo <ArrowUpRight size={16} /></Link><p className="ws-demo-disclosure">Preview with illustrative data. No account required.</p></section></main></div>
+
+  function setSyntheticMaker() {
+    setToken('synthetic-maker-token-for-nova')
+    setWorkspaceCode('nova')
+  }
+
+  function setSyntheticReviewer() {
+    setToken('synthetic-reviewer-token-for-nova')
+    setWorkspaceCode('nova')
+  }
+
+  return (
+    <div className="workspace-entry">
+      <TopPublicHeader />
+      <main className="ws-login-layout">
+        <section className="ws-login-story">
+          <div className="ws-entry-tag">
+            <span /> {roleNames[role].toUpperCase()} WORKSPACE
+          </div>
+          <div className="ws-login-emblem">
+            <Icon size={68} strokeWidth={1} />
+            <i />
+            <i />
+            <i />
+          </div>
+          <h1>{detail.title}</h1>
+          <p>{detail.description}</p>
+          <div className="ws-login-benefits">
+            {detail.features.map((feature) => (
+              <span key={feature}>
+                <CheckCircle2 size={15} />
+                {feature}
+              </span>
+            ))}
+          </div>
+          <div className="ws-login-coordinate">
+            LEDGAR.AI <span>HUMAN JUDGMENT. CONNECTED INTELLIGENCE.</span>
+          </div>
+        </section>
+
+        <section className="ws-login-form">
+          <Link to="/login" className="ws-back">
+            <ArrowLeft size={13} /> Change workspace
+          </Link>
+          <small className="ws-overline">CONNECTED TO ROLE 4 PUBLIC API</small>
+          <h2>Sign in as {roleNames[role]}</h2>
+          <p>Provide your authenticated token or select an authorized identity.</p>
+
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+            <button
+              type="button"
+              onClick={setSyntheticMaker}
+              className="button secondary small"
+              style={{ flex: 1, fontSize: '10px' }}
+            >
+              Maker (nova-admin)
+            </button>
+            <button
+              type="button"
+              onClick={setSyntheticReviewer}
+              className="button secondary small"
+              style={{ flex: 1, fontSize: '10px' }}
+            >
+              Reviewer (nova-reviewer)
+            </button>
+          </div>
+
+          <form onSubmit={submit}>
+            <label htmlFor="ws-token">Bearer Access Token</label>
+            <input
+              id="ws-token"
+              type="text"
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+              autoComplete="off"
+              placeholder="synthetic-maker-token-for-nova or JWT"
+              required
+            />
+
+            <label htmlFor="ws-code">Workspace Code</label>
+            <input
+              id="ws-code"
+              type="text"
+              value={workspaceCode}
+              onChange={(e) => setWorkspaceCode(e.target.value)}
+              placeholder="nova"
+              required
+            />
+
+            <div className="ws-form-help">
+              <LockKeyhole size={12} /> Backend authenticates tokens and resolves tenant permissions.
+            </div>
+
+            {error && (
+              <div className="ws-form-error" role="alert">
+                <AlertCircle size={17} />
+                <span>{error}</span>
+              </div>
+            )}
+
+            <button className="button primary ws-submit" disabled={busy} type="submit">
+              {busy ? 'Verifying access with Role 4…' : 'Sign in to workspace'}
+              <ArrowRight size={16} />
+            </button>
+          </form>
+
+          <div className="ws-demo-divider">
+            <span /> PREVIEW WORKSPACE <span />
+          </div>
+          <Link to={`/demo/${role}`} className="ws-preview-button">
+            <Eye size={15} /> Explore isolated browser-only demo <ArrowUpRight size={16} />
+          </Link>
+        </section>
+      </main>
+    </div>
+  )
 }
 
 const seedRecords: RecordItem[] = [
-  { id: 'DOC-1024', name: 'Invoice_October.pdf', company: 'Northstar Studios', amount: '₹48,500.00', status: 'Needs review', type: 'Invoice', date: 'Oct 16, 2026', owner: 'Priya Sharma' },
-  { id: 'DOC-1023', name: 'Vendor_statement.pdf', company: 'Vertex Supplies', amount: '₹1,24,000.00', status: 'Ready to approve', type: 'Statement', date: 'Oct 15, 2026', owner: 'Arjun Mehta' },
-  { id: 'DOC-1022', name: 'Travel_receipts.pdf', company: 'Team expenses', amount: '₹12,750.00', status: 'Reviewed', type: 'Expense', date: 'Oct 15, 2026', owner: 'Priya Sharma' },
-  { id: 'DOC-1021', name: 'Office_invoice.pdf', company: 'Forma Workspace', amount: '₹32,400.00', status: 'Needs review', type: 'Invoice', date: 'Oct 14, 2026', owner: 'Riya Kapoor' },
+  {
+    id: 'DOC-1024',
+    name: 'Invoice_October.pdf',
+    company: 'Northstar Studios',
+    amount: '₹48,500.00',
+    status: 'Needs review',
+    type: 'Invoice',
+    date: 'Oct 16, 2026',
+    owner: 'Priya Sharma',
+  },
+  {
+    id: 'DOC-1023',
+    name: 'Vendor_statement.pdf',
+    company: 'Vertex Supplies',
+    amount: '₹1,24,000.00',
+    status: 'Ready to approve',
+    type: 'Statement',
+    date: 'Oct 15, 2026',
+    owner: 'Arjun Mehta',
+  },
+  {
+    id: 'DOC-1022',
+    name: 'Travel_receipts.pdf',
+    company: 'Team expenses',
+    amount: '₹12,750.00',
+    status: 'Reviewed',
+    type: 'Expense',
+    date: 'Oct 15, 2026',
+    owner: 'Priya Sharma',
+  },
+  {
+    id: 'DOC-1021',
+    name: 'Office_invoice.pdf',
+    company: 'Forma Workspace',
+    amount: '₹32,400.00',
+    status: 'Needs review',
+    type: 'Invoice',
+    date: 'Oct 14, 2026',
+    owner: 'Riya Kapoor',
+  },
 ]
-const adminUsers = [{ name: 'Priya Sharma', email: 'priya@example.com', role: 'Employee', state: 'Active' }, { name: 'Arjun Mehta', email: 'arjun@example.com', role: 'Manager', state: 'Active' }, { name: 'Riya Kapoor', email: 'riya@example.com', role: 'Employee', state: 'Invited' }]
+
+type ConnectedTab =
+  | 'documents'
+  | 'transactions'
+  | 'reconciliation'
+  | 'reviews'
+  | 'posting'
+  | 'statements'
+  | 'audit'
 
 export function Dashboard({ demo = false }: { demo?: boolean }) {
   const { role: rawRole } = useParams()
   const role: Role = validRole(rawRole) ? rawRole : 'employee'
-  const [session, setSession] = useState<SessionUser | null>(null)
-  const [sessionError, setSessionError] = useState('')
-  const [loading, setLoading] = useState(!demo)
-  const [tab, setTab] = useState('Overview')
-  const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState('All documents')
-  const [records, setRecords] = useState<RecordItem[]>(seedRecords)
-  const [selected, setSelected] = useState<RecordItem | null>(null)
-  const [toast, setToast] = useState('')
-  const [classify, setClassify] = useState(false)
-  const [taskText, setTaskText] = useState('Review the Northstar October invoice before the close on Friday.')
-  const [suggestion, setSuggestion] = useState(false)
-  const [tasks, setTasks] = useState([{ title: 'Review Northstar invoice', detail: 'Confirm supplier details and line items', priority: 'High', done: false }, { title: 'Match Vertex statement', detail: 'Compare balances with the vendor ledger', priority: 'Medium', done: false }, { title: 'Confirm travel expenses', detail: 'Verify receipts and expense categories', priority: 'Normal', done: true }])
-  const [notices, setNotices] = useState(false)
-  const fileInput = useRef<HTMLInputElement>(null)
-  const navigate = useNavigate()
-  useEffect(() => {
-    if (demo) { setLoading(false); return }
-    setSession(null)
-    setSessionError('')
-    if (!apiBase) { setSessionError('The secure workspace is not connected. Your administrator must connect your organization’s identity service before you can sign in.'); setLoading(false); return }
-    const controller = new AbortController()
-    setLoading(true)
-    fetch(`${apiBase}/auth/me`, { credentials: 'include', signal: controller.signal }).then(async response => {
-      if (!response.ok) throw new Error('Your session could not be verified. Please sign in to your organization’s workspace.')
-      const user = parseUser(await response.json())
-      if (!user) throw new Error('Your authentication service returned an invalid user identity.')
-      if (user.role !== role) throw new Error(`Access denied. Your verified account belongs to the ${roleNames[user.role]} workspace.`)
-      if (!controller.signal.aborted) setSession(user)
-    }).catch(cause => { if (!controller.signal.aborted) setSessionError(cause instanceof Error ? cause.message : 'Session verification failed.') }).finally(() => { if (!controller.signal.aborted) setLoading(false) })
-    return () => controller.abort()
-  }, [demo, role])
-  useEffect(() => { if (!toast) return; const timeout = window.setTimeout(() => setToast(''), 4500); return () => window.clearTimeout(timeout) }, [toast])
-  useEffect(() => {
-    if (!demo || (!selected && !classify)) return
-    const dialog = document.querySelector<HTMLElement>('.ws-document-drawer, .ws-classify-modal')
-    if (!dialog) return
-    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    const focusable = () => Array.from(dialog.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex="0"]')).filter(element => element.getClientRects().length > 0)
-    focusable()[0]?.focus()
-    function handleKey(event: KeyboardEvent) {
-      if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); setSelected(null); setClassify(false); return }
-      if (event.key !== 'Tab') return
-      const elements = focusable()
-      const first = elements[0]
-      const last = elements[elements.length - 1]
-      if (!first) { event.preventDefault(); return }
-      if (event.shiftKey && (document.activeElement === first || !dialog?.contains(document.activeElement))) { event.preventDefault(); last.focus() }
-      else if (!event.shiftKey && (document.activeElement === last || !dialog?.contains(document.activeElement))) { event.preventDefault(); first.focus() }
-    }
-    document.addEventListener('keydown', handleKey, true)
-    return () => { document.removeEventListener('keydown', handleKey, true); document.body.style.overflow = previousOverflow; if (previousFocus?.isConnected) previousFocus.focus() }
-  }, [selected?.id, classify, demo, role])
+  const { token, principal, isLoading: isAuthLoading } = useAuth()
+
+  // Connected full-stack cross-component state
+  const [connectedTab, setConnectedTab] = useState<ConnectedTab>('documents')
+  const [selectedDoc, setSelectedDoc] = useState<DocumentResponse | null>(null)
+  const [selectedVersion, setSelectedVersion] = useState<DocumentVersionResponse | null>(null)
+  const [selectedTxIds, setSelectedTxIds] = useState<string[]>([])
+  const [approvedProposalId, setApprovedProposalId] = useState<string | null>(null)
+  const [currentPeriod, setCurrentPeriod] = useState<AccountingPeriodResponse | null>(null)
+  const [traceTarget, setTraceTarget] = useState<{ type: string; id: string } | null>(null)
+
+  // Demo fallback states
+  const [records] = useState<RecordItem[]>(seedRecords)
+  const [demoTab, setDemoTab] = useState('Overview')
+
   if (!validRole(rawRole)) return <RoleSelection />
-  if (loading) return <div className="ws-auth-wall"><Brand /><span className="loading-orbit" /><h2>Verifying your secure session</h2><p>Your organization determines your workspace access.</p></div>
-  if (!demo && (!session || session.role !== role || sessionError)) return <div className="workspace-entry"><WorkspaceHeader /><main className="ws-auth-wall"><LockKeyhole size={43} /><h1>Your workspace is protected.</h1><p>{sessionError || 'Sign in to continue with a verified session.'}</p><Link to={`/login/${role}`} className="button primary">Go to secure sign-in <ArrowRight size={16} /></Link><Link to={`/demo/${role}`} className="ws-demo-link">Explore a demo with sample data <ArrowRight size={13} /></Link></main></div>
-  if (!demo) return <div className="workspace-entry"><WorkspaceHeader /><main className="ws-auth-wall"><ShieldCheck size={42} /><div className="ws-entry-tag">VERIFIED {roleNames[role].toUpperCase()} SESSION</div><h1>Welcome, {session?.name}.</h1><p>Your identity is verified. Your organization’s live finance workspace has not been connected yet.</p><div className="ws-form-help">No live records have been loaded from your organization.</div><Link to={`/demo/${role}`} className="button primary">Explore the separate demo <ArrowRight size={16} /></Link><button className="ws-demo-link" onClick={() => navigate('/login')}>Back to workspace selection</button></main></div>
-  const tabs = role === 'admin' ? [{ name: 'Overview', icon: LayoutDashboard }, { name: 'Users & roles', icon: Users }, { name: 'Processing', icon: Activity }, { name: 'Audit trail', icon: ShieldCheck }, { name: 'AMD benchmarks', icon: Activity }] : role === 'manager' ? [{ name: 'Overview', icon: LayoutDashboard }, { name: 'Approvals', icon: FileCheck2 }, { name: 'Reconciliation', icon: ReceiptText }, { name: 'Close tasks', icon: FolderCheck }] : [{ name: 'Overview', icon: LayoutDashboard }, { name: 'My documents', icon: FileText }, { name: 'Data review', icon: FileCheck2 }, { name: 'My tasks', icon: FolderCheck }]
-  const currentRecords = records.filter(record => `${record.name} ${record.company}`.toLowerCase().includes(search.toLowerCase()) && (filter === 'All documents' || record.status === filter) && (tab !== 'Approvals' || record.status === 'Ready to approve') && (tab !== 'Data review' || record.status === 'Needs review'))
-  function review(record: RecordItem) { setRecords(items => items.map(item => item.id === record.id ? { ...item, company: record.company, amount: record.amount, status: role === 'manager' ? 'Approved' : 'Reviewed' } : item)); setSelected(null); setToast(role === 'manager' ? 'Demo approval recorded after your review.' : 'Demo corrections saved and document marked as reviewed.') }
-  function upload(files: FileList | null) { if (!files?.length) return; const file = files[0]; setRecords(items => [{ id: `DOC-${Date.now().toString().slice(-4)}`, name: file.name, company: 'Local file · metadata only', amount: 'Not extracted', status: 'Needs review', type: file.type || 'Document', date: 'Just added', owner: 'You' }, ...items]); setTab('My documents'); setToast(`“${file.name}” added to the local demo. No file was uploaded or analyzed.`) }
-  const taskView = tab === 'My tasks' || tab === 'Close tasks'
-  const title = tab === 'Overview' ? role === 'admin' ? 'Your operations, in focus.' : role === 'manager' ? 'A clear path to your next close.' : 'Make room for meaningful work.' : tab
-  const showTable = !['Users & roles', 'Audit trail', 'AMD benchmarks'].includes(tab) && !taskView
-  const benchmarkPanel = <section className="ws-panel"><div className="ws-panel-title"><div><h2>Verified AMD benchmarks</h2><p>Measured results, with their evidence attached.</p></div><Activity size={20} /></div><div className="ws-empty"><Activity size={30} /><h3>No verified measurements supplied</h3><p>A benchmark needs the hardware model, runtime, dataset, methodology, measured units, and validation evidence before it belongs here.</p></div><div className="ws-inline-notice"><ShieldCheck size={14} /> Verified measurements will appear here with their supporting evidence.</div></section>
-  const routing = /access|permission|user account|invite|workspace role/i.test(taskText) ? { category: 'Access management', role: 'Administrator', reason: 'Access and permission keywords suggest an administrator should review the request.' } : /approv|authorize|payment release/i.test(taskText) ? { category: 'Financial approval', role: 'Finance Manager', reason: 'Approval keywords indicate an authorized financial reviewer is required.' } : /exception|mismatch|duplicate|discrepan|missing/i.test(taskText) ? { category: 'Exception investigation', role: 'Finance Manager', reason: 'A discrepancy or exception keyword indicates that the supporting records need investigation.' } : /bank|reconcil|statement/i.test(taskText) ? { category: 'Reconciliation review', role: 'Finance Manager', reason: 'Bank, statement, or reconciliation keywords suggest a comparison with ledger records.' } : /report|financial statement|month.end/i.test(taskText) ? { category: 'Reporting preparation', role: 'Finance Manager', reason: 'Reporting or close keywords suggest preparation of reviewed financial information.' } : /verif|correct|receipt|tax|gst|tds/i.test(taskText) ? { category: 'Document verification', role: 'Finance Employee', reason: 'Verification and document-detail keywords suggest a source document review.' } : /invoice|vendor|payable/i.test(taskText) ? { category: 'Invoice processing', role: 'Finance Employee', reason: 'Invoice and vendor keywords suggest document intake and field verification.' } : { category: 'Unclassified — human triage', role: 'Finance Manager', reason: 'No supported category keyword was found. A person should choose the appropriate workflow.' }
-  const suggestionCategory = routing.category
-  const priority = /urgent|today|friday|close|deadline/i.test(taskText) ? 'High — deadline keyword present' : 'Normal — no deadline keyword found'
-  return <div className="ws-dashboard"><aside className="ws-sidebar"><Link to="/"><Brand /></Link><div className="ws-org-switch"><span className="ws-org-icon">N</span><div>Northstar Finance<small>Sample organization</small></div><ChevronDown size={13} /></div><div className="ws-sidebar-caption">{roleNames[role].toUpperCase()} WORKSPACE</div><nav>{tabs.map(item => <button key={item.name} className={tab === item.name ? 'active' : ''} onClick={() => { setTab(item.name); setSearch(''); setFilter('All documents') }}><item.icon size={17} />{item.name}{item.name === 'Approvals' && <small>{records.filter(record => record.status === 'Ready to approve').length}</small>}</button>)}</nav><div className="ws-sidebar-support"><div className="ws-help-orb"><Sparkles size={20} /></div><h4>A little clarity goes a long way.</h4><p>Try a task routing suggestion with an illustrative rule-based example.</p><button onClick={() => { setClassify(true); setSuggestion(false) }}>Explore task routing <ArrowUpRight size={13} /></button></div><Link to="/login" className="ws-switch-role"><LogOut size={16} /> Switch workspace <ArrowUpRight size={13} /></Link><div className="ws-profile"><div className="ws-profile-avatar">{role === 'admin' ? 'AK' : role === 'manager' ? 'AM' : 'PS'}</div><div>{role === 'admin' ? 'Alex Kim' : role === 'manager' ? 'Arjun Mehta' : 'Priya Sharma'}<small>{roleNames[role]} · Demo profile</small></div><Settings2 size={15} /></div></aside><div className="ws-main-shell"><header className="ws-dashboard-header"><div className="ws-breadcrumb">Workspace <ChevronRight size={12} /><span>{tab}</span></div><div className="ws-header-actions"><span className="ws-demo-pill"><span /> DEMO WORKSPACE</span><button aria-label="View sample notifications" className="ws-notification-button" onClick={() => setNotices(!notices)}><Bell size={18} /><i /></button><div className="ws-header-avatar">{roleNames[role].charAt(0)}</div></div>{notices && <div className="ws-notifications"><strong>Sample notifications</strong><p><FileCheck2 size={15} /> Northstar invoice is ready for human review.</p><p><Clock3 size={15} /> October close checklist has two open items.</p><small>Illustrative activity only.</small></div>}</header><div className="ws-demo-banner"><CircleHelp size={14} /><span>Interactive preview · All records are illustrative. Changes stay in this browser session.</span><Link to={`/login/${role}`}>Secure sign-in <ArrowUpRight size={12} /></Link></div><main className="ws-dashboard-content"><div className="ws-mobile-tabs">{tabs.map(item => <button key={item.name} onClick={() => setTab(item.name)} className={tab === item.name ? 'active' : ''}>{item.name}</button>)}</div><div className="ws-page-title"><div><div className="ws-overline">OCTOBER 16, 2026 <span /> {roleNames[role].toUpperCase()} OVERVIEW</div><h1>{title}</h1><p>{role === 'admin' ? 'Your team, document activity, and governance in one place.' : role === 'manager' ? 'Review what matters. Keep your team and close on track.' : 'Your documents, reviews, and next steps — all together.'}</p></div><button className="ws-action" onClick={() => { if (role === 'employee') fileInput.current?.click(); else { setClassify(true); setSuggestion(false) } }}><Plus size={15} />{role === 'employee' ? 'Add document' : 'Create task'}</button><input ref={fileInput} type="file" className="sr-only" accept=".pdf,.png,.jpg,.jpeg,.csv,.xlsx" onChange={event => { upload(event.target.files); event.target.value = '' }} /></div><div className="ws-metric-grid">{(role === 'admin' ? [{ label: 'Workspace members', value: '3', icon: Users, note: '2 employees · 1 manager', color: 'mint' }, { label: 'Documents in workspace', value: String(records.length), icon: FileText, note: 'Across the sample organization', color: 'blue' }, { label: 'Awaiting review', value: String(records.filter(item => item.status === 'Needs review').length), icon: Clock3, note: 'Human verification required', color: 'amber' }, { label: 'Audit events', value: '6', icon: ShieldCheck, note: 'Illustrative activity log', color: 'violet' }] : role === 'manager' ? [{ label: 'Awaiting approval', value: String(records.filter(item => item.status === 'Ready to approve').length), icon: FileCheck2, note: 'Ready for your review', color: 'mint' }, { label: 'Reconciliation items', value: '2', icon: ReceiptText, note: 'Sample items to investigate', color: 'blue' }, { label: 'Open close tasks', value: String(tasks.filter(task => !task.done).length), icon: FolderCheck, note: 'On your October checklist', color: 'amber' }, { label: 'Reviewed documents', value: String(records.filter(item => item.status === 'Reviewed' || item.status === 'Approved').length), icon: CheckCircle2, note: 'Human review recorded in demo', color: 'violet' }] : [{ label: 'My documents', value: String(records.length), icon: FileText, note: 'In this sample workspace', color: 'mint' }, { label: 'Needs my review', value: String(records.filter(item => item.status === 'Needs review').length), icon: FileCheck2, note: 'Check extracted details', color: 'amber' }, { label: 'My open tasks', value: String(tasks.filter(task => !task.done).length), icon: FolderCheck, note: 'One step at a time', color: 'blue' }, { label: 'Reviewed', value: String(records.filter(item => item.status === 'Reviewed').length), icon: CheckCircle2, note: 'Human review recorded in demo', color: 'violet' }]).map(metric => <article className="ws-metric" key={metric.label}><div><span>{metric.label}</span><i className={metric.color}><metric.icon size={17} /></i></div><strong>{metric.value}</strong><p>{metric.note}</p></article>)}</div><div className="ws-content-grid"><div className="ws-primary-column">{showTable && <section className="ws-panel"><div className="ws-panel-title"><div><h2>{tab === 'Overview' ? role === 'manager' ? 'Your review queue' : role === 'admin' ? 'Document activity' : 'Recent documents' : tab === 'Processing' ? 'Document processing overview' : tab === 'Reconciliation' ? 'Reconciliation workspace' : tab}</h2><p>{tab === 'Reconciliation' ? 'Review sample discrepancies against supporting evidence.' : 'A clear view of every document and its next step.'}</p></div><span className="ws-count">{currentRecords.length} documents</span></div>{tab === 'Reconciliation' && <div className="ws-inline-notice"><AlertCircle size={14} /> Sample discrepancy: Vertex statement differs from the ledger by ₹2,000. Investigate before completing reconciliation.</div>}<div className="ws-table-toolbar"><label><Search size={14} /><input aria-label="Search documents" placeholder="Search documents…" value={search} onChange={event => setSearch(event.target.value)} /></label><div><SlidersHorizontal size={13} /><select aria-label="Filter document status" value={filter} onChange={event => setFilter(event.target.value)}><option>All documents</option><option>Needs review</option><option>Ready to approve</option><option>Reviewed</option><option>Approved</option></select></div></div><div className="ws-table-overflow"><table className="ws-record-table"><thead><tr><th>DOCUMENT</th><th>AMOUNT</th><th>STATUS</th><th /></tr></thead><tbody>{currentRecords.map(record => <tr key={record.id}><td><div className="ws-document-name"><span><FileText size={17} /></span><div><strong>{record.name}</strong><small>{record.company}</small></div></div></td><td>{record.amount}</td><td><span className={`ws-status ${record.status === 'Reviewed' || record.status === 'Approved' ? 'reviewed' : record.status === 'Ready to approve' ? 'ready' : ''}`}><i />{record.status}</span></td><td><button className="ws-record-open" aria-label={`Review ${record.name}`} onClick={() => setSelected(record)}><ArrowUpRight size={16} /></button></td></tr>)}</tbody></table>{currentRecords.length === 0 && <div className="ws-empty"><Search size={25} /><h3>No matching documents</h3><p>Try another search or change the status filter.</p><button onClick={() => { setSearch(''); setFilter('All documents') }}>Clear filters</button></div>}</div><div className="ws-table-footer"><ShieldCheck size={12} /> Human review remains part of every financial decision.<span>SAMPLE DATA</span></div></section>}{tab === 'AMD benchmarks' && benchmarkPanel}{tab === 'Users & roles' && <section className="ws-panel"><div className="ws-panel-title"><div><h2>People & permissions</h2><p>Sample role assignments. No live account changes are made.</p></div><Users size={20} /></div><div className="ws-table-overflow"><table className="ws-record-table"><thead><tr><th>MEMBER</th><th>ROLE</th><th>ACCESS</th></tr></thead><tbody>{adminUsers.map(user => <tr key={user.email}><td><div className="ws-document-name"><span>{user.name.charAt(0)}</span><div><strong>{user.name}</strong><small>{user.email}</small></div></div></td><td>{user.role}</td><td><span className={`ws-status ${user.state === 'Active' ? 'reviewed' : ''}`}>{user.state}</span></td></tr>)}</tbody></table></div><div className="ws-inline-notice"><LockKeyhole size={14} /> Production roles must be enforced by your organization’s server.</div></section>}{tab === 'Audit trail' && <section className="ws-panel"><div className="ws-panel-title"><div><h2>Trace the decision.</h2><p>Illustrative audit events for the sample organization.</p></div><ShieldCheck size={20} /></div><div className="ws-audit-list">{['Priya Sharma reviewed extracted invoice fields', 'Arjun Mehta opened the October close checklist', 'Riya Kapoor added Office_invoice.pdf', 'Priya Sharma confirmed travel expense categories', 'Arjun Mehta flagged a vendor statement discrepancy', 'Admin assigned an employee workspace role'].map((event, index) => <div key={event}><span><CheckCircle2 size={16} /></span><div><strong>{event}</strong><small>Oct {16 - Math.floor(index / 2)}, 2026 · Sample activity</small></div></div>)}</div></section>}{taskView && <section className="ws-panel"><div className="ws-panel-title"><div><h2>{role === 'manager' ? 'October close checklist' : 'Your next steps'}</h2><p>Mark tasks complete as you review this local demonstration.</p></div><button className="ws-text-action" onClick={() => { setClassify(true); setSuggestion(false) }}><Plus size={13} /> Add task</button></div><div className="ws-task-list">{tasks.map((task, index) => <div className={task.done ? 'done' : ''} key={`${index}-${task.title}`}><button className="ws-checkbox" aria-label={`${task.done ? 'Reopen' : 'Complete'} ${task.title}`} onClick={() => setTasks(items => items.map((item, itemIndex) => itemIndex === index ? { ...item, done: !item.done } : item))}>{task.done && <Check size={13} />}</button><div><h3>{task.title}</h3><p>{task.detail}</p></div><span className={task.priority === 'High' ? 'ws-priority high' : 'ws-priority'}>{task.done ? 'Done' : task.priority}</span></div>)}</div></section>}{tab === 'Overview' && <section className="ws-bottom-card"><div className="ws-bottom-icon"><Sparkles size={23} strokeWidth={1.4} /></div><div><small>FROM A TASK TO A CLEAR NEXT STEP</small><h3>Put the right work in the right hands.</h3><p>Explore a routing suggestion, its explanation, and the evidence to review.</p></div><button onClick={() => { setClassify(true); setSuggestion(false) }} aria-label="Explore task routing"><ArrowUpRight size={21} /></button></section>}</div><aside className="ws-secondary-column"><section className="ws-panel ws-next-panel"><div className="ws-panel-title"><h2>{role === 'admin' ? 'Governance checklist' : 'What’s next'}</h2><span className="ws-tiny-dot" /></div>{(role === 'admin' ? [{ title: 'Review workspace access', detail: 'Confirm active roles and permissions', icon: Users }, { title: 'Inspect document exceptions', detail: '2 documents need a human review', icon: AlertCircle }, { title: 'Explore the audit trail', detail: 'Follow sample changes and decisions', icon: ShieldCheck }] : [{ title: 'Review Northstar invoice', detail: 'Supplier details need confirmation', icon: FileCheck2 }, { title: 'Check vendor statement', detail: 'A sample balance discrepancy', icon: ReceiptText }, { title: 'Complete close checklist', detail: '2 open tasks in October', icon: FolderCheck }]).map((item, index) => <button className="ws-next-item" key={item.title} onClick={() => { if (role === 'admin') setTab(index === 0 ? 'Users & roles' : index === 1 ? 'Processing' : 'Audit trail'); else if (index === 0) setSelected(records[0]); else if (index === 1) setSelected(records[1]); else setTab(role === 'manager' ? 'Close tasks' : 'My tasks') }}><span><item.icon size={16} /></span><div><strong>{item.title}</strong><small>{item.detail}</small></div><ChevronRight size={14} /></button>)}</section><section className="ws-panel ws-activity-panel"><div className="ws-panel-title"><h2>Recent activity</h2><span className="ws-sample-label">SAMPLE</span></div><div className="ws-timeline"><div><span /><p><strong>Northstar invoice</strong> added for review<small>Today, 10:42 AM</small></p></div><div><span /><p><strong>Travel receipts</strong> marked as reviewed<small>Yesterday, 4:20 PM</small></p></div><div><span /><p><strong>October checklist</strong> updated<small>Yesterday, 2:15 PM</small></p></div></div></section><div className="ws-trust-note"><ShieldCheck size={22} strokeWidth={1.2} /><div><h4>Your judgment stays central.</h4><p>Suggestions support decisions. People review and approve financial work.</p></div></div></aside></div><footer className="ws-dashboard-footer"><span>ledgar.ai <i /> Clarity for the work ahead.</span><span>ILLUSTRATIVE DEMO · NO LIVE INTEGRATIONS</span></footer></main></div>{toast && <div className="ws-toast" role="status"><CheckCircle2 size={17} /><span>{toast}</span><button onClick={() => setToast('')} aria-label="Dismiss message"><X size={15} /></button></div>}{selected && <div className="ws-drawer-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) setSelected(null) }}><section className="ws-document-drawer" role="dialog" aria-modal="true" aria-label="Document review"><div className="ws-drawer-top"><span>DOCUMENT REVIEW</span><button onClick={() => setSelected(null)} aria-label="Close document review"><X size={20} /></button></div><div className="ws-drawer-file"><FileText size={32} /><span className="ws-status">{selected.status}</span></div><h2>{selected.name}</h2><p className="ws-drawer-subtitle">{selected.id} · {selected.company}</p><div className="ws-review-disclosure"><AlertCircle size={16} /><span>Illustrative document details. Compare every field with the original document before approving. Local additions have no extracted data.</span></div><h3>Details to verify</h3><dl className="ws-detail-list"><div><dt>Document type</dt><dd>{selected.type}</dd></div><div><dt>Supplier</dt><dd>{selected.company}</dd></div><div><dt>Total amount</dt><dd>{selected.amount}</dd></div><div><dt>Added</dt><dd>{selected.date}</dd></div><div><dt>Assigned to</dt><dd>{selected.owner}</dd></div><div><dt>Model confidence</dt><dd>Unavailable in demo</dd></div></dl><div className="ws-demo-corrections" hidden={role !== 'employee'}><label>Correct supplier<input aria-label="Correct supplier" value={selected.company} onChange={event => setSelected({ ...selected, company: event.target.value })} /></label><label>Correct amount<input aria-label="Correct amount" value={selected.amount} onChange={event => setSelected({ ...selected, amount: event.target.value })} /></label><small>Local demo corrections are saved when you mark the document reviewed.</small></div><div className="ws-evidence-box"><ShieldCheck size={20} /><h4>Human verification required</h4><p>Source document evidence is unavailable in this demo. These sample fields demonstrate the review interface.</p></div>{role !== 'admin' && <button className="ws-action ws-review-button" onClick={() => review(selected)}><Check size={16} />{role === 'manager' ? 'Record demo approval' : 'Mark reviewed in demo'}</button>}<button className="ws-cancel-button" onClick={() => setSelected(null)}>Return to workspace</button></section></div>}{classify && <div className="ws-modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) setClassify(false) }}><section className="ws-classify-modal" role="dialog" aria-modal="true" aria-labelledby="ws-classify-title"><div className="ws-drawer-top"><span><Sparkles size={15} /> TASK ROUTING EXPLORER</span><button aria-label="Close task routing" onClick={() => setClassify(false)}><X size={20} /></button></div><h2 id="ws-classify-title">A clear next step starts here.</h2><p>Describe a task to explore an illustrative routing suggestion.</p><label htmlFor="ws-task-description">What needs to get done?</label><textarea id="ws-task-description" value={taskText} onChange={event => { setTaskText(event.target.value); setSuggestion(false) }} rows={3} placeholder="Describe your accounting task…" /><div className="ws-rule-note"><CircleHelp size={14} /> This demo uses simple keyword rules. No AI service is connected.</div><button className="ws-action" disabled={!taskText.trim()} onClick={() => setSuggestion(true)}><Sparkles size={15} /> Show illustrative suggestion</button>{suggestion && <div className="ws-suggestion-result"><div className="ws-result-heading"><span>ILLUSTRATIVE SUGGESTION</span><ShieldCheck size={17} /></div><dl><div><dt>Category</dt><dd>{suggestionCategory}</dd></div><div><dt>Suggested reviewer</dt><dd>{routing.role} · human review required</dd></div><div><dt>Priority</dt><dd>{priority}</dd></div><div><dt>Confidence</dt><dd>Unavailable — no model inference</dd></div></dl><h4>Why this suggestion?</h4><p>{routing.reason} This is a keyword demonstration; a human must confirm the owner and policy.</p><h4>Evidence & next action</h4><p>Only your task description was used. A reviewer should confirm the source documents, due date, and appropriate owner.</p><button className="ws-action" onClick={() => { setTasks(items => [{ title: taskText.length > 65 ? `${taskText.slice(0, 65)}…` : taskText, detail: `${suggestionCategory} · Suggested ${routing.role} review`, priority: priority.startsWith('High') ? 'High' : 'Normal', done: false }, ...items]); setClassify(false); setTab(role === 'manager' ? 'Close tasks' : role === 'employee' ? 'My tasks' : 'Overview'); setToast('Task added to this local demo after your confirmation.') }}><Check size={15} /> Confirm & add demo task</button></div>}</section></div>}</div>
+
+  // If not in demo mode and not authenticated, present login gate
+  if (!demo && !isAuthLoading && (!token || !principal)) {
+    return (
+      <div className="workspace-entry">
+        <TopPublicHeader />
+        <main className="ws-auth-wall">
+          <LockKeyhole size={43} />
+          <h1>Protected Role 4 Finance Workspace</h1>
+          <p>
+            An authenticated session with Role 4 backend is required to access live financial data.
+          </p>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <Link to={`/login/${role}`} className="button primary">
+              Sign In to Workspace <ArrowRight size={16} />
+            </Link>
+            <Link to={`/demo/${role}`} className="button secondary">
+              Explore Browser-Only Demo <ArrowRight size={14} />
+            </Link>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  // --- CONNECTED FULL-STACK WORKSPACE ---
+  if (!demo) {
+    return (
+      <div className="ws-dashboard" style={{ flexDirection: 'column' }}>
+        <WorkspaceHeader />
+
+        {/* Full-Stack Tab Navigation */}
+        <div className="ws-main-shell" style={{ margin: 0, width: '100%' }}>
+          <div
+            style={{
+              background: '#0a2333',
+              borderBottom: '1px solid #1c3e53',
+              padding: '10px 28px 0',
+              display: 'flex',
+              gap: '6px',
+              overflowX: 'auto',
+            }}
+          >
+            {[
+              { id: 'documents', label: '1. Documents & Ingestion', icon: FileText },
+              { id: 'transactions', label: '2. Bank Statements & CSV', icon: FileSpreadsheet },
+              { id: 'reconciliation', label: '3. Reconciliation & Exceptions', icon: GitCompare },
+              { id: 'reviews', label: '4. Review Queue & Approvals', icon: Scale },
+              { id: 'posting', label: '5. Ledger Posting & Periods', icon: Layers },
+              { id: 'statements', label: '6. Financial Statements', icon: BookOpen },
+              { id: 'audit', label: '7. Audit Log & Provenance', icon: Activity },
+            ].map((tab) => {
+              const Icon = tab.icon
+              const isActive = connectedTab === tab.id
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setConnectedTab(tab.id as ConnectedTab)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '11px 16px',
+                    border: '1px solid transparent',
+                    borderBottom: 'none',
+                    borderTopLeftRadius: '6px',
+                    borderTopRightRadius: '6px',
+                    background: isActive ? '#f5f7f7' : 'transparent',
+                    color: isActive ? '#143841' : '#8fa8b7',
+                    fontWeight: isActive ? 600 : 400,
+                    fontSize: '11px',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <Icon size={14} />
+                  <span>{tab.label}</span>
+                </button>
+              )
+            })}
+          </div>
+
+          <main className="ws-dashboard-content" style={{ padding: '24px 28px 40px' }}>
+            {connectedTab === 'documents' && (
+              <DocumentWorkflow
+                selectedDocId={selectedDoc?.id}
+                onDocumentSelected={(doc, ver) => {
+                  setSelectedDoc(doc)
+                  setSelectedVersion(ver)
+                }}
+              />
+            )}
+
+            {connectedTab === 'transactions' && (
+              <BankCsvWorkflow
+                onSelectedTransactionsChange={(txIds) => {
+                  setSelectedTxIds(txIds)
+                }}
+              />
+            )}
+
+            {connectedTab === 'reconciliation' && (
+              <ReconciliationWorkflow
+                selectedDoc={selectedDoc}
+                selectedVersion={selectedVersion}
+                selectedTxIds={selectedTxIds}
+                onWorkflowCompleted={(res) => {
+                  if (res.journal_proposal_id) {
+                    setApprovedProposalId(res.journal_proposal_id)
+                  }
+                }}
+              />
+            )}
+
+            {connectedTab === 'reviews' && (
+              <ReviewQueueWorkflow
+                onProposalApproved={(propId) => {
+                  setApprovedProposalId(propId)
+                }}
+              />
+            )}
+
+            {connectedTab === 'posting' && (
+              <AccountingAndPostingWorkflow
+                approvedProposalId={approvedProposalId}
+                onPeriodClosed={(period) => {
+                  setCurrentPeriod(period)
+                }}
+              />
+            )}
+
+            {connectedTab === 'statements' && (
+              <FinancialStatementsWorkflow
+                currentPeriod={currentPeriod}
+                onTraceLineSelected={(statementLineId) => {
+                  setTraceTarget({ type: 'statement_line', id: statementLineId })
+                  setConnectedTab('audit')
+                }}
+              />
+            )}
+
+            {connectedTab === 'audit' && (
+              <AuditAndProvenanceWorkflow initialTraceTarget={traceTarget} />
+            )}
+          </main>
+        </div>
+      </div>
+    )
+  }
+
+  // --- BROWSER-ONLY ISOLATED DEMO VIEW ---
+  const tabs =
+    role === 'admin'
+      ? [
+          { name: 'Overview', icon: LayoutDashboard },
+          { name: 'Users & roles', icon: Users },
+          { name: 'Processing', icon: Activity },
+          { name: 'Audit trail', icon: ShieldCheck },
+        ]
+      : role === 'manager'
+      ? [
+          { name: 'Overview', icon: LayoutDashboard },
+          { name: 'Approvals', icon: FileCheck2 },
+          { name: 'Reconciliation', icon: ReceiptText },
+          { name: 'Close tasks', icon: FolderCheck },
+        ]
+      : [
+          { name: 'Overview', icon: LayoutDashboard },
+          { name: 'My documents', icon: FileText },
+          { name: 'Data review', icon: FileCheck2 },
+          { name: 'My tasks', icon: FolderCheck },
+        ]
+
+  const currentRecords = records
+
+  return (
+    <div className="ws-dashboard">
+      <aside className="ws-sidebar">
+        <Link to="/">
+          <Brand />
+        </Link>
+        <div className="ws-org-switch">
+          <span className="ws-org-icon">N</span>
+          <div>
+            Northstar Finance<small>Demo Sandbox</small>
+          </div>
+        </div>
+        <nav style={{ marginTop: '20px' }}>
+          {tabs.map((item) => (
+            <button
+              key={item.name}
+              className={demoTab === item.name ? 'active' : ''}
+              onClick={() => setDemoTab(item.name)}
+            >
+              <item.icon size={17} />
+              {item.name}
+            </button>
+          ))}
+        </nav>
+        <div style={{ marginTop: 'auto', paddingBottom: '20px' }}>
+          <Link to={`/login/${role}`} className="ws-switch-role">
+            <LockKeyhole size={15} /> Switch to Live Role 4 Workspace
+          </Link>
+        </div>
+      </aside>
+
+      <div className="ws-main-shell">
+        <header className="ws-dashboard-header">
+          <div className="ws-breadcrumb">
+            Demo Sandbox <ChevronRight size={12} />
+            <span>{demoTab}</span>
+          </div>
+          <span className="ws-demo-pill">
+            <span /> ISOLATED DEMO MODE
+          </span>
+        </header>
+
+        <main className="ws-dashboard-content">
+          <div className="ws-page-title">
+            <div>
+              <div className="ws-overline">SIMULATED FINANCIAL WORKSPACE</div>
+              <h1>Interactive Preview</h1>
+              <p>Explore workflow features with illustrative data. No live backend connected.</p>
+            </div>
+            <Link to={`/login/${role}`} className="button primary">
+              Open Live Stack <ArrowRight size={14} />
+            </Link>
+          </div>
+
+          <div className="ws-panel">
+            <div className="ws-panel-title">
+              <h3>Sample Documents</h3>
+            </div>
+            <div className="ws-table-overflow">
+              <table className="ws-record-table">
+                <thead>
+                  <tr>
+                    <th>DOCUMENT</th>
+                    <th>AMOUNT</th>
+                    <th>STATUS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentRecords.map((r) => (
+                    <tr key={r.id}>
+                      <td>
+                        <strong>{r.name}</strong> ({r.company})
+                      </td>
+                      <td>{r.amount}</td>
+                      <td>
+                        <span className="ws-badge success">{r.status}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  )
 }
 
-export default function WorkspacePages({ page }: { page: 'selection' | 'login' | 'dashboard' | 'demo' }) {
+export default function WorkspacePages({
+  page,
+}: {
+  page: 'selection' | 'login' | 'dashboard' | 'demo'
+}) {
   if (page === 'selection') return <RoleSelection />
   if (page === 'login') return <RoleLogin />
   return <Dashboard demo={page === 'demo'} />
