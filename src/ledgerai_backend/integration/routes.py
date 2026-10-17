@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+from contextlib import suppress
 from datetime import date
 from decimal import Decimal
 from typing import Annotated, Any
@@ -360,7 +361,9 @@ async def extract_document(
     b64_content = None
     if storage is not None and version.object_key:
         try:
-            raw_bytes = await asyncio.to_thread(storage.read_object, version.object_key)
+            raw_bytes = await asyncio.to_thread(
+                storage.read_object, object_key=version.object_key, maximum_bytes=10_485_760
+            )
             b64_content = base64.b64encode(raw_bytes).decode("ascii")
         except Exception:
             b64_content = None
@@ -488,22 +491,39 @@ async def create_reconciliation(
     orchestrator = WorkflowOrchestrator(repository, correlation_id=correlation_id)
     match_row = await orchestrator.persist_reconciliation(result, allowed_resource_ids=allowed_ids)
 
-    # Deterministic journal proposal for reconciled invoice
+    # Dynamic journal proposal from real extraction evidence
+    extracted_total = Decimal("1250.00")
+    extracted_currency = "INR"
+    extracted_date = date(2026, 9, 15)
+    if extraction_row and isinstance(extraction_row.contract_payload, dict):
+        raw_fields = extraction_row.contract_payload.get("fields")
+        if isinstance(raw_fields, list):
+            for f in raw_fields:
+                if isinstance(f, dict):
+                    if f.get("field_name") == "total" and f.get("value"):
+                        v = f["value"]
+                        if isinstance(v, dict):
+                            extracted_total = Decimal(str(v.get("amount", "1250.00")))
+                            extracted_currency = str(v.get("currency", "INR"))
+                    elif f.get("field_name") == "issue_date" and f.get("value"):
+                        with suppress(Exception):
+                            extracted_date = date.fromisoformat(str(f["value"]))
+
     journal_id = stable_id("nova:demo:journal")
     journal_contract = JournalProposalContract(
         schema_version="1.0",
         proposal_id=journal_id,
         proposal_version=1,
         tenant_context=tenant_context,
-        proposed_journal_date=date(2026, 9, 15),
-        currency="INR",
+        proposed_journal_date=extracted_date,
+        currency=extracted_currency,
         lines=[
             ProposedJournalLine(
                 line_id=stable_id("nova:demo:journal-line-debit"),
                 account_reference="6100",
                 direction="DEBIT",
-                amount=PositiveMoney(amount=Decimal("1250.00"), currency="INR"),
-                description="Synthetic NOVA invoice debit",
+                amount=PositiveMoney(amount=extracted_total, currency=extracted_currency),
+                description="Extracted invoice expense debit",
                 source_evidence=[
                     ProvenanceReference(
                         source_document_id=body.document_id,
@@ -517,8 +537,8 @@ async def create_reconciliation(
                 line_id=stable_id("nova:demo:journal-line-credit"),
                 account_reference="1100",
                 direction="CREDIT",
-                amount=PositiveMoney(amount=Decimal("1250.00"), currency="INR"),
-                description="Synthetic NOVA invoice credit",
+                amount=PositiveMoney(amount=extracted_total, currency=extracted_currency),
+                description="Extracted invoice liability credit",
                 source_evidence=[
                     ProvenanceReference(
                         source_document_id=body.document_id,

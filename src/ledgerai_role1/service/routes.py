@@ -111,27 +111,19 @@ async def request_extraction(
         if storage_loader:
             doc_bytes = storage_loader(payload.storage_reference.object_key)
         else:
-            doc_bytes = (
-                f"INVOICE NUMBER: {payload.document_id}\n"
-                f"SUPPLIER: Acme Vendor Corp\n"
-                f"CUSTOMER: Nova Enterprises\n"
-                f"INVOICE DATE: 2026-09-15\n"
-                f"DUE DATE: 2026-10-15\n"
-                f"TOTAL AMOUNT: USD 100.00\n"
-            ).encode()
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Storage loader is unavailable to fetch referenced document",
+            )
     else:
         storage_loader = getattr(request.app.state, "storage_loader", None)
         if storage_loader:
             doc_bytes = storage_loader(f"documents/{payload.document_id}")
         else:
-            doc_bytes = (
-                f"INVOICE NUMBER: {payload.document_id}\n"
-                f"SUPPLIER: Acme Vendor Corp\n"
-                f"CUSTOMER: Nova Enterprises\n"
-                f"INVOICE DATE: 2026-09-15\n"
-                f"DUE DATE: 2026-10-15\n"
-                f"TOTAL AMOUNT: USD 100.00\n"
-            ).encode()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No document content or valid storage reference provided",
+            )
 
     # Verify signature, limits, and decompression safety
     verify_file_signature_and_limits(

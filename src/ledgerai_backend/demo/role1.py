@@ -49,6 +49,19 @@ def create_demo_role1_app() -> FastAPI:
             app.state.storage_loader = s3_loader
         except Exception:
             pass
+    else:
+        from pathlib import Path
+
+        invoice_path = (
+            Path(__file__).resolve().parents[3]
+            / "demo"
+            / "nova"
+            / "documents"
+            / "NOVA_SYNTHETIC_INVOICE_001.pdf"
+        )
+        if invoice_path.exists():
+            pdf_bytes = invoice_path.read_bytes()
+            app.state.storage_loader = lambda _: pdf_bytes
 
     return app
 
