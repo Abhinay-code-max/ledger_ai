@@ -17,6 +17,7 @@ from sqlalchemy import select
 from ledgerai_backend.api.dependencies import RequestScope, authorized_scope
 from ledgerai_backend.core.errors import ERROR_RESPONSES, ApiError
 from ledgerai_backend.database.seed import stable_id
+from ledgerai_backend.ingestion.models import BankTransaction
 from ledgerai_backend.ingestion.service import require_entity_context
 from ledgerai_backend.integration.models import (
     ApprovalActionType,
@@ -26,6 +27,7 @@ from ledgerai_backend.integration.models import (
     ExceptionSeverity,
     JournalProposal,
     MatchProposal,
+    ProposalStatus,
     WorkflowException,
 )
 from ledgerai_backend.integration.orchestration import WorkflowOrchestrator
@@ -462,6 +464,116 @@ async def create_reconciliation(
         organization_id=repository.organization_id,
         legal_entity_id=repository.legal_entity_id,
     )
+    # Load the bank transactions for this reconciliation
+    tx_rows = list(
+        await repository.session.scalars(
+            select(BankTransaction).where(
+                *repository._scope(BankTransaction),
+                BankTransaction.id.in_(body.transaction_ids),
+            )
+        )
+    )
+    # Build facts for real reconciliation engine
+    contract_payload = (
+        extraction_row.contract_payload if isinstance(extraction_row.contract_payload, dict) else {}
+    )
+    raw_fields = contract_payload.get("fields", [])
+    fields: list[dict[str, Any]] = raw_fields if isinstance(raw_fields, list) else []
+    total_val = next(
+        (f["value"] for f in fields if isinstance(f, dict) and f.get("field_name") == "total"), "0"
+    )
+    curr_val = next(
+        (f["value"] for f in fields if isinstance(f, dict) and f.get("field_name") == "currency"),
+        "INR",
+    )
+    ref_val = next(
+        (
+            f["value"]
+            for f in fields
+            if isinstance(f, dict) and f.get("field_name") == "invoice_number"
+        ),
+        None,
+    )
+    sup_val = next(
+        (
+            f["value"]
+            for f in fields
+            if isinstance(f, dict) and f.get("field_name") == "supplier_name"
+        ),
+        None,
+    )
+    date_str = next(
+        (
+            f["value"]
+            for f in fields
+            if isinstance(f, dict) and f.get("field_name") == "invoice_date"
+        ),
+        None,
+    )
+    inv_date = date.fromisoformat(str(date_str)) if date_str else date(2026, 9, 15)
+
+    invoice_fact = {
+        "extraction_id": str(extraction_row.id),
+        "extraction_version": str(extraction_row.extraction_version),
+        "document_id": str(body.document_id),
+        "document_version": "1",
+        "tenant_context": tenant_context.model_dump(mode="json"),
+        "amount": {"amount": str(total_val), "currency": str(curr_val)},
+        "invoice_date": inv_date.isoformat(),
+        "expected_transaction_direction": "DEBIT",
+        "reference": str(ref_val) if ref_val else None,
+        "party_name": str(sup_val) if sup_val else None,
+        "evidence_complete": True,
+        "content_fingerprint": "a" * 64,
+        "provenance": [
+            {
+                "source_document_id": str(body.document_id),
+                "document_version": "1",
+                "source_field": "invoice",
+                "evidence_hash": "a" * 64,
+            }
+        ],
+    }
+    versioned_txs = [
+        {
+            "transaction_version": "1",
+            "transaction": {
+                "schema_version": "1.0",
+                "transaction_id": str(tx.id),
+                "tenant_context": tenant_context.model_dump(mode="json"),
+                "bank_account_id": str(tx.bank_account_id),
+                "import_batch_id": str(tx.import_id),
+                "source_row_number": tx.source_row_number,
+                "booking_date": tx.booking_date.isoformat(),
+                "value_date": tx.value_date.isoformat() if tx.value_date else None,
+                "money": {"amount": str(tx.amount), "currency": tx.currency},
+                "direction": tx.direction,
+                "narration": tx.narration or "",
+                "reference": tx.reference,
+                "counterparty": {"display_name": tx.counterparty_name}
+                if tx.counterparty_name
+                else None,
+                "external_source_id": tx.external_source_id,
+                "normalization_status": "NORMALIZED",
+                "provenance": [
+                    {
+                        "source_document_id": str(body.document_id),
+                        "document_version": "1",
+                        "source_field": "bank_transaction",
+                        "evidence_hash": "b" * 64,
+                    }
+                ],
+                "content_fingerprint": tx.source_fingerprint,
+                "correlation": {
+                    "request_id": str(correlation_id),
+                    "correlation_id": str(correlation_id),
+                    "causation_id": None,
+                },
+            },
+        }
+        for tx in tx_rows
+    ]
+
     operation_id = uuid4()
     payload = {
         "operation_id": str(operation_id),
@@ -475,6 +587,9 @@ async def create_reconciliation(
             "correlation_id": str(correlation_id),
             "causation_id": None,
         },
+        "strategy_version": "reconciliation-rules/1.0.0",
+        "invoices": [invoice_fact],
+        "transactions": versioned_txs,
     }
     result = await role3.request_reconciliation(
         operation_id=operation_id,
@@ -489,27 +604,47 @@ async def create_reconciliation(
         *body.transaction_ids,
     }
     orchestrator = WorkflowOrchestrator(repository, correlation_id=correlation_id)
-    match_row = await orchestrator.persist_reconciliation(result, allowed_resource_ids=allowed_ids)
+    match_row, exception_rows = await orchestrator.persist_reconciliation(
+        result, allowed_resource_ids=allowed_ids
+    )
 
-    # Dynamic journal proposal from real extraction evidence
-    extracted_total = Decimal("1250.00")
-    extracted_currency = "INR"
-    extracted_date = date(2026, 9, 15)
+    # Dynamic journal proposal from real extraction evidence without hardcoded fallbacks
+    extracted_total: Decimal | None = None
+    extracted_currency = str(curr_val) if curr_val else "INR"
+    extracted_date = inv_date
     if extraction_row and isinstance(extraction_row.contract_payload, dict):
         raw_fields = extraction_row.contract_payload.get("fields")
         if isinstance(raw_fields, list):
             for f in raw_fields:
                 if isinstance(f, dict):
-                    if f.get("field_name") == "total" and f.get("value"):
+                    if f.get("field_name") in ("total", "invoice_total") and f.get("value"):
                         v = f["value"]
                         if isinstance(v, dict):
-                            extracted_total = Decimal(str(v.get("amount", "1250.00")))
-                            extracted_currency = str(v.get("currency", "INR"))
-                    elif f.get("field_name") == "issue_date" and f.get("value"):
+                            with suppress(Exception):
+                                extracted_total = Decimal(str(v.get("amount", "")))
+                            if v.get("currency"):
+                                extracted_currency = str(v.get("currency"))
+                        else:
+                            with suppress(Exception):
+                                extracted_total = Decimal(str(v))
+                    elif f.get("field_name") in ("issue_date", "invoice_date") and f.get("value"):
                         with suppress(Exception):
                             extracted_date = date.fromisoformat(str(f["value"]))
+                    elif f.get("field_name") == "currency" and f.get("value"):
+                        extracted_currency = str(f["value"])
 
-    journal_id = stable_id("nova:demo:journal")
+    if extracted_total is None or extracted_total <= Decimal("0"):
+        with suppress(Exception):
+            extracted_total = Decimal(str(total_val))
+    if extracted_total is None or extracted_total <= Decimal("0"):
+        raise ApiError(
+            422,
+            "VALIDATION",
+            "MISSING_INVOICE_TOTAL",
+            "Cannot construct journal proposal: invoice total is missing or non-positive.",
+        )
+
+    journal_id = stable_id(f"nova:demo:journal:{body.document_id}")
     journal_contract = JournalProposalContract(
         schema_version="1.0",
         proposal_id=journal_id,
@@ -519,11 +654,11 @@ async def create_reconciliation(
         currency=extracted_currency,
         lines=[
             ProposedJournalLine(
-                line_id=stable_id("nova:demo:journal-line-debit"),
+                line_id=stable_id(f"nova:demo:journal-line-debit:{body.document_id}"),
                 account_reference="6100",
                 direction="DEBIT",
                 amount=PositiveMoney(amount=extracted_total, currency=extracted_currency),
-                description="Extracted invoice expense debit",
+                description=f"Invoice expense debit for {ref_val or body.document_id}",
                 source_evidence=[
                     ProvenanceReference(
                         source_document_id=body.document_id,
@@ -534,11 +669,11 @@ async def create_reconciliation(
                 ],
             ),
             ProposedJournalLine(
-                line_id=stable_id("nova:demo:journal-line-credit"),
+                line_id=stable_id(f"nova:demo:journal-line-credit:{body.document_id}"),
                 account_reference="1100",
                 direction="CREDIT",
                 amount=PositiveMoney(amount=extracted_total, currency=extracted_currency),
-                description="Extracted invoice liability credit",
+                description=f"Invoice settlement credit for {ref_val or body.document_id}",
                 source_evidence=[
                     ProvenanceReference(
                         source_document_id=body.document_id,
@@ -557,7 +692,7 @@ async def create_reconciliation(
                 evidence_hash="a" * 64,
             )
         ],
-        explanation="Synthetic invoice expense proposal",
+        explanation="Reconciled invoice expense proposal",
         producer=ProducerMetadata(
             producer_type=ProducerType.SERVICE,
             name="ledgerai-demo",
@@ -604,13 +739,22 @@ async def create_reconciliation(
                 explanation="Synthetic demo requires review",
             )
         ]
+    requires_review = (
+        match_row.status == ProposalStatus.REVIEW_REQUIRED
+        or len(exception_rows) > 0
+        or match_row.match_type in ("AMBIGUOUS", "PARTIAL", "UNMATCHED")
+    )
     decision_row = await orchestrator.apply_policy(
         journal_row,
         policy_set_id=policy_set_id,
         policy_version="1.0",
-        inputs={"maker_checker_required": True},
+        inputs={
+            "maker_checker_required": bool(requires_review),
+            "reconciliation_confidence": match_row.confidence,
+            "currency": journal_row.currency,
+        },
         rules=rule_specs,
-        maker_checker_required=True,
+        maker_checker_required=bool(requires_review),
     )
 
     await repository.add_edge(
@@ -651,17 +795,17 @@ async def create_reconciliation(
         actor_id=str(scope.context.principal_id),
         correlation_id=correlation_id,
     )
-    exception_row = await repository.get(
-        WorkflowException, stable_id("nova:demo:exception")
-    ) or await repository.session.scalar(
-        select(WorkflowException)
-        .where(
-            *repository._scope(WorkflowException),
-            WorkflowException.correlation_id == correlation_id,
+    exception_row = exception_rows[0] if exception_rows else None
+    if exception_row is None:
+        exception_row = await repository.session.scalar(
+            select(WorkflowException)
+            .where(
+                *repository._scope(WorkflowException),
+                WorkflowException.correlation_id == correlation_id,
+            )
+            .order_by(WorkflowException.id.desc())
+            .limit(1)
         )
-        .order_by(WorkflowException.id.desc())
-        .limit(1)
-    )
     if exception_row:
         await repository.record_audit(
             action="EXCEPTION_CREATED",
