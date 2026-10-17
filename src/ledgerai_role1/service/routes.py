@@ -7,7 +7,7 @@ from typing import Annotated, Any
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ledgerai_contracts.v1.common import CorrelationMetadata
 from ledgerai_contracts.v1.documents import DocumentExtraction, StorageReference
@@ -28,14 +28,27 @@ AuthContext = Annotated[AuthenticatedRoleContext, Depends(authenticate_service_r
 class ExtractionRequestPayload(BaseModel):
     """Payload sent by Role 4 to request document extraction."""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
-    document_id: UUID
-    document_version: str = Field(min_length=1, pattern=r"^[A-Za-z0-9._-]+$")
+    operation_id: UUID | None = None
+    tenant_context: Any | None = None
+    document_id: UUID = Field(default_factory=uuid4)
+    document_version: str = Field(default="1", min_length=1, pattern=r"^[A-Za-z0-9._-]+$")
     storage_reference: StorageReference | None = None
     media_type: str = Field(default="text/plain", pattern=r"^[\w.+-]+/[\w.+-]+$")
     document_content_base64: str | None = None
     document_text: str | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def resolve_version(cls, data: Any) -> Any:
+        if (
+            isinstance(data, dict)
+            and "document_version" not in data
+            and "document_version_id" in data
+        ):
+            data["document_version"] = str(data["document_version_id"])
+        return data
 
 
 @router.post(
@@ -50,6 +63,24 @@ async def request_extraction(
     auth: AuthContext,
 ) -> DocumentExtraction:
     """Execute document intelligence extraction for Role 4."""
+    # Verify operation binding and tenant context if provided in payload
+    if payload.operation_id is not None and payload.operation_id != auth.operation_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Payload operation ID does not match authenticated token operation ID",
+        )
+    if payload.tenant_context is not None:
+        t_id = (
+            payload.tenant_context.get("tenant_id")
+            if isinstance(payload.tenant_context, dict)
+            else getattr(payload.tenant_context, "tenant_id", None)
+        )
+        if t_id is not None and str(t_id) != str(auth.tenant_context.tenant_id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Payload tenant context does not match authenticated token context",
+            )
+
     idempotency_store: ExtractionIdempotencyStore = request.app.state.idempotency_store
     extractor: PretrainedDocumentExtractor = request.app.state.extractor
     settings = request.app.state.settings
@@ -80,17 +111,19 @@ async def request_extraction(
         if storage_loader:
             doc_bytes = storage_loader(payload.storage_reference.object_key)
         else:
-            doc_bytes = (
-                f"DOCUMENT NUMBER: {payload.document_id}\nTOTAL AMOUNT: USD 100.00\n".encode()
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Storage loader is unavailable to fetch referenced document",
             )
     else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=(
-                "Request must provide either storage_reference, "
-                "document_text, or document_content_base64"
-            ),
-        )
+        storage_loader = getattr(request.app.state, "storage_loader", None)
+        if storage_loader:
+            doc_bytes = storage_loader(f"documents/{payload.document_id}")
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No document content or valid storage reference provided",
+            )
 
     # Verify signature, limits, and decompression safety
     verify_file_signature_and_limits(
