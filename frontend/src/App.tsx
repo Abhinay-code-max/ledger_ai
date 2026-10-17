@@ -17,6 +17,6 @@ export default function App() {
     <Route path="/login/:role" element={<WorkspaceRoute page="login" />} />
     <Route path="/dashboard/:role" element={<WorkspaceRoute page="dashboard" />} />
     <Route path="/demo/:role" element={<WorkspaceRoute page="demo" />} />
-    <Route path="*" element={<div className="not-found"><div className="eyebrow">404 / OFF THE LEDGER</div><h1>This page is unaccounted for.</h1><a className="button primary" href="/">Return to LedgerAI ↗</a></div>} />
+    <Route path="*" element={<div className="not-found"><div className="eyebrow">404 / OFF THE LEDGER</div><h1>This page is unaccounted for.</h1><a className="button primary" href="/">Return to ledgar.ai ↗</a></div>} />
   </Routes>
 }

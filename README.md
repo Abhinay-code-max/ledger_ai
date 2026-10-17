@@ -26,7 +26,7 @@ See `docs/integration/cross-role-contracts-v1.md` for team usage and
 `docs/backend/phase1.md` and `docs/backend/phase2.md` for architecture, setup, configuration,
 migrations, RLS, ingestion, reliability, recovery, and independent review instructions.
 
-## LedgerAI 2.0 frontend
+## ledgar.ai frontend
 
 The interactive React and TypeScript website is in `frontend/`. It includes the cinematic intro,
 procedural Three.js scenes, public workflow walkthrough, role-specific sign-in screens, and

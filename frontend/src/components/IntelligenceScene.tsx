@@ -19,7 +19,7 @@ function useReducedMotion() {
 
 export function SceneFallback() {
   return (
-    <div className="intelligence-fallback" role="img" aria-label="LedgerAI intelligence core, connecting finance documents, transactions, and compliance">
+    <div className="intelligence-fallback" role="img" aria-label="ledgar.ai intelligence core, connecting finance documents, transactions, and compliance">
       <div className="fallback-orbit fallback-orbit-one" />
       <div className="fallback-orbit fallback-orbit-two" />
       <div className="fallback-orbit fallback-orbit-three" />
@@ -304,7 +304,7 @@ export default function IntelligenceScene({ variant = 'hero', progress = 0, acti
           </Suspense>
         </SceneBoundary>
       )}
-      <span className="intelligence-scene-description">Interactive LedgerAI intelligence engine. Drag to explore the connected document and transaction network.</span>
+      <span className="intelligence-scene-description">Interactive ledgar.ai intelligence engine. Drag to explore the connected document and transaction network.</span>
     </div>
   )
 }

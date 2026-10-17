@@ -161,7 +161,7 @@ export default function Workflow() {
           </div>
 
           <div className={`wf-product wf-product-stage-${active}`} role="group" aria-label={`${stage.label}: ${stage.title}`}>
-            <div className="wf-product-top"><span className="wf-product-brand"><Layers3 size={17} /> ledger<span>ai</span></span><span className="wf-workspace"><span />DEMO WORKSPACE</span><span className="wf-product-menu">•••</span></div>
+            <div className="wf-product-top"><span className="wf-product-brand"><Layers3 size={17} /> ledgar<span>.ai</span></span><span className="wf-workspace"><span />DEMO WORKSPACE</span><span className="wf-product-menu">•••</span></div>
             <div className="wf-product-title" key={`title-${active}`}><span>0{active + 1} / THE PROCESS</span><h3>{stage.title}</h3><p>{stage.subtitle}</p></div>
             <div className="wf-visual-stage" aria-hidden="true">
               <div className="wf-orbit wf-orbit-one" /><div className="wf-orbit wf-orbit-two" />
@@ -169,7 +169,7 @@ export default function Workflow() {
               <div className="wf-document" style={{ transform: reducedMotion ? 'none' : `perspective(900px) rotateY(${10 - active * 2}deg) rotateZ(${-7 + active * 1.1}deg)` }}>
                 <div className="wf-doc-top"><span className="wf-doc-logo">a<span>c</span></span><span>ACME<br />STUDIO</span><FileText size={17} /></div>
                 <div className="wf-doc-invoice">INVOICE <span>014</span></div>
-                <div className="wf-doc-meta"><span>Invoice to<br /><b>LedgerAI Demo</b></span><span>Issued<br /><b>01 Oct 2026</b></span></div>
+                <div className="wf-doc-meta"><span>Invoice to<br /><b>ledgar.ai Demo</b></span><span>Issued<br /><b>01 Oct 2026</b></span></div>
                 <div className="wf-doc-rule" /><div className="wf-doc-line"><span>Design services</span><b>₹ 20,000</b></div><div className="wf-doc-line"><span>Project support</span><b>₹ 4,000</b></div><div className="wf-doc-rule" />
                 <div className="wf-doc-total"><span>TOTAL DUE</span><b>₹ 24,000<span>.00</span></b></div>
                 <div className="wf-doc-bottom"><span>INV-2026-014</span><span>DEMO DOCUMENT</span></div>

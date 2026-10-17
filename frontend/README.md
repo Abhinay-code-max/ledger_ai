@@ -1,4 +1,4 @@
-# LedgerAI 2.0
+# ledgar.ai
 
 A React, TypeScript and Vite frontend for an interactive finance operations website, with a procedural 3D scene, a six-stage workflow, role-specific sign-in and illustrative workspaces.
 
