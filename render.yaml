@@ -1,0 +1,151 @@
+services:
+  # Role 4 Public Web Service (Orchestrator & API Gateway)
+  - type: web
+    name: ledgerai-role4
+    runtime: docker
+    dockerfilePath: tools/nova.Dockerfile
+    dockerContext: .
+    region: oregon
+    plan: free
+    healthCheckPath: /health/live
+    dockerCommand: sh -c "alembic upgrade head && uvicorn ledgerai_backend.main:create_app --factory --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: LEDGERAI_ENVIRONMENT
+        value: production
+      - key: LEDGERAI_SERVICE_TOKEN_SECRET
+        generateValue: true
+      - key: LEDGERAI_CORS_ORIGINS
+        sync: false
+      - key: LEDGERAI_DATABASE_DSN
+        fromDatabase:
+          name: ledgerai-postgres
+          property: connectionString
+      - key: LEDGERAI_MIGRATION_DSN
+        fromDatabase:
+          name: ledgerai-postgres
+          property: connectionString
+      - key: LEDGERAI_REDIS_URL
+        fromRedis:
+          name: ledgerai-redis
+          property: connectionString
+      - key: LEDGERAI_STORAGE_ENDPOINT_URL
+        value: http://ledgerai-minio:9000
+      - key: LEDGERAI_STORAGE_ACCESS_KEY
+        value: ledgerai-minio-local
+      - key: LEDGERAI_STORAGE_SECRET_KEY
+        fromService:
+          type: pserv
+          name: ledgerai-minio
+          envVarKey: MINIO_ROOT_PASSWORD
+      - key: LEDGERAI_ROLE1_BASE_URL
+        value: http://ledgerai-role1:8101
+      - key: LEDGERAI_ROLE2_BASE_URL
+        value: http://ledgerai-role2:8102
+      - key: LEDGERAI_ROLE3_BASE_URL
+        value: http://ledgerai-role3:8103
+      - key: LEDGERAI_ROLE6_BASE_URL
+        value: http://ledgerai-role6:8006
+
+  # Role 1 Private Service (Document Intelligence)
+  - type: pserv
+    name: ledgerai-role1
+    runtime: docker
+    dockerfilePath: tools/nova.Dockerfile
+    dockerContext: .
+    region: oregon
+    dockerCommand: uvicorn ledgerai_role1.service.app:create_app --factory --host 0.0.0.0 --port 8101
+    envVars:
+      - key: LEDGERAI_ROLE1_ENVIRONMENT
+        value: production
+      - key: LEDGERAI_SERVICE_TOKEN_SECRET
+        fromService:
+          type: web
+          name: ledgerai-role4
+          envVarKey: LEDGERAI_SERVICE_TOKEN_SECRET
+
+  # Role 2 Private Service (Accounting Core)
+  - type: pserv
+    name: ledgerai-role2
+    runtime: docker
+    dockerfilePath: tools/nova.Dockerfile
+    dockerContext: .
+    region: oregon
+    dockerCommand: uvicorn ledgerai_role2.api.app:create_role2_app --factory --host 0.0.0.0 --port 8102
+    envVars:
+      - key: LEDGERAI_ENVIRONMENT
+        value: production
+      - key: LEDGERAI_ROLE2_RUNTIME_DSN
+        fromDatabase:
+          name: ledgerai-postgres
+          property: connectionString
+      - key: LEDGERAI_SERVICE_TOKEN_SECRET
+        fromService:
+          type: web
+          name: ledgerai-role4
+          envVarKey: LEDGERAI_SERVICE_TOKEN_SECRET
+
+  # Role 3 Private Service (Reconciliation Engine)
+  - type: pserv
+    name: ledgerai-role3
+    runtime: docker
+    dockerfilePath: tools/nova.Dockerfile
+    dockerContext: .
+    region: oregon
+    dockerCommand: uvicorn ledgerai_backend.reconciliation.api:create_app --factory --host 0.0.0.0 --port 8103
+    envVars:
+      - key: LEDGERAI_SERVICE_TOKEN_SECRET
+        fromService:
+          type: web
+          name: ledgerai-role4
+          envVarKey: LEDGERAI_SERVICE_TOKEN_SECRET
+
+  # Role 6 Private Service (Local Model Runtime / Inference Gateway)
+  - type: pserv
+    name: ledgerai-role6
+    runtime: docker
+    dockerfilePath: tools/nova.Dockerfile
+    dockerContext: .
+    region: oregon
+    dockerCommand: uvicorn ledgerai_role6.app:create_role6_app --factory --host 0.0.0.0 --port 8006
+    envVars:
+      - key: LEDGERAI_ROLE6_ENVIRONMENT
+        value: production
+      - key: LEDGERAI_ROLE6_ACTIVE_BACKEND
+        value: real_onnx
+      - key: LEDGERAI_ROLE6_MODEL_PATH
+        value: /workspace/models/weights.pt
+      - key: LEDGERAI_ROLE6_SERVICE_TOKEN_SECRET
+        fromService:
+          type: web
+          name: ledgerai-role4
+          envVarKey: LEDGERAI_SERVICE_TOKEN_SECRET
+
+  # MinIO Private Storage Service
+  - type: pserv
+    name: ledgerai-minio
+    runtime: docker
+    dockerfilePath: tools/minio.Dockerfile
+    dockerContext: .
+    region: oregon
+    dockerCommand: server /data --console-address ":9001"
+    envVars:
+      - key: MINIO_ROOT_USER
+        value: ledgerai-minio-local
+      - key: MINIO_ROOT_PASSWORD
+        generateValue: true
+      - key: MINIO_KMS_AUTO_ENCRYPTION
+        value: "on"
+
+databases:
+  - name: ledgerai-postgres
+    databaseName: ledgerai
+    user: ledgerai_migrator
+    region: oregon
+    plan: free
+    ipAllowList: []
+
+redis:
+  - name: ledgerai-redis
+    region: oregon
+    plan: free
+    ipAllowList: []
